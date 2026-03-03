@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X, Mail, Shield, Check, Loader2 } from 'lucide-react';
 import { useWallet } from '@/contexts/WalletContext';
-import { lovable } from '@/integrations/lovable/index';
+import { addCredential } from '@/services/storageService';
+import { mockConnectSocial, mockUploadToIPFS } from '@/services/cryptoService';
+import { VerifiableCredential } from '@/types';
 import { cn } from '@/lib/utils';
 
 interface WalletModalProps {
@@ -9,51 +11,88 @@ interface WalletModalProps {
   onClose: () => void;
 }
 
-type ConnectingState = string | null; // tracks which button is loading
-type SuccessState = string | null;    // tracks which button succeeded
+type ConnectingState = string | null;
+type SuccessState = Set<string>;
+
+const EDGE_FN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/social-auth`;
 
 export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => {
-  const { connect, authError } = useWallet();
+  const { connect, authError, userIdentity, updateIdentity } = useWallet();
   const [email, setEmail] = useState('');
   const [connecting, setConnecting] = useState<ConnectingState>(null);
-  const [success, setSuccess] = useState<SuccessState>(null);
+  const [successSet, setSuccessSet] = useState<SuccessState>(new Set());
   const [emailSent, setEmailSent] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
-  if (!isOpen) return null;
+  // Listen for AUTH_SUCCESS from popup windows
+  const handleMessage = useCallback(async (event: MessageEvent) => {
+    if (event.data?.type !== 'AUTH_SUCCESS') return;
 
-  const handleOAuth = async (provider: 'google' | 'apple') => {
-    setConnecting(provider);
-    setLocalError(null);
+    const { platform, handle, displayName } = event.data;
+    if (!platform || !userIdentity) return;
+
     try {
-      const result = await lovable.auth.signInWithOAuth(provider, {
-        redirect_uri: window.location.origin,
-      });
-      if (result.error) {
-        setLocalError(result.error.message || `Failed to sign in with ${provider}`);
-        setConnecting(null);
-      }
-      // If redirected, the page will reload and auth state listener handles the rest
-    } catch (err: any) {
-      setLocalError(err.message || 'OAuth failed');
+      // Simulate social analysis (followers, engagement, etc.)
+      const result = await mockConnectSocial(displayName || platform, handle || `${platform}_user`);
+
+      const socialVC: VerifiableCredential = {
+        id: `urn:uuid:${crypto.randomUUID()}`,
+        type: ['VerifiableCredential', 'SocialCredential'],
+        issuer: `did:web:${platform.toLowerCase()}.com`,
+        issuanceDate: new Date().toISOString(),
+        credentialSubject: {
+          id: userIdentity.did,
+          ...result,
+        },
+      };
+
+      await mockUploadToIPFS(socialVC);
+      const newIdentity = addCredential(userIdentity, socialVC);
+      updateIdentity(newIdentity);
+
+      setSuccessSet(prev => new Set(prev).add(platform.toLowerCase()));
+      setConnecting(null);
+    } catch (err) {
+      console.error('Social credential creation failed:', err);
+      setLocalError(`Failed to create credential for ${platform}`);
       setConnecting(null);
     }
+  }, [userIdentity, updateIdentity]);
+
+  useEffect(() => {
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [handleMessage]);
+
+  if (!isOpen) return null;
+
+  const openSocialPopup = (platformId: string) => {
+    setConnecting(platformId);
+    setLocalError(null);
+
+    const url = `${EDGE_FN_URL}?platform=${encodeURIComponent(platformId)}&origin=${encodeURIComponent(window.location.origin)}`;
+    const popup = window.open(url, 'choiceid_auth', 'width=500,height=650,left=200,top=100');
+
+    // Watch for popup close without auth
+    const timer = setInterval(() => {
+      if (popup && popup.closed) {
+        clearInterval(timer);
+        setConnecting(prev => prev === platformId ? null : prev);
+      }
+    }, 500);
   };
 
   const handleMetaMask = async () => {
     setConnecting('metamask');
     setLocalError(null);
     await connect('metamask');
-    setSuccess('metamask');
+    setSuccessSet(prev => new Set(prev).add('metamask'));
     setConnecting(null);
     setTimeout(() => onClose(), 800);
   };
 
   const handleWallet = async (walletId: string) => {
-    if (walletId === 'metamask') {
-      return handleMetaMask();
-    }
-    // For other wallets, show not-yet-supported message
+    if (walletId === 'metamask') return handleMetaMask();
     setLocalError(`${walletId} connection coming soon. Use MetaMask or a social login.`);
   };
 
@@ -67,10 +106,14 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
   };
 
   const hasMetaMask = typeof window !== 'undefined' && !!(window as any).ethereum;
+  const isSuccess = (id: string) => successSet.has(id.toLowerCase());
 
   const socialProviders = [
-    { id: 'google' as const, name: 'Google', icon: '🔵' },
-    { id: 'apple' as const, name: 'Apple', icon: '🍎' },
+    { id: 'google', name: 'Google', icon: '🔵' },
+    { id: 'x', name: 'X (Twitter)', icon: '𝕏' },
+    { id: 'apple', name: 'Apple', icon: '🍎' },
+    { id: 'discord', name: 'Discord', icon: '🎮' },
+    { id: 'telegram', name: 'Telegram', icon: '✈️' },
   ];
 
   const wallets = [
@@ -129,7 +172,7 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
                 <span className="font-bold text-sm text-foreground">MetaMask</span>
                 {connecting === 'metamask' ? (
                   <Loader2 size={16} className="animate-spin text-primary" />
-                ) : success === 'metamask' ? (
+                ) : isSuccess('metamask') ? (
                   <Check size={16} className="text-emerald-500" />
                 ) : (
                   <span className="text-xs font-black text-primary uppercase tracking-wider">Connect</span>
@@ -138,7 +181,7 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
             </div>
           )}
 
-          {/* Social Sign In - Real OAuth */}
+          {/* Social Sign In */}
           <div className="mb-6">
             <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em]">
               Sign in with
@@ -147,15 +190,18 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
               {socialProviders.map((provider) => (
                 <button
                   key={provider.id}
-                  onClick={() => handleOAuth(provider.id)}
-                  disabled={!!connecting}
+                  onClick={() => openSocialPopup(provider.id)}
+                  disabled={!!connecting || isSuccess(provider.id)}
                   className={cn(
                     "flex items-center justify-center gap-2 p-3 rounded-xl border border-border hover:border-primary/30 hover:bg-muted/50 transition-all text-sm font-bold text-foreground disabled:opacity-60",
-                    connecting === provider.id && "border-primary/30 bg-muted/50"
+                    connecting === provider.id && "border-primary/30 bg-muted/50",
+                    isSuccess(provider.id) && "border-emerald-300 bg-emerald-50/50 dark:bg-emerald-950/20"
                   )}
                 >
                   {connecting === provider.id ? (
                     <Loader2 size={16} className="animate-spin text-primary" />
+                  ) : isSuccess(provider.id) ? (
+                    <Check size={16} className="text-emerald-500" />
                   ) : (
                     <span className="text-base">{provider.icon}</span>
                   )}
@@ -213,12 +259,13 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
                   disabled={!!connecting}
                   className={cn(
                     "flex flex-col items-center gap-2 p-4 rounded-xl border border-border hover:border-primary/30 hover:bg-muted/50 transition-all disabled:opacity-60",
-                    connecting === wallet.id && "border-primary/30 bg-muted/50"
+                    connecting === wallet.id && "border-primary/30 bg-muted/50",
+                    isSuccess(wallet.id) && "border-emerald-300 bg-emerald-50/50"
                   )}
                 >
                   {connecting === wallet.id ? (
                     <Loader2 size={24} className="animate-spin text-primary" />
-                  ) : success === wallet.id ? (
+                  ) : isSuccess(wallet.id) ? (
                     <Check size={24} className="text-emerald-500" />
                   ) : (
                     <span className="text-2xl">{wallet.emoji}</span>
