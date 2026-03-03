@@ -2,15 +2,17 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { UserIdentity } from '../types';
 import { loadIdentity, saveIdentity } from '../services/storageService';
 import { generateDID, calculateReputationScore } from '../services/cryptoService';
+import { supabase } from '@/integrations/supabase/client';
 
 interface WalletContextType {
   address: string | null;
   isConnected: boolean;
   isConnecting: boolean;
   userIdentity: UserIdentity | null;
-  connect: () => void;
+  connect: (method?: string, payload?: Record<string, string>) => Promise<void>;
   disconnect: () => void;
   updateIdentity: (identity: UserIdentity) => void;
+  authError: string | null;
 }
 
 const WalletContext = createContext<WalletContextType | null>(null);
@@ -21,45 +23,137 @@ export const useWallet = () => {
   return ctx;
 };
 
-// Mock wallet address
-const MOCK_ADDRESS = '0x742d35Cc6634C0532925a3b844Bc9e7595f2bD38';
-
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [address, setAddress] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [userIdentity, setUserIdentity] = useState<UserIdentity | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
 
+  // Listen for Supabase auth state changes (handles OAuth redirect)
   useEffect(() => {
-    // Check for existing connection
-    const saved = loadIdentity();
-    if (saved) {
-      setAddress(saved.address);
-      setUserIdentity(saved);
-    }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        const user = session.user;
+        const addr = user.email || user.id;
+        setAddress(addr);
+
+        let identity = loadIdentity();
+        if (!identity || identity.address !== addr) {
+          identity = {
+            address: addr,
+            did: generateDID(addr),
+            displayName: user.user_metadata?.full_name || user.user_metadata?.name || user.email,
+            avatar: user.user_metadata?.avatar_url,
+            credentials: [],
+            reputationScore: calculateReputationScore([]),
+          };
+          saveIdentity(identity);
+        }
+        setUserIdentity(identity);
+        setIsConnecting(false);
+      } else if (event === 'SIGNED_OUT') {
+        setAddress(null);
+        setUserIdentity(null);
+      }
+    });
+
+    // Check existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        const user = session.user;
+        const addr = user.email || user.id;
+        setAddress(addr);
+        let identity = loadIdentity();
+        if (!identity || identity.address !== addr) {
+          identity = {
+            address: addr,
+            did: generateDID(addr),
+            displayName: user.user_metadata?.full_name || user.user_metadata?.name || user.email,
+            avatar: user.user_metadata?.avatar_url,
+            credentials: [],
+            reputationScore: calculateReputationScore([]),
+          };
+          saveIdentity(identity);
+        }
+        setUserIdentity(identity);
+      } else {
+        // Fallback: check localStorage for wallet-only connections
+        const saved = loadIdentity();
+        if (saved) {
+          setAddress(saved.address);
+          setUserIdentity(saved);
+        }
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const connect = () => {
+  const connect = async (method?: string, payload?: Record<string, string>) => {
     setIsConnecting(true);
-    setTimeout(() => {
-      const addr = MOCK_ADDRESS;
-      setAddress(addr);
+    setAuthError(null);
 
-      let identity = loadIdentity();
-      if (!identity || identity.address !== addr) {
-        identity = {
-          address: addr,
-          did: generateDID(addr),
-          credentials: [],
-          reputationScore: calculateReputationScore([]),
-        };
-        saveIdentity(identity);
+    try {
+      if (method === 'metamask' || method === 'wallet') {
+        // Real MetaMask / browser wallet connection
+        const ethereum = (window as any).ethereum;
+        if (!ethereum) {
+          setAuthError('No wallet extension detected. Please install MetaMask.');
+          setIsConnecting(false);
+          return;
+        }
+        const accounts: string[] = await ethereum.request({ method: 'eth_requestAccounts' });
+        if (accounts.length > 0) {
+          const addr = accounts[0];
+          setAddress(addr);
+          let identity = loadIdentity();
+          if (!identity || identity.address !== addr) {
+            identity = {
+              address: addr,
+              did: generateDID(addr),
+              credentials: [],
+              reputationScore: calculateReputationScore([]),
+            };
+            saveIdentity(identity);
+          }
+          setUserIdentity(identity);
+        }
+        setIsConnecting(false);
+      } else if (method === 'email') {
+        // Supabase email magic link
+        const email = payload?.email;
+        if (!email) {
+          setAuthError('Please enter an email address.');
+          setIsConnecting(false);
+          return;
+        }
+        const { error } = await supabase.auth.signInWithOtp({
+          email,
+          options: { emailRedirectTo: window.location.origin },
+        });
+        if (error) {
+          setAuthError(error.message);
+          setIsConnecting(false);
+        }
+        // isConnecting stays true until auth state changes or user dismisses
+      } else if (method === 'google' || method === 'apple') {
+        // Real OAuth via Lovable Cloud - handled in WalletModal
+        // The actual call is made in the modal, this is a fallback
+        setIsConnecting(false);
+      } else {
+        // Legacy fallback - should not be used
+        setAuthError('Please select a connection method.');
+        setIsConnecting(false);
       }
-      setUserIdentity(identity);
+    } catch (err: any) {
+      console.error('Connection failed:', err);
+      setAuthError(err.message || 'Connection failed. Please try again.');
       setIsConnecting(false);
-    }, 1500);
+    }
   };
 
-  const disconnect = () => {
+  const disconnect = async () => {
+    await supabase.auth.signOut();
     setAddress(null);
     setUserIdentity(null);
   };
@@ -80,6 +174,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       connect,
       disconnect,
       updateIdentity,
+      authError,
     }}>
       {children}
     </WalletContext.Provider>

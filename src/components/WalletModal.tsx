@@ -1,28 +1,76 @@
 import React, { useState } from 'react';
-import { X, Mail, Wallet, Globe, Shield } from 'lucide-react';
+import { X, Mail, Shield, Check, Loader2 } from 'lucide-react';
 import { useWallet } from '@/contexts/WalletContext';
+import { lovable } from '@/integrations/lovable/index';
+import { cn } from '@/lib/utils';
 
 interface WalletModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+type ConnectingState = string | null; // tracks which button is loading
+type SuccessState = string | null;    // tracks which button succeeded
+
 export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => {
-  const { connect } = useWallet();
+  const { connect, authError } = useWallet();
   const [email, setEmail] = useState('');
+  const [connecting, setConnecting] = useState<ConnectingState>(null);
+  const [success, setSuccess] = useState<SuccessState>(null);
+  const [emailSent, setEmailSent] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
-  const handleConnect = () => {
-    connect();
-    onClose();
+  const handleOAuth = async (provider: 'google' | 'apple') => {
+    setConnecting(provider);
+    setLocalError(null);
+    try {
+      const result = await lovable.auth.signInWithOAuth(provider, {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) {
+        setLocalError(result.error.message || `Failed to sign in with ${provider}`);
+        setConnecting(null);
+      }
+      // If redirected, the page will reload and auth state listener handles the rest
+    } catch (err: any) {
+      setLocalError(err.message || 'OAuth failed');
+      setConnecting(null);
+    }
   };
 
+  const handleMetaMask = async () => {
+    setConnecting('metamask');
+    setLocalError(null);
+    await connect('metamask');
+    setSuccess('metamask');
+    setConnecting(null);
+    setTimeout(() => onClose(), 800);
+  };
+
+  const handleWallet = async (walletId: string) => {
+    if (walletId === 'metamask') {
+      return handleMetaMask();
+    }
+    // For other wallets, show not-yet-supported message
+    setLocalError(`${walletId} connection coming soon. Use MetaMask or a social login.`);
+  };
+
+  const handleEmailLogin = async () => {
+    if (!email) return;
+    setConnecting('email');
+    setLocalError(null);
+    await connect('email', { email });
+    setEmailSent(true);
+    setConnecting(null);
+  };
+
+  const hasMetaMask = typeof window !== 'undefined' && !!(window as any).ethereum;
+
   const socialProviders = [
-    { id: 'google', name: 'Google', icon: '🔵', color: 'hover:border-blue-400' },
-    { id: 'x', name: 'X', icon: '✕', color: 'hover:border-foreground', isText: true },
-    { id: 'apple', name: 'Apple', icon: '🍎', color: 'hover:border-foreground' },
-    { id: 'discord', name: 'Discord', icon: '💬', color: 'hover:border-indigo-400' },
+    { id: 'google' as const, name: 'Google', icon: '🔵' },
+    { id: 'apple' as const, name: 'Apple', icon: '🍎' },
   ];
 
   const wallets = [
@@ -33,6 +81,8 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
     { id: 'walletconnect', name: 'WalletConnect', emoji: '🔗' },
     { id: 'phantom', name: 'Phantom', emoji: '👻' },
   ];
+
+  const error = localError || authError;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -50,32 +100,45 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
                 CHOICE<span className="text-primary">iD</span>
               </span>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-all"
-            >
+            <button onClick={onClose} className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-all">
               <X size={20} />
             </button>
           </div>
 
-          {/* Detected Browser Wallet */}
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.15em]">
-                Detected in your browser
-              </span>
+          {/* Error */}
+          {error && (
+            <div className="mb-4 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm font-medium">
+              {error}
             </div>
-            <button
-              onClick={handleConnect}
-              className="w-full flex items-center justify-between p-4 rounded-xl border border-border bg-emerald-50/50 dark:bg-emerald-950/20 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-all"
-            >
-              <span className="font-bold text-sm text-foreground">MetaMask</span>
-              <span className="text-xs font-black text-primary uppercase tracking-wider">Connect</span>
-            </button>
-          </div>
+          )}
 
-          {/* Social Sign In */}
+          {/* Detected Browser Wallet */}
+          {hasMetaMask && (
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.15em]">
+                  Detected in your browser
+                </span>
+              </div>
+              <button
+                onClick={handleMetaMask}
+                disabled={connecting === 'metamask'}
+                className="w-full flex items-center justify-between p-4 rounded-xl border border-border bg-emerald-50/50 dark:bg-emerald-950/20 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-all disabled:opacity-60"
+              >
+                <span className="font-bold text-sm text-foreground">MetaMask</span>
+                {connecting === 'metamask' ? (
+                  <Loader2 size={16} className="animate-spin text-primary" />
+                ) : success === 'metamask' ? (
+                  <Check size={16} className="text-emerald-500" />
+                ) : (
+                  <span className="text-xs font-black text-primary uppercase tracking-wider">Connect</span>
+                )}
+              </button>
+            </div>
+          )}
+
+          {/* Social Sign In - Real OAuth */}
           <div className="mb-6">
             <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em]">
               Sign in with
@@ -84,11 +147,15 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
               {socialProviders.map((provider) => (
                 <button
                   key={provider.id}
-                  onClick={handleConnect}
-                  className="flex items-center justify-center gap-2 p-3 rounded-xl border border-border hover:border-primary/30 hover:bg-muted/50 transition-all text-sm font-bold text-foreground"
+                  onClick={() => handleOAuth(provider.id)}
+                  disabled={!!connecting}
+                  className={cn(
+                    "flex items-center justify-center gap-2 p-3 rounded-xl border border-border hover:border-primary/30 hover:bg-muted/50 transition-all text-sm font-bold text-foreground disabled:opacity-60",
+                    connecting === provider.id && "border-primary/30 bg-muted/50"
+                  )}
                 >
-                  {provider.isText ? (
-                    <span className="text-base font-black">✕</span>
+                  {connecting === provider.id ? (
+                    <Loader2 size={16} className="animate-spin text-primary" />
                   ) : (
                     <span className="text-base">{provider.icon}</span>
                   )}
@@ -103,24 +170,34 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
             <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em]">
               Or continue with email
             </span>
-            <div className="flex gap-2 mt-3">
-              <div className="flex-1 flex items-center gap-2 px-4 py-3 rounded-xl border border-border bg-muted/30">
-                <Mail size={16} className="text-muted-foreground shrink-0" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="email@example.com"
-                  className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
-                />
+            {emailSent ? (
+              <div className="mt-3 p-4 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 text-center">
+                <Check size={24} className="mx-auto mb-2 text-emerald-500" />
+                <p className="text-sm font-bold text-foreground">Check your email</p>
+                <p className="text-xs text-muted-foreground mt-1">We sent a magic link to <strong>{email}</strong></p>
               </div>
-              <button
-                onClick={handleConnect}
-                className="px-5 py-3 rounded-xl bg-foreground text-background text-xs font-black uppercase tracking-wider hover:opacity-90 transition-opacity shrink-0"
-              >
-                Continue
-              </button>
-            </div>
+            ) : (
+              <div className="flex gap-2 mt-3">
+                <div className="flex-1 flex items-center gap-2 px-4 py-3 rounded-xl border border-border bg-muted/30">
+                  <Mail size={16} className="text-muted-foreground shrink-0" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="email@example.com"
+                    className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
+                    onKeyDown={(e) => e.key === 'Enter' && handleEmailLogin()}
+                  />
+                </div>
+                <button
+                  onClick={handleEmailLogin}
+                  disabled={!email || !!connecting}
+                  className="px-5 py-3 rounded-xl bg-foreground text-background text-xs font-black uppercase tracking-wider hover:opacity-90 transition-opacity shrink-0 disabled:opacity-50"
+                >
+                  {connecting === 'email' ? <Loader2 size={14} className="animate-spin" /> : 'Continue'}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Connect a Wallet */}
@@ -132,10 +209,20 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
               {wallets.map((wallet) => (
                 <button
                   key={wallet.id}
-                  onClick={handleConnect}
-                  className="flex flex-col items-center gap-2 p-4 rounded-xl border border-border hover:border-primary/30 hover:bg-muted/50 transition-all"
+                  onClick={() => handleWallet(wallet.id)}
+                  disabled={!!connecting}
+                  className={cn(
+                    "flex flex-col items-center gap-2 p-4 rounded-xl border border-border hover:border-primary/30 hover:bg-muted/50 transition-all disabled:opacity-60",
+                    connecting === wallet.id && "border-primary/30 bg-muted/50"
+                  )}
                 >
-                  <span className="text-2xl">{wallet.emoji}</span>
+                  {connecting === wallet.id ? (
+                    <Loader2 size={24} className="animate-spin text-primary" />
+                  ) : success === wallet.id ? (
+                    <Check size={24} className="text-emerald-500" />
+                  ) : (
+                    <span className="text-2xl">{wallet.emoji}</span>
+                  )}
                   <span className="text-[10px] font-bold text-foreground leading-tight text-center">
                     {wallet.name}
                   </span>
