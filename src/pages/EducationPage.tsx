@@ -1,52 +1,35 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ChoiceButton } from '@/components/ChoiceButton';
 import { Award, CheckCircle, Lock, PlayCircle, Star } from 'lucide-react';
-import { VerifiableCredential } from '@/types';
-import { addCredential } from '@/services/storageService';
-import { mockUploadToIPFS } from '@/services/cryptoService';
 import { useWallet } from '@/contexts/WalletContext';
-
-const COURSES = [
-  { id: 'web3-101', title: 'Web3 & Identity Basics', level: 'Beginner', duration: '15 min', points: 5, description: "Learn the fundamentals of Decentralized Identity (DID), Verifiable Credentials, and why privacy matters.", color: "bg-emerald-500" },
-  { id: 'sec-201', title: 'Wallet Security Pro', level: 'Intermediate', duration: '30 min', points: 10, description: "Master the art of self-custody. Learn about seed phrases, hardware wallets, and avoiding phishing attacks.", color: "bg-blue-500" },
-  { id: 'collab-301', title: 'DAO Collaboration', level: 'Advanced', duration: '45 min', points: 15, description: "How to use your Reputation Score to get hired in DAOs and manage cryptographic agreements.", color: "bg-purple-600" },
-];
+import { COURSES } from '@/data/coursesData';
 
 const EducationPage: React.FC = () => {
-  const { userIdentity: identity, updateIdentity: onUpdateIdentity } = useWallet();
-  const [completing, setCompleting] = useState<string | null>(null);
+  const { userIdentity: identity } = useWallet();
+  const navigate = useNavigate();
 
   const hasBadge = (courseTitle: string) => {
     return identity?.credentials.some(vc => vc.type.includes('EducationCredential') && vc.credentialSubject.courseName === courseTitle);
   };
 
-  const handleComplete = async (course: typeof COURSES[0]) => {
-    if (!identity) return;
-    setCompleting(course.id);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      const badgeVC: VerifiableCredential = {
-        id: `urn:uuid:${crypto.randomUUID()}`,
-        type: ['VerifiableCredential', 'EducationCredential'],
-        issuer: 'did:web:choice.love/education',
-        issuanceDate: new Date().toISOString(),
-        credentialSubject: { id: identity.did, courseName: course.title, level: course.level, badge: `${course.level} Badge`, points: course.points }
-      };
-      await mockUploadToIPFS(badgeVC);
-      const newIdentity = addCredential(identity, badgeVC);
-      onUpdateIdentity(newIdentity);
-    } catch (e) { console.error(e); }
-    finally { setCompleting(null); }
-  };
+  const totalPoints = COURSES.reduce((sum, c) => sum + c.points, 0);
+  const earnedPoints = COURSES.filter(c => hasBadge(c.title)).reduce((sum, c) => sum + c.points, 0);
 
   return (
     <div className="space-y-8 animate-fade-in pb-10">
-      <header>
-        <h1 className="text-3xl md:text-4xl font-extrabold text-foreground mb-2 tracking-tight">Education Center</h1>
-        <p className="text-muted-foreground text-base md:text-lg">Earn badges and boost your Trust Score by mastering Web3 skills.</p>
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-extrabold text-foreground mb-2 tracking-tight">Education Center</h1>
+          <p className="text-muted-foreground text-base md:text-lg">Earn badges and boost your Trust Score by mastering Web3 skills.</p>
+        </div>
+        <div className="bg-card border border-border rounded-2xl px-5 py-3 text-center">
+          <span className="block text-2xl font-extrabold text-primary">{earnedPoints}/{totalPoints}</span>
+          <span className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Points Earned</span>
+        </div>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {COURSES.map((course) => {
           const isCompleted = hasBadge(course.title);
           return (
@@ -61,14 +44,22 @@ const EducationPage: React.FC = () => {
                 )}
               </div>
               <h3 className="text-xl font-bold text-foreground mb-2">{course.title}</h3>
-              <p className="text-sm text-muted-foreground mb-6 flex-1 leading-relaxed">{course.description}</p>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-6 font-medium">
+              <p className="text-sm text-muted-foreground mb-4 flex-1 leading-relaxed">{course.description}</p>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2 font-medium">
                 <PlayCircle size={14} /> {course.duration}
-                <span className="mx-2">•</span>
+                <span className="mx-1">•</span>
                 <Star size={14} className="text-amber-400 fill-amber-400" /> +{course.points} Points
               </div>
-              <ChoiceButton onClick={() => handleComplete(course)} disabled={isCompleted || !identity} isLoading={completing === course.id} variant={isCompleted ? "outline" : "primary"} className="w-full">
-                {isCompleted ? "Completed" : "Start Lesson"}
+              <div className="text-xs text-muted-foreground mb-6">
+                {course.lessons.length} lesson{course.lessons.length > 1 ? 's' : ''} with quizzes
+              </div>
+              <ChoiceButton
+                onClick={() => navigate(`/education/${course.id}`)}
+                disabled={!identity}
+                variant={isCompleted ? "outline" : "primary"}
+                className="w-full"
+              >
+                {isCompleted ? "Review Course" : "Start Lesson"}
               </ChoiceButton>
             </div>
           );
@@ -82,7 +73,7 @@ const EducationPage: React.FC = () => {
             <h2 className="text-xl md:text-2xl font-bold text-white">Gamified Reputation</h2>
           </div>
           <p className="text-white/90 text-lg leading-relaxed mb-6">
-            Every badge you earn is a Verifiable Credential stored in your wallet. Professional DAOs and recruiters use these badges to verify your skills.
+            Every badge you earn is a Verifiable Credential stored in your wallet. Complete all {COURSES.length} courses to maximize your Trust Score.
           </p>
           <div className="flex gap-4">
             <div className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-xl border border-white/30">
@@ -90,8 +81,12 @@ const EducationPage: React.FC = () => {
               <span className="text-xs uppercase tracking-wider text-white/80">Score Weight</span>
             </div>
             <div className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-xl border border-white/30">
-              <span className="block text-2xl font-bold text-white">NFT</span>
-              <span className="text-xs uppercase tracking-wider text-white/80">Badges</span>
+              <span className="block text-2xl font-bold text-white">{COURSES.length}</span>
+              <span className="text-xs uppercase tracking-wider text-white/80">Courses</span>
+            </div>
+            <div className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-xl border border-white/30">
+              <span className="block text-2xl font-bold text-white">{totalPoints}</span>
+              <span className="text-xs uppercase tracking-wider text-white/80">Total Points</span>
             </div>
           </div>
         </div>

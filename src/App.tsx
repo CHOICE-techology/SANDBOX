@@ -8,6 +8,7 @@ import { AppLayout } from "@/components/AppLayout";
 import IdentityPage from "./pages/IdentityPage";
 import CredentialsPage from "./pages/CredentialsPage";
 import EducationPage from "./pages/EducationPage";
+import LessonPage from "./pages/LessonPage";
 import JobsPage from "./pages/JobsPage";
 import AboutPage from "./pages/AboutPage";
 import VerifyPage from "./pages/VerifyPage";
@@ -28,6 +29,7 @@ const App = () => (
               <Route path="/" element={<IdentityPage />} />
               <Route path="/credentials" element={<CredentialsPage />} />
               <Route path="/education" element={<EducationPage />} />
+              <Route path="/education/:courseId" element={<LessonPage />} />
               <Route path="/jobs" element={<JobsPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/verify" element={<VerifyPage />} />
