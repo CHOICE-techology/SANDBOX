@@ -132,22 +132,6 @@ const WalletConnectProviderLogo = () => (
   </svg>
 );
 
-const CHAIN_DATA = [
-  { name: "Ethereum", symbol: "ETH", risk: "Low", description: "The leading smart contract platform. Used for DeFi, NFTs, and DAOs.", url: "https://ethereum.org", Logo: EthereumLogo },
-  { name: "Bitcoin", symbol: "BTC", risk: "Low", description: "The first cryptocurrency. Digital gold and a store of value.", url: "https://bitcoin.org", Logo: BitcoinLogo },
-  { name: "Solana", symbol: "SOL", risk: "Medium", description: "High-performance blockchain known for speed and low fees.", url: "https://solana.com", Logo: SolanaLogo },
-  { name: "Arbitrum", symbol: "ARB", risk: "Medium", description: "Layer 2 scaling solution for Ethereum. Fast and cheap transactions.", url: "https://arbitrum.io", Logo: ArbitrumLogo },
-  { name: "Polygon", symbol: "MATIC", risk: "Medium", description: "Scalable infrastructure for building Ethereum-compatible blockchains.", url: "https://polygon.technology", Logo: PolygonLogo },
-  { name: "Base", symbol: "BASE", risk: "Low", description: "Secure, low-cost Ethereum L2 incubated by Coinbase.", url: "https://base.org", Logo: BaseLogo },
-  { name: "Avalanche", symbol: "AVAX", risk: "Medium", description: "Open, programmable smart contracts platform for dApps.", url: "https://avax.network", Logo: AvalancheLogo },
-  { name: "Polkadot", symbol: "DOT", risk: "Medium", description: "Multi-chain protocol connecting blockchains into one unified network.", url: "https://polkadot.com", Logo: PolkadotLogo },
-  { name: "Trust Wallet", symbol: "TRUST", risk: "Low", description: "The most trusted & secure crypto wallet. Multi-chain support with staking.", url: "https://trustwallet.com", Logo: TrustWalletLogo },
-  // Uncomment below if you want 10
-  // { name: "Zengo", symbol: "ZENGO", risk: "Low", description: "Keyless crypto wallet using MPC technology. No seed phrase needed.", url: "https://zengo.com", Logo: ZengoLogo },
-];
-
-// Actually user asked for Zengo too, making it 10. Let me include it.
-// Overwrite with all items:
 const ITEMS = [
   { name: "Ethereum", symbol: "ETH", risk: "Low", description: "The leading smart contract platform. Used for DeFi, NFTs, and DAOs.", url: "https://ethereum.org", Logo: EthereumLogo },
   { name: "Bitcoin", symbol: "BTC", risk: "Low", description: "The first cryptocurrency. Digital gold and a store of value.", url: "https://bitcoin.org", Logo: BitcoinLogo },
@@ -161,12 +145,12 @@ const ITEMS = [
 ];
 
 const WALLET_PROVIDERS = [
-  { name: "MetaMask", description: "The most popular Ethereum browser wallet.", logo: "🦊" },
-  { name: "Trust Wallet", description: "Multi-chain mobile wallet with DApp browser.", logo: "🛡️" },
-  { name: "Coinbase Wallet", description: "Self-custody wallet by Coinbase.", logo: "🔵" },
-  { name: "Phantom", description: "The friendly Solana & multi-chain wallet.", logo: "👻" },
-  { name: "Rainbow", description: "Beautiful Ethereum wallet for NFTs & DeFi.", logo: "🌈" },
-  { name: "WalletConnect", description: "Connect any wallet via QR code scan.", logo: "🔗" },
+  { name: "MetaMask", description: "The most popular Ethereum browser wallet.", Logo: MetaMaskProviderLogo },
+  { name: "Trust Wallet", description: "Multi-chain mobile wallet with DApp browser.", Logo: TrustProviderLogo },
+  { name: "Coinbase Wallet", description: "Self-custody wallet by Coinbase.", Logo: CoinbaseProviderLogo },
+  { name: "Phantom", description: "The friendly Solana & multi-chain wallet.", Logo: PhantomProviderLogo },
+  { name: "Rainbow", description: "Beautiful Ethereum wallet for NFTs & DeFi.", Logo: RainbowProviderLogo },
+  { name: "WalletConnect", description: "Connect any wallet via QR code scan.", Logo: WalletConnectProviderLogo },
 ];
 
 const WalletManagerPage: React.FC = () => {
