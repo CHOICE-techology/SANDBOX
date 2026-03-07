@@ -85,7 +85,7 @@ export const COURSES: Course[] = [
     ]
   },
   {
-    id: 'scale-302', title: 'Layer 2 & Scaling Solutions', level: 'Advanced', duration: '40 min', points: 15,
+    id: 'scale-302', title: 'Layer 2 & Scaling Solutions', level: 'Advanced', duration: '40 min', points: 4,
     description: "Master Ethereum scaling: rollups, sidechains, state channels, and how to bridge assets safely.",
     color: "bg-orange-500",
     lessons: [
