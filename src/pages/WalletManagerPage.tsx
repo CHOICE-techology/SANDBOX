@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { ChoiceButton } from '@/components/ChoiceButton';
 import { Copy, Check, Lock, Eye, EyeOff, ArrowRight, ChevronRight, Globe, ExternalLink } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useWallet } from '@/contexts/WalletContext';
+import { addCredential } from '@/services/storageService';
+import { mockUploadToIPFS } from '@/services/cryptoService';
+import { VerifiableCredential } from '@/types';
 
 // Brand logos as inline SVGs — faithful to official brand marks
 const EthereumLogo = () => (
