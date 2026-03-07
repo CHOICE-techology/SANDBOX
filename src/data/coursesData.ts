@@ -39,7 +39,7 @@ export const COURSES: Course[] = [
     ]
   },
   {
-    id: 'collab-301', title: 'DAO Collaboration', level: 'Advanced', duration: '45 min', points: 15,
+    id: 'collab-301', title: 'DAO Collaboration', level: 'Advanced', duration: '45 min', points: 5,
     description: "How to use your Reputation Score to get hired in DAOs and manage cryptographic agreements.",
     color: "bg-purple-600",
     lessons: [
