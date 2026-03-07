@@ -49,7 +49,7 @@ export const COURSES: Course[] = [
     ]
   },
   {
-    id: 'defi-101', title: 'DeFi Fundamentals', level: 'Beginner', duration: '20 min', points: 5,
+    id: 'defi-101', title: 'DeFi Fundamentals', level: 'Beginner', duration: '20 min', points: 3,
     description: "Understand decentralized finance: lending, borrowing, yield farming, and liquidity pools.",
     color: "bg-amber-500",
     lessons: [
