@@ -1,17 +1,19 @@
-import { VerifiableCredential, CredentialType } from '../types';
-import { differenceInYears, parseISO } from 'date-fns';
+import { VerifiableCredential } from '../types';
 
-const CREDENTIAL_WEIGHTS: Record<string, number> = {
-  'government_id': 50,
-  'professional': 30,
-  'education': 25,
-  'social': 15,
-  'self_attested': 5,
-  'PhysicalCredential': 20,
-  'SocialCredential': 10,
-  'EducationCredential': 10,
-  'WalletHistoryCredential': 10,
-};
+// Max points per category
+const MAX_SOCIAL = 40;
+const MAX_EDUCATION = 30;
+const MAX_REAL_WORLD = 20;
+const MAX_FINANCE = 10;
+// Total possible = 100
+
+// 11 social platforms, each gives equal share
+const SOCIAL_PLATFORMS_COUNT = 11;
+const POINTS_PER_SOCIAL = MAX_SOCIAL / SOCIAL_PLATFORMS_COUNT; // ~3.636
+
+// 4 document slots, each 5 points
+const POINTS_PER_DOCUMENT = 5;
+const MAX_DOCUMENTS = 4;
 
 export interface ReputationBreakdown {
   baseScore: number;
@@ -19,10 +21,10 @@ export interface ReputationBreakdown {
   timeDecayAdjustment: number;
   totalScore: number;
   categories: {
-    physical: number;
     social: number;
-    finance: number;
     education: number;
+    physical: number;
+    finance: number;
   };
 }
 
@@ -33,54 +35,74 @@ export interface ReputationResult {
 }
 
 export const calculateReputation = (credentials: VerifiableCredential[]): ReputationResult => {
-  const baseScore = 10;
-  let weightedScore = 0;
-  let totalDecay = 0;
+  let socialRaw = 0;
+  let educationRaw = 0;
+  let physicalRaw = 0;
+  let financeRaw = 0;
 
-  const categories = { physical: 0, social: 0, finance: 0, education: 0 };
-  const now = new Date();
+  let socialCount = 0;
+  let docCount = 0;
 
   credentials.forEach((vc) => {
     const types = Array.isArray(vc.type) ? vc.type : [vc.type];
-    let weight = 5;
-    types.forEach(t => {
-      const w = CREDENTIAL_WEIGHTS[t as CredentialType];
-      if (w && w > weight) weight = w;
-    });
 
-    if (types.includes('PhysicalCredential')) categories.physical += weight;
-    else if (types.includes('SocialCredential')) categories.social += weight;
-    else if (types.includes('WalletHistoryCredential')) categories.finance += weight;
-    else if (types.includes('EducationCredential')) categories.education += weight;
-
-    const issueDate = typeof vc.issuanceDate === 'string' ? parseISO(vc.issuanceDate) : vc.issuanceDate as unknown as Date;
-    const yearsOld = differenceInYears(now, issueDate);
-
-    let decayFactor = 1;
-    if (yearsOld >= 1) {
-      decayFactor = Math.max(0.1, 1 - (yearsOld * 0.1));
+    if (types.includes('SocialCredential')) {
+      socialCount++;
+      socialRaw = Math.min(MAX_SOCIAL, socialCount * POINTS_PER_SOCIAL);
+    } else if (types.includes('EducationCredential')) {
+      // Each education credential carries its own points from the course data
+      const coursePoints = (vc.credentialSubject as any)?.points;
+      if (typeof coursePoints === 'number') {
+        educationRaw += coursePoints;
+      } else {
+        // fallback: generic education credential
+        educationRaw += 3;
+      }
+      educationRaw = Math.min(MAX_EDUCATION, educationRaw);
+    } else if (types.includes('PhysicalCredential')) {
+      docCount++;
+      physicalRaw = Math.min(MAX_REAL_WORLD, docCount * POINTS_PER_DOCUMENT);
+    } else if (types.includes('WalletHistoryCredential')) {
+      // Wallet analysis gives up to 10 points based on activity
+      const stats = vc.credentialSubject as any;
+      const txCount = stats?.totalTransactions || 0;
+      const chains = stats?.activeChains || 0;
+      // Score: up to 5 pts for transactions (100+ = max), up to 5 pts for multi-chain (3+ = max)
+      const txScore = Math.min(5, (txCount / 100) * 5);
+      const chainScore = Math.min(5, (chains / 3) * 5);
+      financeRaw = Math.min(MAX_FINANCE, Math.round(txScore + chainScore));
     }
-
-    const contribution = weight * decayFactor;
-    weightedScore += weight;
-    totalDecay += (weight - contribution);
   });
 
-  const finalScore = Math.min(100, Math.round(baseScore + (weightedScore - totalDecay)));
+  const social = Math.round(Math.min(MAX_SOCIAL, socialRaw) * 100) / 100;
+  const education = Math.min(MAX_EDUCATION, educationRaw);
+  const physical = Math.min(MAX_REAL_WORLD, physicalRaw);
+  const finance = Math.min(MAX_FINANCE, financeRaw);
 
-  const nonSelfAttestedCount = credentials.filter(vc => vc.type !== 'self_attested').length;
+  const totalScore = Math.min(100, Math.round(social + education + physical + finance));
+
+  const nonSelfAttestedCount = credentials.filter(vc => {
+    const types = Array.isArray(vc.type) ? vc.type : [vc.type];
+    return !types.includes('self_attested');
+  }).length;
+
   let sybilRisk: 'low' | 'medium' | 'high' = 'high';
   if (nonSelfAttestedCount >= 3) sybilRisk = 'low';
   else if (nonSelfAttestedCount >= 1) sybilRisk = 'medium';
 
   return {
-    score: finalScore,
+    score: totalScore,
     breakdown: {
-      baseScore,
-      weightedScore,
-      timeDecayAdjustment: -Math.round(totalDecay),
-      totalScore: finalScore,
-      categories
+      baseScore: 0,
+      weightedScore: totalScore,
+      timeDecayAdjustment: 0,
+      totalScore,
+      categories: {
+        social: Math.round(social),
+        education,
+        physical,
+        finance,
+      }
     },
     sybilRisk,
   };

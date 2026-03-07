@@ -18,7 +18,7 @@ export interface Lesson {
 
 export const COURSES: Course[] = [
   {
-    id: 'web3-101', title: 'Web3 & Identity Basics', level: 'Beginner', duration: '15 min', points: 5,
+    id: 'web3-101', title: 'Web3 & Identity Basics', level: 'Beginner', duration: '15 min', points: 3,
     description: "Learn the fundamentals of Decentralized Identity (DID), Verifiable Credentials, and why privacy matters.",
     color: "bg-emerald-500",
     lessons: [
@@ -28,7 +28,7 @@ export const COURSES: Course[] = [
     ]
   },
   {
-    id: 'sec-201', title: 'Wallet Security Pro', level: 'Intermediate', duration: '30 min', points: 10,
+    id: 'sec-201', title: 'Wallet Security Pro', level: 'Intermediate', duration: '30 min', points: 4,
     description: "Master the art of self-custody. Learn about seed phrases, hardware wallets, and avoiding phishing attacks.",
     color: "bg-blue-500",
     lessons: [
@@ -39,7 +39,7 @@ export const COURSES: Course[] = [
     ]
   },
   {
-    id: 'collab-301', title: 'DAO Collaboration', level: 'Advanced', duration: '45 min', points: 15,
+    id: 'collab-301', title: 'DAO Collaboration', level: 'Advanced', duration: '45 min', points: 5,
     description: "How to use your Reputation Score to get hired in DAOs and manage cryptographic agreements.",
     color: "bg-purple-600",
     lessons: [
@@ -49,7 +49,7 @@ export const COURSES: Course[] = [
     ]
   },
   {
-    id: 'defi-101', title: 'DeFi Fundamentals', level: 'Beginner', duration: '20 min', points: 5,
+    id: 'defi-101', title: 'DeFi Fundamentals', level: 'Beginner', duration: '20 min', points: 3,
     description: "Understand decentralized finance: lending, borrowing, yield farming, and liquidity pools.",
     color: "bg-amber-500",
     lessons: [
@@ -58,7 +58,7 @@ export const COURSES: Course[] = [
     ]
   },
   {
-    id: 'nft-102', title: 'NFTs & Digital Ownership', level: 'Beginner', duration: '20 min', points: 5,
+    id: 'nft-102', title: 'NFTs & Digital Ownership', level: 'Beginner', duration: '20 min', points: 3,
     description: "Explore non-fungible tokens: how they work, use cases, and how to evaluate NFT projects.",
     color: "bg-pink-500",
     lessons: [
@@ -67,7 +67,7 @@ export const COURSES: Course[] = [
     ]
   },
   {
-    id: 'gov-202', title: 'On-Chain Governance', level: 'Intermediate', duration: '25 min', points: 10,
+    id: 'gov-202', title: 'On-Chain Governance', level: 'Intermediate', duration: '25 min', points: 4,
     description: "Learn how DAOs make decisions, voting mechanisms, and how to write effective proposals.",
     color: "bg-indigo-500",
     lessons: [
@@ -76,7 +76,7 @@ export const COURSES: Course[] = [
     ]
   },
   {
-    id: 'privacy-203', title: 'Privacy & Zero-Knowledge', level: 'Intermediate', duration: '35 min', points: 10,
+    id: 'privacy-203', title: 'Privacy & Zero-Knowledge', level: 'Intermediate', duration: '35 min', points: 4,
     description: "Deep dive into zero-knowledge proofs, privacy coins, and how to protect your on-chain activity.",
     color: "bg-teal-500",
     lessons: [
@@ -85,7 +85,7 @@ export const COURSES: Course[] = [
     ]
   },
   {
-    id: 'scale-302', title: 'Layer 2 & Scaling Solutions', level: 'Advanced', duration: '40 min', points: 15,
+    id: 'scale-302', title: 'Layer 2 & Scaling Solutions', level: 'Advanced', duration: '40 min', points: 4,
     description: "Master Ethereum scaling: rollups, sidechains, state channels, and how to bridge assets safely.",
     color: "bg-orange-500",
     lessons: [

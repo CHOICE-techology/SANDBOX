@@ -31,10 +31,10 @@ const IdentityPage: React.FC = () => {
   const { physical, social, finance, education } = reputation.breakdown.categories;
 
   const chartData = [
-    { subject: 'Real World', value: Math.min((physical / 40) * 100, 100), fullMark: 100 },
-    { subject: 'Social', value: Math.min((social / 30) * 100, 100), fullMark: 100 },
+    { subject: 'Social', value: Math.min((social / 40) * 100, 100), fullMark: 100 },
+    { subject: 'Education', value: Math.min((education / 30) * 100, 100), fullMark: 100 },
+    { subject: 'Real World', value: Math.min((physical / 20) * 100, 100), fullMark: 100 },
     { subject: 'Finance', value: Math.min((finance / 10) * 100, 100), fullMark: 100 },
-    { subject: 'Education', value: Math.min((education / 20) * 100, 100), fullMark: 100 },
   ];
 
   const getTier = (s: number) => {
@@ -133,19 +133,19 @@ const IdentityPage: React.FC = () => {
 
         <div className="bg-muted p-6 grid grid-cols-2 md:grid-cols-4 gap-4 divide-y md:divide-y-0 md:divide-x divide-border border-t border-border">
           <div className="text-center pt-2 md:pt-0">
-            <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Real World</div>
-            <div className="text-xl md:text-2xl font-black text-foreground">{physical}<span className="text-sm text-muted-foreground font-medium">/40</span></div>
-            <div className="text-[10px] text-emerald-600 font-bold bg-emerald-50 inline-block px-2 py-0.5 rounded-full mt-1">Proof of Humanity</div>
-          </div>
-          <div className="text-center pt-2 md:pt-0">
             <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Social</div>
-            <div className="text-xl md:text-2xl font-black text-foreground">{social}<span className="text-sm text-muted-foreground font-medium">/30</span></div>
+            <div className="text-xl md:text-2xl font-black text-foreground">{social}<span className="text-sm text-muted-foreground font-medium">/40</span></div>
             <div className="text-[10px] text-blue-600 font-bold bg-blue-50 inline-block px-2 py-0.5 rounded-full mt-1">Influence</div>
           </div>
-          <div className="text-center pt-4 md:pt-0">
+          <div className="text-center pt-2 md:pt-0">
             <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Education</div>
-            <div className="text-xl md:text-2xl font-black text-foreground">{education}<span className="text-sm text-muted-foreground font-medium">/20</span></div>
+            <div className="text-xl md:text-2xl font-black text-foreground">{education}<span className="text-sm text-muted-foreground font-medium">/30</span></div>
             <div className="text-[10px] text-purple-600 font-bold bg-purple-50 inline-block px-2 py-0.5 rounded-full mt-1">Skill Badges</div>
+          </div>
+          <div className="text-center pt-4 md:pt-0">
+            <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Real World</div>
+            <div className="text-xl md:text-2xl font-black text-foreground">{physical}<span className="text-sm text-muted-foreground font-medium">/20</span></div>
+            <div className="text-[10px] text-emerald-600 font-bold bg-emerald-50 inline-block px-2 py-0.5 rounded-full mt-1">Proof of Humanity</div>
           </div>
           <div className="text-center pt-4 md:pt-0">
             <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Finance</div>
