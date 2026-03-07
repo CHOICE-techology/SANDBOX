@@ -76,7 +76,7 @@ export const COURSES: Course[] = [
     ]
   },
   {
-    id: 'privacy-203', title: 'Privacy & Zero-Knowledge', level: 'Intermediate', duration: '35 min', points: 10,
+    id: 'privacy-203', title: 'Privacy & Zero-Knowledge', level: 'Intermediate', duration: '35 min', points: 4,
     description: "Deep dive into zero-knowledge proofs, privacy coins, and how to protect your on-chain activity.",
     color: "bg-teal-500",
     lessons: [
