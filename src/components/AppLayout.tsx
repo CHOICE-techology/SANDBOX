@@ -136,7 +136,7 @@ export const AppLayout: React.FC<LayoutProps> = ({ children }) => {
                 onClick={() => setIsWalletModalOpen(true)}
                 className="w-full bg-primary text-primary-foreground font-black py-4 rounded-2xl shadow-glow-primary hover:opacity-90 transition-all transform active:scale-95 uppercase text-xs tracking-widest flex items-center justify-center gap-2"
               >
-                <PlusCircle size={18} /> Connect CHOICE iD
+                <PlusCircle size={18} /> Connect CHOICE ID
               </button>
             )}
           </div>
