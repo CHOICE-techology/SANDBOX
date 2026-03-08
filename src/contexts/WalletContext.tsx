@@ -165,6 +165,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           localStorage.setItem('choice_wallet_address', addr);
           const identity = await resolveIdentity(addr);
           setUserIdentity(identity);
+          // Grant wallet connect reward
+          grantWalletConnectReward(addr).then(r => {
+            if (r.success) triggerRewardAnimation(100, 'Wallet Connected');
+          });
         }
         setIsConnecting(false);
       } else if (method === 'email') {
