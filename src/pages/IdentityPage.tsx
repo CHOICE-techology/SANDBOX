@@ -5,7 +5,7 @@ import { calculateReputation } from '@/services/reputationEngine';
 import { calculateJobMatch } from '@/services/jobMatchingService';
 import { ALL_JOBS } from '@/data/jobsData';
 import { ChoiceButton } from '@/components/ChoiceButton';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import {
   Download, Edit2, Sparkles, FileText, Camera, CheckCircle, Info,
   TrendingUp, Lock, ExternalLink, Shield, Briefcase, Bell, FileCheck,
