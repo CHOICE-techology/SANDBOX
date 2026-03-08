@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Job, JobMatchResult } from '@/types';
 import { calculateJobMatch } from '@/services/jobMatchingService';
 import { ChoiceButton } from '@/components/ChoiceButton';
+import { JobApplicationDialog } from '@/components/JobApplicationDialog';
 import { DollarSign, Zap, Star, MapPin, Search, CheckCircle, AlertTriangle, ArrowUpRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { useWallet } from '@/contexts/WalletContext';
 import { ALL_JOBS } from '@/data/jobsData';
