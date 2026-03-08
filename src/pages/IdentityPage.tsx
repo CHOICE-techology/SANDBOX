@@ -71,7 +71,7 @@ const IdentityPage: React.FC = () => {
     }
   }, []);
 
-  const defaultLayout: Layout[] = [
+  const defaultLayout: GridLayoutItem[] = [
     { i: 'scoreboard', x: 0, y: 0, w: 12, h: 7, minW: 6, minH: 5 },
     { i: 'profile', x: 0, y: 7, w: 5, h: 8, minW: 3, minH: 6 },
     { i: 'verification', x: 5, y: 7, w: 7, h: 8, minW: 4, minH: 6 },
@@ -80,7 +80,7 @@ const IdentityPage: React.FC = () => {
     { i: 'referral', x: 0, y: 24, w: 12, h: 4, minW: 6, minH: 3 },
   ];
 
-  const [layout, setLayout] = useState<Layout[]>(() => {
+  const [layout, setLayout] = useState<GridLayoutItem[]>(() => {
     try {
       const saved = localStorage.getItem('identity_page_layout');
       return saved ? JSON.parse(saved) : defaultLayout;
@@ -89,7 +89,7 @@ const IdentityPage: React.FC = () => {
     }
   });
 
-  const onLayoutChange = (newLayout: Layout[]) => {
+  const onLayoutChange = (newLayout: GridLayoutItem[]) => {
     setLayout(newLayout);
     localStorage.setItem('identity_page_layout', JSON.stringify(newLayout));
   };
