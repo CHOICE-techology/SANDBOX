@@ -69,13 +69,13 @@ const EducationPage: React.FC = () => {
             {completedCourses.map(course => (
               <div
                 key={course.id}
-                className="group relative flex flex-col items-center text-center p-4 rounded-2xl border border-border bg-muted/20 hover:bg-muted/40 transition-all duration-300 hover:shadow-lg"
+                className="group relative flex flex-col items-center text-center p-4 rounded-2xl border border-border bg-muted/20 hover:bg-muted/40 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5"
               >
                 {/* Neon glow ring behind the badge */}
                 <div className={`relative w-16 h-16 mb-3`}>
-                  <div className={`absolute -inset-2 rounded-full bg-gradient-to-br ${course.badgeColor} opacity-0 blur-xl group-hover:opacity-50 transition-opacity duration-500`} />
-                  <div className={`absolute inset-0 rounded-full bg-gradient-to-br ${course.badgeColor} opacity-25 blur-md group-hover:opacity-40 transition-opacity`} />
-                  <div className={`relative w-full h-full rounded-full bg-gradient-to-br ${course.badgeColor} flex items-center justify-center shadow-lg border-2 border-white/20 group-hover:border-white/40 transition-all`}>
+                  <div className={`absolute -inset-3 rounded-full bg-gradient-to-br ${course.badgeColor} opacity-20 blur-xl group-hover:opacity-60 transition-opacity duration-500`} />
+                  <div className={`absolute -inset-1 rounded-full bg-gradient-to-br ${course.badgeColor} opacity-30 blur-md group-hover:opacity-50 transition-opacity`} />
+                  <div className={`relative w-full h-full rounded-full bg-gradient-to-br ${course.badgeColor} flex items-center justify-center shadow-lg border-2 border-white/25 group-hover:border-white/50 transition-all`}>
                     <CourseIcon courseId={course.id} size={24} className="text-white drop-shadow-md" />
                   </div>
                   {/* Checkmark overlay */}
@@ -103,17 +103,20 @@ const EducationPage: React.FC = () => {
           const isCompleted = hasBadge(course.title);
           const level = LEVEL_STYLES[course.level];
           return (
-            <div key={course.id} className={`bg-card border rounded-3xl p-6 shadow-xl flex flex-col relative overflow-hidden group transition-all duration-300 hover:shadow-2xl ${isCompleted ? 'border-emerald-500/30' : 'border-border'}`}>
-              {/* Top neon color bar */}
+            <div key={course.id} className={`bg-card border rounded-3xl p-6 shadow-xl flex flex-col relative overflow-hidden group transition-all duration-500 hover:shadow-2xl ${isCompleted ? 'border-emerald-500/30 shadow-emerald-500/10' : 'border-border'}`}
+              style={{ boxShadow: isCompleted ? undefined : undefined }}
+            >
+              {/* Top neon color bar with glow */}
               <div className={`absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r ${course.badgeColor}`} />
-              <div className={`absolute top-0 left-0 w-full h-8 bg-gradient-to-b ${course.badgeColor} opacity-[0.06] pointer-events-none`} />
+              <div className={`absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r ${course.badgeColor} blur-sm opacity-60`} />
+              <div className={`absolute top-0 left-0 w-full h-12 bg-gradient-to-b ${course.badgeColor} opacity-[0.08] pointer-events-none`} />
 
               {/* Icon + Level + Status */}
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-3">
-                  <div className={`relative w-10 h-10 rounded-xl bg-gradient-to-br ${course.badgeColor} flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow`}>
-                    <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${course.badgeColor} opacity-0 blur-md group-hover:opacity-40 transition-opacity duration-500`} />
-                    <CourseIcon courseId={course.id} size={18} className="relative text-white" />
+                  <div className={`relative w-10 h-10 rounded-xl bg-gradient-to-br ${course.badgeColor} flex items-center justify-center shadow-md transition-shadow`}>
+                    <div className={`absolute -inset-1 rounded-xl bg-gradient-to-br ${course.badgeColor} opacity-20 blur-md group-hover:opacity-60 transition-opacity duration-500`} />
+                    <CourseIcon courseId={course.id} size={18} className="relative text-white drop-shadow-sm" />
                   </div>
                   <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-md border ${level.bg} ${level.text} ${level.border}`}>
                     {course.level}
@@ -146,8 +149,8 @@ const EducationPage: React.FC = () => {
               <div className="mb-4">
                 <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
                   <div
-                    className={`h-full rounded-full transition-all duration-500 bg-gradient-to-r ${course.badgeColor}`}
-                    style={{ width: isCompleted ? '100%' : '0%' }}
+                    className={`h-full rounded-full transition-all duration-500 bg-gradient-to-r ${course.badgeColor} shadow-sm`}
+                    style={{ width: isCompleted ? '100%' : '0%', boxShadow: isCompleted ? '0 0 8px rgba(0,255,200,0.3)' : 'none' }}
                   />
                 </div>
                 <span className="text-[10px] text-muted-foreground mt-1 block">
