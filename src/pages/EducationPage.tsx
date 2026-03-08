@@ -114,6 +114,7 @@ const EducationPage: React.FC = () => {
                   <div className={`relative w-10 h-10 rounded-xl bg-gradient-to-br ${course.badgeColor} flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow`}>
                     <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${course.badgeColor} opacity-0 blur-md group-hover:opacity-40 transition-opacity duration-500`} />
                     <CourseIcon courseId={course.id} size={18} className="relative text-white" />
+                  </div>
                   <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-md border ${level.bg} ${level.text} ${level.border}`}>
                     {course.level}
                   </span>
