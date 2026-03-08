@@ -166,6 +166,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const disconnect = async () => {
     await supabase.auth.signOut();
+    localStorage.removeItem('choice_wallet_method');
+    localStorage.removeItem('choice_wallet_address');
     setAddress(null);
     setUserIdentity(null);
   };
