@@ -322,44 +322,44 @@ const CredentialsPage: React.FC = () => {
         </div>
 
         {socialCredentials.length > 0 && (
-          <div className="border-t border-border pt-12 animate-fade-in">
-            <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.25em] mb-8">SOCIAL CAPITAL ANALYSIS</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="border-t border-border pt-10 animate-fade-in">
+            <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.25em] mb-6">SOCIAL CAPITAL ANALYSIS</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {socialCredentials.map((vc) => (
-                <div key={vc.id} className="bg-[#020617] text-white p-8 rounded-[2rem] shadow-xl relative overflow-hidden group border border-white/5">
-                  <div className="relative z-10">
-                    <div className="flex justify-between items-start mb-6">
-                      <h4 className="font-black text-xl flex items-center gap-2 tracking-tighter">{vc.credentialSubject.platform as string}</h4>
-                      <div className="bg-white/10 px-3 py-1 rounded-lg text-[10px] text-primary font-black uppercase tracking-widest">
+                <div key={vc.id} className="bg-[#020617] text-white rounded-2xl shadow-xl relative overflow-hidden group border border-white/5 flex flex-col">
+                  <div className="relative z-10 p-5 flex flex-col flex-1">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="font-black text-base tracking-tight truncate">{vc.credentialSubject.platform as string}</h4>
+                      <span className="bg-white/10 px-2.5 py-0.5 rounded-md text-[9px] text-primary font-black uppercase tracking-wider shrink-0 ml-2">
                         @{(vc.credentialSubject.handle as string)?.split('/').pop()}
-                      </div>
+                      </span>
                     </div>
-                    <div className="grid grid-cols-2 gap-y-6 gap-x-4">
-                      <div>
-                        <span className="text-slate-500 block text-[10px] font-black uppercase tracking-widest mb-1">Followers</span>
-                        <span className="font-black text-2xl tracking-tighter">{(vc.credentialSubject.followers as number)?.toLocaleString()}</span>
+                    <div className="grid grid-cols-2 gap-3 flex-1">
+                      <div className="bg-white/5 rounded-lg px-3 py-2">
+                        <span className="text-slate-500 block text-[9px] font-black uppercase tracking-widest mb-0.5">Followers</span>
+                        <span className="font-black text-lg tracking-tighter">{(vc.credentialSubject.followers as number)?.toLocaleString() || '—'}</span>
                       </div>
-                      <div>
-                        <span className="text-slate-500 block text-[10px] font-black uppercase tracking-widest mb-1">Engagement</span>
-                        <span className="font-black text-2xl text-primary tracking-tighter">{vc.credentialSubject.engagementRate as string}</span>
+                      <div className="bg-white/5 rounded-lg px-3 py-2">
+                        <span className="text-slate-500 block text-[9px] font-black uppercase tracking-widest mb-0.5">Engagement</span>
+                        <span className="font-black text-lg text-primary tracking-tighter">{(vc.credentialSubject.engagementRate as string) || '—'}</span>
                       </div>
-                      <div>
-                        <span className="text-slate-500 block text-[10px] font-black uppercase tracking-widest mb-1">Bot Risk</span>
-                        <span className="font-black text-2xl text-emerald-400 tracking-tighter">{vc.credentialSubject.botProbability as string}</span>
+                      <div className="bg-white/5 rounded-lg px-3 py-2">
+                        <span className="text-slate-500 block text-[9px] font-black uppercase tracking-widest mb-0.5">Bot Risk</span>
+                        <span className="font-black text-lg text-emerald-400 tracking-tighter">{(vc.credentialSubject.botProbability as string) || '—'}</span>
                       </div>
-                      <div>
-                        <span className="text-slate-500 block text-[10px] font-black uppercase tracking-widest mb-1">Behavior</span>
-                        <span className="font-black text-white text-xs bg-white/10 px-3 py-1.5 rounded-xl inline-block uppercase tracking-widest">{vc.credentialSubject.behaviorScore as string}</span>
+                      <div className="bg-white/5 rounded-lg px-3 py-2">
+                        <span className="text-slate-500 block text-[9px] font-black uppercase tracking-widest mb-0.5">Behavior</span>
+                        <span className="font-bold text-white text-[10px] bg-white/10 px-2 py-1 rounded-md inline-block uppercase tracking-wider leading-tight">{(vc.credentialSubject.behaviorScore as string) || '—'}</span>
                       </div>
                     </div>
                     {vc.credentialSubject.sector && (
-                      <div className="mt-6 pt-4 border-t border-white/10">
-                        <span className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Sector: </span>
-                        <span className="text-white text-sm font-bold">{vc.credentialSubject.sector as string}</span>
+                      <div className="mt-3 pt-3 border-t border-white/10">
+                        <span className="text-slate-500 text-[9px] font-black uppercase tracking-widest">Sector: </span>
+                        <span className="text-white text-xs font-bold">{vc.credentialSubject.sector as string}</span>
                       </div>
                     )}
                   </div>
-                  <div className="absolute -bottom-10 -right-10 text-white/5 group-hover:text-white/10 transition-colors pointer-events-none"><Activity size={180} /></div>
+                  <div className="absolute -bottom-8 -right-8 text-white/[0.03] pointer-events-none"><Activity size={140} /></div>
                 </div>
               ))}
             </div>
