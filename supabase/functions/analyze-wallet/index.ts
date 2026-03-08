@@ -102,12 +102,33 @@ async function analyzeCardanoWallet(address: string) {
 
 async function analyzePolkadotWallet(address: string) {
   try {
+    // Use Subscan v2 API with proper headers
     const res = await fetch('https://polkadot.api.subscan.io/api/v2/scan/search', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
       body: JSON.stringify({ key: address }),
     });
-    if (!res.ok) return { txCount: 0, balanceDot: 0, chain: 'polkadot' };
+    if (!res.ok) {
+      console.error(`Subscan returned ${res.status} for ${address}`);
+      // Fallback: try the account endpoint
+      const fallbackRes = await fetch(`https://polkadot.api.subscan.io/api/scan/account/tokens`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address }),
+      });
+      if (fallbackRes.ok) {
+        const fallbackData = await fallbackRes.json();
+        return {
+          txCount: 0,
+          balanceDot: parseFloat(fallbackData.data?.native?.[0]?.balance || '0'),
+          chain: 'polkadot',
+        };
+      }
+      return { txCount: 0, balanceDot: 0, chain: 'polkadot' };
+    }
     const data = await res.json();
     const account = data.data?.account;
     return {
@@ -115,7 +136,8 @@ async function analyzePolkadotWallet(address: string) {
       balanceDot: parseFloat(account?.balance || '0'),
       chain: 'polkadot',
     };
-  } catch {
+  } catch (e) {
+    console.error('Polkadot analysis error:', e);
     return { txCount: 0, balanceDot: 0, chain: 'polkadot' };
   }
 }
