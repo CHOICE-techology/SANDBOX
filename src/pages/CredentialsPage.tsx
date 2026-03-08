@@ -199,6 +199,10 @@ const CredentialsPage: React.FC = () => {
       setRecentlyConnected(platformToUse);
       setTimeout(() => setRecentlyConnected(null), 3000);
       setActivePlatform(null);
+      // Grant social connect reward
+      grantSocialConnectReward(identity.address, platformToUse).then(r => {
+        if (r.success) triggerRewardAnimation(100, `${platformToUse} Connected`);
+      });
     } catch (e: any) {
       setLinkError(e.message || 'Analysis failed. Please try again.');
     } finally {
