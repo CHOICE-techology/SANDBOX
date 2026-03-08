@@ -35,6 +35,8 @@ export const JobApplicationDialog: React.FC<JobApplicationDialogProps> = ({
   const [isSending, setIsSending] = useState(false);
   const [applicationSent, setApplicationSent] = useState(false);
 
+  useEffect(() => { setApplicationSent(false); setCv(null); setOptimizedCV(null); setCoverLetter(null); }, [job?.id]);
+
   const reputation = calculateReputation(identity.credentials);
   const score = reputation?.score ?? 0;
   const tier = score >= 80 ? 'Grand Master' : score >= 60 ? 'Expert Verified' : score >= 30 ? 'Verified Identity' : 'New Entrant';
