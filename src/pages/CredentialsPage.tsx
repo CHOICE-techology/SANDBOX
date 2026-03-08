@@ -17,6 +17,9 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+// Platforms that use @handle instead of URL
+const HANDLE_PLATFORMS = new Set(['Telegram', 'Discord', 'Farcaster']);
+
 // URL patterns for each social platform
 const PLATFORM_URL_PATTERNS: Record<string, { regex: RegExp; example: string }> = {
   X: { regex: /^https?:\/\/(www\.)?(twitter\.com|x\.com)\/[a-zA-Z0-9_]+\/?$/, example: 'https://x.com/username' },
@@ -27,9 +30,13 @@ const PLATFORM_URL_PATTERNS: Record<string, { regex: RegExp; example: string }> 
   TikTok: { regex: /^https?:\/\/(www\.)?tiktok\.com\/@[a-zA-Z0-9_.]+\/?$/, example: 'https://tiktok.com/@username' },
   Youtube: { regex: /^https?:\/\/(www\.)?youtube\.com\/(@[a-zA-Z0-9_-]+|channel\/[a-zA-Z0-9_-]+)\/?$/, example: 'https://youtube.com/@username' },
   Meta: { regex: /^https?:\/\/(www\.)?(facebook\.com|meta\.com)\/[a-zA-Z0-9._]+\/?$/, example: 'https://facebook.com/username' },
-  Telegram: { regex: /^https?:\/\/(www\.)?(t\.me|telegram\.me)\/[a-zA-Z0-9_]+\/?$/, example: 'https://t.me/username' },
-  Farcaster: { regex: /^https?:\/\/(www\.)?warpcast\.com\/[a-zA-Z0-9._-]+\/?$/, example: 'https://warpcast.com/username' },
-  Discord: { regex: /^https?:\/\/(www\.)?discord(app)?\.com\/(users\/\d+|channels\/\d+)\/?$/, example: 'https://discord.com/users/123456' },
+};
+
+// Handle validation patterns
+const HANDLE_PATTERNS: Record<string, { regex: RegExp; example: string }> = {
+  Telegram: { regex: /^@?[a-zA-Z][a-zA-Z0-9_]{4,31}$/, example: '@username' },
+  Discord: { regex: /^@?[a-zA-Z0-9_.]{2,32}$/, example: '@username#0000 or @username' },
+  Farcaster: { regex: /^@?[a-zA-Z0-9_.-]{1,20}$/, example: '@username' },
 };
 
 const CredentialsPage: React.FC = () => {
@@ -79,19 +86,30 @@ const CredentialsPage: React.FC = () => {
     setLinkError(null);
   };
 
-  const validateSocialUrl = (url: string, platform: string): boolean => {
-    if (platform === 'Custom') return url.startsWith('http');
+  const isHandlePlatform = (platform: string | null) => platform ? HANDLE_PLATFORMS.has(platform) : false;
+
+  const validateInput = (value: string, platform: string): boolean => {
+    if (platform === 'Custom') return value.startsWith('http');
+    if (HANDLE_PLATFORMS.has(platform)) {
+      const pattern = HANDLE_PATTERNS[platform];
+      return pattern ? pattern.regex.test(value.replace(/^@/, '')) || pattern.regex.test(value) : value.length >= 2;
+    }
     const pattern = PLATFORM_URL_PATTERNS[platform];
-    if (!pattern) return url.startsWith('http');
-    return pattern.regex.test(url);
+    if (!pattern) return value.startsWith('http');
+    return pattern.regex.test(value);
   };
 
   const handleInputChange = (value: string) => {
     setHandleInput(value);
     if (value && activePlatform) {
-      if (!validateSocialUrl(value, activePlatform)) {
-        const pattern = PLATFORM_URL_PATTERNS[activePlatform || ''];
-        setLinkError(`Invalid URL format. Expected: ${pattern?.example || 'https://...'}`);
+      if (!validateInput(value, activePlatform)) {
+        if (isHandlePlatform(activePlatform)) {
+          const pattern = HANDLE_PATTERNS[activePlatform];
+          setLinkError(`Invalid handle. Expected: ${pattern?.example || '@username'}`);
+        } else {
+          const pattern = PLATFORM_URL_PATTERNS[activePlatform];
+          setLinkError(`Invalid URL format. Expected: ${pattern?.example || 'https://...'}`);
+        }
       } else {
         setLinkError(null);
       }
@@ -104,18 +122,22 @@ const CredentialsPage: React.FC = () => {
     const platformToUse = activePlatform === 'Custom' ? customPlatformName : activePlatform;
     if (!platformToUse || !handleInput) return;
 
-    // Validate URL
-    if (!validateSocialUrl(handleInput, activePlatform || '')) {
-      setLinkError('Please provide a valid profile URL before connecting.');
+    // Validate input
+    if (!validateInput(handleInput, activePlatform || '')) {
+      setLinkError(isHandlePlatform(activePlatform) ? 'Please provide a valid handle.' : 'Please provide a valid profile URL before connecting.');
       return;
     }
 
     setIsVerifyingSocial(true);
     setLinkError(null);
     try {
-      // Call real AI-powered analysis edge function
+      // For handle-based platforms, construct a synthetic profile URL for the AI
+      const profileUrl = isHandlePlatform(activePlatform)
+        ? `https://${platformToUse.toLowerCase()}.com/${handleInput.replace(/^@/, '')}`
+        : handleInput;
+
       const { data, error } = await supabase.functions.invoke('analyze-social', {
-        body: { platform: platformToUse, profileUrl: handleInput },
+        body: { platform: platformToUse, profileUrl },
       });
 
       if (error) throw new Error(error.message || 'Analysis failed');
@@ -215,12 +237,12 @@ const CredentialsPage: React.FC = () => {
             <h2 className="text-2xl font-bold tracking-tight text-white">Wallet History Analysis</h2>
             <span className="ml-2 bg-emerald-500/20 text-emerald-400 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-emerald-500/30">Live On-Chain</span>
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-            <div className="lg:col-span-7 space-y-8">
-              <p className="text-slate-400 text-lg leading-relaxed font-medium">
-                Real-time analysis across <span className="text-primary">Ethereum</span>, <span className="text-primary">Arbitrum</span>, <span className="text-primary">Base</span>, <span className="text-primary">Polygon</span>, <span className="text-primary">Bitcoin</span>, and <span className="text-primary">Solana</span>. We query live RPC nodes to verify your on-chain activity.
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+             <div className="lg:col-span-7 space-y-4">
+              <p className="text-slate-400 text-sm leading-relaxed font-medium">
+                Live analysis across <span className="text-primary">Ethereum</span>, <span className="text-primary">Arbitrum</span>, <span className="text-primary">Base</span>, <span className="text-primary">Polygon</span>, <span className="text-primary">Bitcoin</span> &amp; <span className="text-primary">Solana</span>.
               </p>
-              <div className="flex flex-wrap gap-4 items-center">
+              <div className="flex flex-wrap gap-3 items-center">
                 <ChoiceButton onClick={handleAnalyzeWallet} isLoading={isAnalyzing} className="rounded-2xl py-4 px-8 font-black text-xs uppercase tracking-widest shadow-glow-primary">
                   {identity.credentials.some(vc => vc.type.includes('WalletHistoryCredential')) ? 'Refresh Analysis' : 'Analyze Wallet History'}
                 </ChoiceButton>
@@ -239,16 +261,16 @@ const CredentialsPage: React.FC = () => {
                   <AlertCircle size={16} /> {walletError}
                 </div>
               )}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-4 gap-2">
                 {[
-                  { label: 'Account Age', value: blockchainStats?.accountAge || '—' },
-                  { label: 'Total Volume', value: blockchainStats?.totalVolume || '—', color: 'text-primary' },
-                  { label: 'Assets Held', value: blockchainStats?.assetsHeld || '—', color: 'text-purple-400' },
-                  { label: 'Est. Net Value', value: blockchainStats?.netValue || '—', color: 'text-emerald-400' }
+                  { label: 'Age', value: blockchainStats?.accountAge || '—' },
+                  { label: 'Volume', value: blockchainStats?.totalVolume || '—', color: 'text-primary' },
+                  { label: 'Assets', value: blockchainStats?.assetsHeld || '—', color: 'text-purple-400' },
+                  { label: 'Net Value', value: blockchainStats?.netValue || '—', color: 'text-emerald-400' }
                 ].map((stat, i) => (
-                  <div key={i} className="bg-white/5 p-4 md:p-5 rounded-2xl border border-white/10 backdrop-blur-sm">
-                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">{stat.label}</span>
-                    <span className={cn("text-base md:text-lg font-black tracking-tight", stat.color || "text-white")}>{stat.value}</span>
+                  <div key={i} className="bg-white/5 px-3 py-2.5 rounded-xl border border-white/10">
+                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-0.5">{stat.label}</span>
+                    <span className={cn("text-sm font-black tracking-tight", stat.color || "text-white")}>{stat.value}</span>
                   </div>
                 ))}
               </div>
@@ -300,44 +322,44 @@ const CredentialsPage: React.FC = () => {
         </div>
 
         {socialCredentials.length > 0 && (
-          <div className="border-t border-border pt-12 animate-fade-in">
-            <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.25em] mb-8">SOCIAL CAPITAL ANALYSIS</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="border-t border-border pt-10 animate-fade-in">
+            <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.25em] mb-6">SOCIAL CAPITAL ANALYSIS</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {socialCredentials.map((vc) => (
-                <div key={vc.id} className="bg-[#020617] text-white p-8 rounded-[2rem] shadow-xl relative overflow-hidden group border border-white/5">
-                  <div className="relative z-10">
-                    <div className="flex justify-between items-start mb-6">
-                      <h4 className="font-black text-xl flex items-center gap-2 tracking-tighter">{vc.credentialSubject.platform as string}</h4>
-                      <div className="bg-white/10 px-3 py-1 rounded-lg text-[10px] text-primary font-black uppercase tracking-widest">
+                <div key={vc.id} className="bg-[#020617] text-white rounded-2xl shadow-xl relative overflow-hidden group border border-white/5 flex flex-col">
+                  <div className="relative z-10 p-5 flex flex-col flex-1">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="font-black text-base tracking-tight truncate">{vc.credentialSubject.platform as string}</h4>
+                      <span className="bg-white/10 px-2.5 py-0.5 rounded-md text-[9px] text-primary font-black uppercase tracking-wider shrink-0 ml-2">
                         @{(vc.credentialSubject.handle as string)?.split('/').pop()}
-                      </div>
+                      </span>
                     </div>
-                    <div className="grid grid-cols-2 gap-y-6 gap-x-4">
-                      <div>
-                        <span className="text-slate-500 block text-[10px] font-black uppercase tracking-widest mb-1">Followers</span>
-                        <span className="font-black text-2xl tracking-tighter">{(vc.credentialSubject.followers as number)?.toLocaleString()}</span>
+                    <div className="grid grid-cols-2 gap-3 flex-1">
+                      <div className="bg-white/5 rounded-lg px-3 py-2">
+                        <span className="text-slate-500 block text-[9px] font-black uppercase tracking-widest mb-0.5">Followers</span>
+                        <span className="font-black text-lg tracking-tighter">{(vc.credentialSubject.followers as number)?.toLocaleString() || '—'}</span>
                       </div>
-                      <div>
-                        <span className="text-slate-500 block text-[10px] font-black uppercase tracking-widest mb-1">Engagement</span>
-                        <span className="font-black text-2xl text-primary tracking-tighter">{vc.credentialSubject.engagementRate as string}</span>
+                      <div className="bg-white/5 rounded-lg px-3 py-2">
+                        <span className="text-slate-500 block text-[9px] font-black uppercase tracking-widest mb-0.5">Engagement</span>
+                        <span className="font-black text-lg text-primary tracking-tighter">{(vc.credentialSubject.engagementRate as string) || '—'}</span>
                       </div>
-                      <div>
-                        <span className="text-slate-500 block text-[10px] font-black uppercase tracking-widest mb-1">Bot Risk</span>
-                        <span className="font-black text-2xl text-emerald-400 tracking-tighter">{vc.credentialSubject.botProbability as string}</span>
+                      <div className="bg-white/5 rounded-lg px-3 py-2">
+                        <span className="text-slate-500 block text-[9px] font-black uppercase tracking-widest mb-0.5">Bot Risk</span>
+                        <span className="font-black text-lg text-emerald-400 tracking-tighter">{(vc.credentialSubject.botProbability as string) || '—'}</span>
                       </div>
-                      <div>
-                        <span className="text-slate-500 block text-[10px] font-black uppercase tracking-widest mb-1">Behavior</span>
-                        <span className="font-black text-white text-xs bg-white/10 px-3 py-1.5 rounded-xl inline-block uppercase tracking-widest">{vc.credentialSubject.behaviorScore as string}</span>
+                      <div className="bg-white/5 rounded-lg px-3 py-2">
+                        <span className="text-slate-500 block text-[9px] font-black uppercase tracking-widest mb-0.5">Behavior</span>
+                        <span className="font-bold text-white text-[10px] bg-white/10 px-2 py-1 rounded-md inline-block uppercase tracking-wider leading-tight">{(vc.credentialSubject.behaviorScore as string) || '—'}</span>
                       </div>
                     </div>
                     {vc.credentialSubject.sector && (
-                      <div className="mt-6 pt-4 border-t border-white/10">
-                        <span className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Sector: </span>
-                        <span className="text-white text-sm font-bold">{vc.credentialSubject.sector as string}</span>
+                      <div className="mt-3 pt-3 border-t border-white/10">
+                        <span className="text-slate-500 text-[9px] font-black uppercase tracking-widest">Sector: </span>
+                        <span className="text-white text-xs font-bold">{vc.credentialSubject.sector as string}</span>
                       </div>
                     )}
                   </div>
-                  <div className="absolute -bottom-10 -right-10 text-white/5 group-hover:text-white/10 transition-colors pointer-events-none"><Activity size={180} /></div>
+                  <div className="absolute -bottom-8 -right-8 text-white/[0.03] pointer-events-none"><Activity size={140} /></div>
                 </div>
               ))}
             </div>
@@ -436,7 +458,9 @@ const CredentialsPage: React.FC = () => {
             <p className="text-muted-foreground mb-8 font-medium leading-relaxed">
               {activePlatform === 'Custom'
                 ? "Enter the platform name and your profile URL to verify your social presence."
-                : `Paste your full ${activePlatform} profile URL. We'll validate the format and run an AI-powered reputation analysis.`}
+                : isHandlePlatform(activePlatform)
+                  ? `Enter your ${activePlatform} username or handle. We'll run an AI-powered reputation analysis.`
+                  : `Paste your full ${activePlatform} profile URL. We'll validate the format and run an AI-powered reputation analysis.`}
             </p>
             {activePlatform === 'Custom' && (
               <div className="mb-6">
@@ -446,16 +470,18 @@ const CredentialsPage: React.FC = () => {
               </div>
             )}
             <div className="mb-4">
-              <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3">PROFILE URL</label>
+              <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3">
+                {isHandlePlatform(activePlatform) ? 'USERNAME / HANDLE' : 'PROFILE URL'}
+              </label>
               <input
-                type="url"
+                type={isHandlePlatform(activePlatform) ? 'text' : 'url'}
                 value={handleInput}
                 onChange={(e) => handleInputChange(e.target.value)}
                 className={cn(
                   "w-full bg-muted border rounded-2xl px-5 py-4 outline-none focus:ring-2 transition-all font-medium text-foreground",
                   linkError ? "border-red-500 focus:ring-red-500/20" : "border-border focus:ring-primary/20"
                 )}
-                placeholder={PLATFORM_URL_PATTERNS[activePlatform]?.example || 'https://...'}
+                placeholder={isHandlePlatform(activePlatform) ? (HANDLE_PATTERNS[activePlatform!]?.example || '@username') : (PLATFORM_URL_PATTERNS[activePlatform!]?.example || 'https://...')}
                 autoFocus={activePlatform !== 'Custom'}
               />
             </div>

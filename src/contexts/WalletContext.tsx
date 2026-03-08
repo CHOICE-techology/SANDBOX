@@ -31,6 +31,23 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Listen for Supabase auth state changes (handles OAuth redirect)
   useEffect(() => {
+    // Auto-reconnect persistent wallet (MetaMask)
+    const savedMethod = localStorage.getItem('choice_wallet_method');
+    const savedAddr = localStorage.getItem('choice_wallet_address');
+    if (savedMethod === 'metamask' && savedAddr) {
+      const ethereum = (window as any).ethereum;
+      if (ethereum) {
+        ethereum.request({ method: 'eth_accounts' }).then((accounts: string[]) => {
+          if (accounts.length > 0) {
+            const addr = accounts[0];
+            setAddress(addr);
+            const saved = loadIdentity();
+            if (saved && saved.address === addr) setUserIdentity(saved);
+          }
+        }).catch(() => {});
+      }
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         const user = session.user;
@@ -77,11 +94,21 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
         setUserIdentity(identity);
       } else {
-        // Fallback: check localStorage for wallet-only connections
-        const saved = loadIdentity();
-        if (saved) {
-          setAddress(saved.address);
-          setUserIdentity(saved);
+        // Restore persistent wallet connection from localStorage
+        const savedMethod = localStorage.getItem('choice_wallet_method');
+        const savedAddr = localStorage.getItem('choice_wallet_address');
+        if (savedMethod && savedAddr) {
+          setAddress(savedAddr);
+          const saved = loadIdentity();
+          if (saved && saved.address === savedAddr) {
+            setUserIdentity(saved);
+          }
+        } else {
+          const saved = loadIdentity();
+          if (saved) {
+            setAddress(saved.address);
+            setUserIdentity(saved);
+          }
         }
       }
     });
@@ -95,7 +122,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     try {
       if (method === 'metamask' || method === 'wallet') {
-        // Real MetaMask / browser wallet connection
         const ethereum = (window as any).ethereum;
         if (!ethereum) {
           setAuthError('No wallet extension detected. Please install MetaMask.');
@@ -106,6 +132,9 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (accounts.length > 0) {
           const addr = accounts[0];
           setAddress(addr);
+          // Persist wallet connection
+          localStorage.setItem('choice_wallet_method', 'metamask');
+          localStorage.setItem('choice_wallet_address', addr);
           let identity = loadIdentity();
           if (!identity || identity.address !== addr) {
             identity = {
@@ -154,6 +183,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const disconnect = async () => {
     await supabase.auth.signOut();
+    localStorage.removeItem('choice_wallet_method');
+    localStorage.removeItem('choice_wallet_address');
     setAddress(null);
     setUserIdentity(null);
   };
