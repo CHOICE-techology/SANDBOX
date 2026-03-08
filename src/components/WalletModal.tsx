@@ -77,8 +77,7 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
     const list = q
       ? walletRegistry.filter(w => w.name.toLowerCase().includes(q))
       : walletRegistry;
-    // Don't show already-detected wallets in the grid when not searching
-    return q ? list : list.filter(w => !detectedIds.has(w.id));
+    return list;
   }, [search, detectedIds]);
 
   if (!isOpen) return null;
