@@ -23,6 +23,15 @@ const JobsPage: React.FC = () => {
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
   const [selectedJob, setSelectedJob] = useState<JobWithMatch | null>(null);
   const [jobDialogOpen, setJobDialogOpen] = useState(false);
+  const [choiceBalance, setChoiceBalance] = useState(0);
+
+  const score = identity ? calculateReputation(identity.credentials)?.score ?? 0 : 0;
+
+  useEffect(() => {
+    if (identity?.address) {
+      getChoiceBalance(identity.address).then(b => setChoiceBalance(b));
+    }
+  }, [identity?.address]);
 
   useEffect(() => {
     setIsMatching(true);

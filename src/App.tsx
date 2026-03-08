@@ -35,6 +35,7 @@ const App = () => (
               <Route path="/education" element={<EducationPage />} />
               <Route path="/education/:courseId" element={<LessonPage />} />
               <Route path="/jobs" element={<JobsPage />} />
+              <Route path="/bounties" element={<BountyBoardPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/verify" element={<VerifyPage />} />
               <Route path="/wallet/create" element={<WalletManagerPage />} />
