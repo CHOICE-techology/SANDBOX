@@ -39,9 +39,45 @@ export const grantReward = async (
       body: { user_id: userId, amount, type, reason },
     });
 
+    // supabase.functions.invoke puts non-2xx responses in `error`
+    // For 409 (duplicate), the error context contains the JSON body
     if (error) {
+      // Try to parse the error body for duplicate detection
+      try {
+        let errorBody: any = null;
+        if (error instanceof Response) {
+          errorBody = await error.json();
+        } else if (typeof error === 'object' && 'context' in error) {
+          // FunctionsHttpError stores response in context
+          const ctx = (error as any).context;
+          if (ctx instanceof Response) {
+            errorBody = await ctx.json();
+          } else if (ctx?.json) {
+            errorBody = await ctx.json();
+          }
+        }
+        
+        if (!errorBody) {
+          // Try parsing error message as JSON
+          const msg = error.message || String(error);
+          if (msg.includes('duplicate') || msg.includes('already granted')) {
+            return { success: false, duplicate: true };
+          }
+        }
+
+        if (errorBody?.duplicate) {
+          return { success: false, duplicate: true };
+        }
+      } catch {
+        // If parsing fails, check the message string
+        const msg = error.message || String(error);
+        if (msg.includes('409') || msg.includes('duplicate') || msg.includes('already granted')) {
+          return { success: false, duplicate: true };
+        }
+      }
+
       console.error('Grant reward error:', error);
-      return { success: false, error: error.message };
+      return { success: false, error: error.message || 'Unknown error' };
     }
 
     if (data?.duplicate) {
