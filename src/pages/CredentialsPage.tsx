@@ -245,6 +245,7 @@ const CredentialsPage: React.FC = () => {
     { name: 'Other', icon: PlusCircle, id: 'Custom' },
   ];
 
+  const docTypeIconComponents: Record<string, React.ElementType> = { Diploma: GraduationCap, Certification: BadgeCheck, Award: Award, ID: CreditCard };
   const docTypeIcons: Record<string, string> = { Diploma: '🎓', Certification: '📜', Award: '🏆', ID: '🪪' };
 
 
