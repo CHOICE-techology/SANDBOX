@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 // Chain logos
 import ethereumLogo from '@/assets/logos/ethereum.svg';
 import arbitrumLogo from '@/assets/logos/arbitrum.svg';
+import baseLogo from '@/assets/logos/base.svg';
 import bitcoinLogo from '@/assets/logos/bitcoin.svg';
 import solanaLogo from '@/assets/logos/solana.svg';
 import avalancheLogo from '@/assets/logos/avalanche.svg';
