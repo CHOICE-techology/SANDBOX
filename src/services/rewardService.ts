@@ -53,7 +53,8 @@ export const grantReward = async (
 
     const body = await res.json();
 
-    if (res.status === 409 || body?.duplicate) {
+    // Check for duplicate flag (now returned as 200 instead of 409)
+    if (body?.duplicate) {
       return { success: false, duplicate: true };
     }
 
