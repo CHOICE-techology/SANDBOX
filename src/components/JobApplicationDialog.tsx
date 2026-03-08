@@ -4,7 +4,7 @@ import { mockGenerateCV, mockGenerateBio } from '@/services/cryptoService';
 import { calculateReputation } from '@/services/reputationEngine';
 import { ChoiceButton } from '@/components/ChoiceButton';
 import {
-  Briefcase, Target, Sparkles, FileCheck, PenTool, CheckCircle, Eye, FileText, Download
+  Briefcase, Target, Sparkles, FileCheck, PenTool, CheckCircle, Eye, FileText, Download, Send
 } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription
