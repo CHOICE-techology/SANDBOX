@@ -66,62 +66,53 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [isConnecting, setIsConnecting] = useState(false);
   const [userIdentity, setUserIdentity] = useState<UserIdentity | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [isAuthReady, setIsAuthReady] = useState(false);
+
+  // Handle user sign-in
+  const handleSignIn = useCallback(async (user: any) => {
+    const addr = user.email || user.id;
+    setAddress(addr);
+    const identity = await resolveIdentity(addr, {
+      displayName: user.user_metadata?.full_name || user.user_metadata?.name || user.email,
+      avatar: user.user_metadata?.avatar_url,
+    });
+    setUserIdentity(identity);
+    setIsConnecting(false);
+  }, []);
 
   // Listen for Supabase auth state changes (handles OAuth redirect)
   useEffect(() => {
-    // Auto-reconnect persistent wallet (MetaMask)
-    const savedMethod = localStorage.getItem('choice_wallet_method');
-    const savedAddr = localStorage.getItem('choice_wallet_address');
-    if (savedMethod === 'metamask' && savedAddr) {
-      const ethereum = (window as any).ethereum;
-      if (ethereum) {
-        ethereum.request({ method: 'eth_accounts' }).then(async (accounts: string[]) => {
-          if (accounts.length > 0) {
-            const addr = accounts[0];
-            setAddress(addr);
-            const identity = await resolveIdentity(addr);
-            setUserIdentity(identity);
-          }
-        }).catch(() => {});
-      }
-    }
+    let isMounted = true;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        const user = session.user;
-        const addr = user.email || user.id;
-        setAddress(addr);
-        const identity = await resolveIdentity(addr, {
-          displayName: user.user_metadata?.full_name || user.user_metadata?.name || user.email,
-          avatar: user.user_metadata?.avatar_url,
-        });
-        setUserIdentity(identity);
-        setIsConnecting(false);
-      } else if (event === 'SIGNED_OUT') {
-        setAddress(null);
-        setUserIdentity(null);
-      }
-    });
-
-    // Check existing session
+    // First: restore session (source of truth)
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!isMounted) return;
+      
       if (session?.user) {
-        const user = session.user;
-        const addr = user.email || user.id;
-        setAddress(addr);
-        const identity = await resolveIdentity(addr, {
-          displayName: user.user_metadata?.full_name || user.user_metadata?.name || user.email,
-          avatar: user.user_metadata?.avatar_url,
-        });
-        setUserIdentity(identity);
+        await handleSignIn(session.user);
       } else {
-        // Restore persistent wallet connection from localStorage
+        // Try persistent wallet connection
         const savedMethod = localStorage.getItem('choice_wallet_method');
         const savedAddr = localStorage.getItem('choice_wallet_address');
         if (savedMethod && savedAddr) {
-          setAddress(savedAddr);
-          const identity = await resolveIdentity(savedAddr);
-          setUserIdentity(identity);
+          // Verify MetaMask is still connected
+          if (savedMethod === 'metamask') {
+            const ethereum = (window as any).ethereum;
+            if (ethereum) {
+              try {
+                const accounts: string[] = await ethereum.request({ method: 'eth_accounts' });
+                if (accounts.length > 0 && accounts[0].toLowerCase() === savedAddr.toLowerCase()) {
+                  setAddress(accounts[0]);
+                  const identity = await resolveIdentity(accounts[0]);
+                  setUserIdentity(identity);
+                }
+              } catch {}
+            }
+          } else {
+            setAddress(savedAddr);
+            const identity = await resolveIdentity(savedAddr);
+            setUserIdentity(identity);
+          }
         } else {
           const saved = loadIdentity();
           if (saved) {
@@ -130,10 +121,27 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           }
         }
       }
+      setIsAuthReady(true);
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    // Then: listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!isMounted) return;
+      
+      if (event === 'SIGNED_IN' && session?.user) {
+        // Fire and forget - don't await inside callback
+        handleSignIn(session.user);
+      } else if (event === 'SIGNED_OUT') {
+        setAddress(null);
+        setUserIdentity(null);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, [handleSignIn]);
 
   const connect = async (method?: string, payload?: Record<string, string>) => {
     setIsConnecting(true);
