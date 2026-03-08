@@ -23,6 +23,9 @@ import coreWalletLogo from '@/assets/logos/core-wallet.svg';
 import walletconnectLogo from '@/assets/logos/walletconnect.png';
 import rainbowLogo from '@/assets/logos/rainbow.png';
 import talismanLogo from '@/assets/logos/talisman.png';
+import phantomOfficialLogo from '@/assets/logos/phantom-new.png';
+import trustWalletOfficialLogo from '@/assets/logos/trust-wallet-new.png';
+import coinbaseOfficialLogo from '@/assets/logos/coinbase.webp';
 
 /* ══════════════════════════════════════════════
    Logo components using official assets
