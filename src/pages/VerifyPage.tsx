@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ChoiceButton } from '@/components/ChoiceButton';
 import { Search, CheckCircle, ExternalLink, XCircle, ArrowLeft, Clock, Award, Hash, Shield } from 'lucide-react';
 import { generateReputationHash } from '@/services/cryptoService';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface VerificationRecord {
   address: string;
