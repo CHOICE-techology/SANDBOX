@@ -147,11 +147,13 @@ const IdentityPage: React.FC = () => {
 
   if (!identity) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4">
         <div className="bg-muted p-6 rounded-full">
           <CheckCircle size={64} className="text-muted-foreground/30" />
         </div>
         <h2 className="text-2xl font-bold text-foreground">Connect your CHOICE ID to view your identity.</h2>
+        <p className="text-muted-foreground text-sm max-w-sm">It only takes a few seconds — here's how:</p>
+        <ConnectGuideAnimation />
       </div>
     );
   }
