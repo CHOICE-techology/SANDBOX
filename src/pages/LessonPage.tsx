@@ -7,6 +7,8 @@ import { VerifiableCredential } from '@/types';
 import { addCredential } from '@/services/storageService';
 import { mockUploadToIPFS } from '@/services/cryptoService';
 import { useWallet } from '@/contexts/WalletContext';
+import { grantEducationReward } from '@/services/rewardService';
+import { triggerRewardAnimation } from '@/components/RewardAnimation';
 import LessonContent from '@/components/education/LessonContent';
 import LessonQuiz from '@/components/education/LessonQuiz';
 import LessonComplete from '@/components/education/LessonComplete';
