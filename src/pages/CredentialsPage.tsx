@@ -109,6 +109,10 @@ const CredentialsPage: React.FC = () => {
         await mockUploadToIPFS(historyVC);
         const newIdentity = addCredential(identity, historyVC);
         onUpdateIdentity(newIdentity);
+        // Grant wallet analysis reward
+        grantWalletAnalysisReward(identity.address, targetWallet.address).then(r => {
+          if (r.success) triggerRewardAnimation(30, 'Wallet Analysis');
+        });
       }
     } catch (e: any) {
       setWallets(prev => prev.map((p, i) => i === index ? { ...p, analyzing: false, error: e.message || 'Analysis failed' } : p));
