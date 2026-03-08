@@ -6,6 +6,8 @@ export interface Course {
   points: number;
   description: string;
   color: string;
+  badgeColor: string;
+  icon: string;
   lessons: Lesson[];
 }
 
