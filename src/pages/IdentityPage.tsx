@@ -28,8 +28,11 @@ const IdentityPage: React.FC = () => {
   const [selectedJobForCover, setSelectedJobForCover] = useState<Job | null>(null);
 
   const reputation = identity ? calculateReputation(identity.credentials) : null;
-  const score = reputation.score;
-  const { physical, social, finance, education } = reputation.breakdown.categories;
+  const score = reputation?.score ?? 0;
+  const physical = reputation?.breakdown.categories.physical ?? 0;
+  const social = reputation?.breakdown.categories.social ?? 0;
+  const finance = reputation?.breakdown.categories.finance ?? 0;
+  const education = reputation?.breakdown.categories.education ?? 0;
 
   const safePercent = (val: number, max: number) => {
     const result = (val / max) * 100;
@@ -84,7 +87,7 @@ const IdentityPage: React.FC = () => {
 
   // On-chain verification state
   const verificationData = useMemo(() => {
-    if (!identity.lastAnchorHash) return null;
+    if (!identity?.lastAnchorHash) return null;
     const mockTxHash = `0x${identity.lastAnchorHash?.slice(2, 66) || 'a1b2c3d4e5f6'.repeat(5)}`;
     return {
       date: identity.lastAnchorTimestamp ? new Date(identity.lastAnchorTimestamp).toLocaleString() : null,
@@ -92,7 +95,18 @@ const IdentityPage: React.FC = () => {
       txHash: mockTxHash,
       explorerUrl: `https://sepolia.arbiscan.io/tx/${mockTxHash}`,
     };
-  }, [identity.lastAnchorHash, identity.lastAnchorTimestamp, identity.reputationScore]);
+  }, [identity?.lastAnchorHash, identity?.lastAnchorTimestamp, identity?.reputationScore]);
+
+  if (!identity) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6">
+        <div className="bg-muted p-6 rounded-full">
+          <CheckCircle size={64} className="text-muted-foreground/30" />
+        </div>
+        <h2 className="text-2xl font-bold text-foreground">Please connect your wallet to view your identity.</h2>
+      </div>
+    );
+  }
 
   const handleGenerateCV = async () => {
     setIsGeneratingCV(true);
