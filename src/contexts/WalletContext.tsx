@@ -31,6 +31,23 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Listen for Supabase auth state changes (handles OAuth redirect)
   useEffect(() => {
+    // Auto-reconnect persistent wallet (MetaMask)
+    const savedMethod = localStorage.getItem('choice_wallet_method');
+    const savedAddr = localStorage.getItem('choice_wallet_address');
+    if (savedMethod === 'metamask' && savedAddr) {
+      const ethereum = (window as any).ethereum;
+      if (ethereum) {
+        ethereum.request({ method: 'eth_accounts' }).then((accounts: string[]) => {
+          if (accounts.length > 0) {
+            const addr = accounts[0];
+            setAddress(addr);
+            const saved = loadIdentity();
+            if (saved && saved.address === addr) setUserIdentity(saved);
+          }
+        }).catch(() => {});
+      }
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         const user = session.user;
