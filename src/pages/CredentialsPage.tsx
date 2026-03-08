@@ -86,19 +86,30 @@ const CredentialsPage: React.FC = () => {
     setLinkError(null);
   };
 
-  const validateSocialUrl = (url: string, platform: string): boolean => {
-    if (platform === 'Custom') return url.startsWith('http');
+  const isHandlePlatform = (platform: string | null) => platform ? HANDLE_PLATFORMS.has(platform) : false;
+
+  const validateInput = (value: string, platform: string): boolean => {
+    if (platform === 'Custom') return value.startsWith('http');
+    if (HANDLE_PLATFORMS.has(platform)) {
+      const pattern = HANDLE_PATTERNS[platform];
+      return pattern ? pattern.regex.test(value.replace(/^@/, '')) || pattern.regex.test(value) : value.length >= 2;
+    }
     const pattern = PLATFORM_URL_PATTERNS[platform];
-    if (!pattern) return url.startsWith('http');
-    return pattern.regex.test(url);
+    if (!pattern) return value.startsWith('http');
+    return pattern.regex.test(value);
   };
 
   const handleInputChange = (value: string) => {
     setHandleInput(value);
     if (value && activePlatform) {
-      if (!validateSocialUrl(value, activePlatform)) {
-        const pattern = PLATFORM_URL_PATTERNS[activePlatform || ''];
-        setLinkError(`Invalid URL format. Expected: ${pattern?.example || 'https://...'}`);
+      if (!validateInput(value, activePlatform)) {
+        if (isHandlePlatform(activePlatform)) {
+          const pattern = HANDLE_PATTERNS[activePlatform];
+          setLinkError(`Invalid handle. Expected: ${pattern?.example || '@username'}`);
+        } else {
+          const pattern = PLATFORM_URL_PATTERNS[activePlatform];
+          setLinkError(`Invalid URL format. Expected: ${pattern?.example || 'https://...'}`);
+        }
       } else {
         setLinkError(null);
       }
