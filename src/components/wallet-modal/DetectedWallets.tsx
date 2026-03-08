@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, Loader2, Star } from 'lucide-react';
+import { Check, Loader2 } from 'lucide-react';
 import { WalletEntry } from '@/data/walletRegistry';
 import { WalletLogo } from './WalletLogo';
 import { cn } from '@/lib/utils';
@@ -21,14 +21,10 @@ export const DetectedWallets: React.FC<DetectedWalletsProps> = ({
 }) => {
   if (wallets.length === 0) return null;
 
-  const sorted = [...wallets].sort((a, b) => {
-    const ra = POPULARITY_RANK[a.id] ?? 999;
-    const rb = POPULARITY_RANK[b.id] ?? 999;
-    return ra - rb;
-  });
-
-  const hero = sorted[0];
-  const others = sorted.slice(1);
+  // Pick only the single most popular detected wallet
+  const best = [...wallets].sort((a, b) => {
+    return (POPULARITY_RANK[a.id] ?? 999) - (POPULARITY_RANK[b.id] ?? 999);
+  })[0];
 
   return (
     <div className="mb-5">
@@ -39,10 +35,9 @@ export const DetectedWallets: React.FC<DetectedWalletsProps> = ({
         </span>
       </div>
 
-      {/* Hero — most popular detected wallet */}
       <button
-        onClick={() => onConnect(hero.id)}
-        disabled={connecting === hero.id}
+        onClick={() => onConnect(best.id)}
+        disabled={connecting === best.id}
         className={cn(
           "w-full flex items-center justify-between p-3.5 rounded-xl border",
           "border-primary/30 bg-primary/5 dark:bg-primary/10 hover:bg-primary/10 dark:hover:bg-primary/20",
@@ -50,43 +45,20 @@ export const DetectedWallets: React.FC<DetectedWalletsProps> = ({
         )}
       >
         <div className="flex items-center gap-3">
-          <WalletLogo src={hero.logo} name={hero.name} size={32} className="rounded-lg" />
+          <WalletLogo src={best.logo} name={best.name} size={32} className="rounded-lg" />
           <div className="flex flex-col items-start">
-            <span className="font-bold text-sm text-foreground">{hero.name}</span>
-            <span className="text-[9px] text-muted-foreground font-medium">Recommended</span>
+            <span className="font-bold text-sm text-foreground">{best.name}</span>
+            <span className="text-[9px] text-muted-foreground font-medium">Ready to connect</span>
           </div>
-          <Star size={12} className="text-primary fill-primary" />
         </div>
-        {connecting === hero.id ? (
+        {connecting === best.id ? (
           <Loader2 size={16} className="animate-spin text-primary" />
-        ) : successSet.has(hero.id) ? (
+        ) : successSet.has(best.id) ? (
           <Check size={16} className="text-emerald-500" />
         ) : (
           <span className="text-xs font-black text-primary uppercase tracking-wider">Connect</span>
         )}
       </button>
-
-      {/* Other detected wallets — compact row */}
-      {others.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mt-2">
-          {others.map((wallet) => (
-            <button
-              key={wallet.id}
-              onClick={() => onConnect(wallet.id)}
-              disabled={connecting === wallet.id}
-              className={cn(
-                "flex items-center gap-2 px-3 py-2 rounded-lg border border-border",
-                "bg-muted/30 hover:bg-muted/60 transition-all disabled:opacity-60 text-xs"
-              )}
-            >
-              <WalletLogo src={wallet.logo} name={wallet.name} size={20} className="rounded" />
-              <span className="font-semibold text-foreground">{wallet.name}</span>
-              {connecting === wallet.id && <Loader2 size={12} className="animate-spin text-primary" />}
-              {successSet.has(wallet.id) && <Check size={12} className="text-emerald-500" />}
-            </button>
-          ))}
-        </div>
-      )}
     </div>
   );
 };
