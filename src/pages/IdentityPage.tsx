@@ -17,6 +17,7 @@ import { useWallet } from '@/contexts/WalletContext';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription
 } from '@/components/ui/dialog';
+import { useToast } from '@/hooks/use-toast';
 
 const IdentityPage: React.FC = () => {
   const { userIdentity: identity, updateIdentity: onUpdateIdentity } = useWallet();
