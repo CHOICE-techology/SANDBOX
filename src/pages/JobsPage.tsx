@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Job, JobMatchResult } from '@/types';
 import { calculateJobMatch } from '@/services/jobMatchingService';
 import { ChoiceButton } from '@/components/ChoiceButton';
+import { JobApplicationDialog } from '@/components/JobApplicationDialog';
 import { DollarSign, Zap, Star, MapPin, Search, CheckCircle, AlertTriangle, ArrowUpRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { useWallet } from '@/contexts/WalletContext';
 import { ALL_JOBS } from '@/data/jobsData';
@@ -11,13 +12,14 @@ const ITEMS_PER_PAGE = 15;
 type JobWithMatch = Job & { matchResult?: JobMatchResult };
 
 const JobsPage: React.FC = () => {
-  const { userIdentity: identity } = useWallet();
+  const { userIdentity: identity, updateIdentity } = useWallet();
   const [filterType, setFilterType] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [applying, setApplying] = useState<string | null>(null);
   const [isMatching, setIsMatching] = useState(true);
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
+  const [selectedJob, setSelectedJob] = useState<JobWithMatch | null>(null);
+  const [jobDialogOpen, setJobDialogOpen] = useState(false);
 
   useEffect(() => {
     setIsMatching(true);
@@ -39,10 +41,11 @@ const JobsPage: React.FC = () => {
 
   useEffect(() => { setVisibleCount(ITEMS_PER_PAGE); }, [filterType, searchQuery]);
 
-  const handleApply = (id: string) => {
+  const handleApply = (job: JobWithMatch) => {
     if (!identity) return;
-    setApplying(id);
-    setTimeout(() => { setApplying(null); alert("Application Sent! Your CHOICE CV and Trust Score have been securely shared."); }, 1500);
+    const matchResult = job.matchResult || { score: job.matchScore || 0, reason: job.matchReason || '', matchingSkills: [], missingSkills: [], recommendations: [] };
+    setSelectedJob({ ...job, matchResult });
+    setJobDialogOpen(true);
   };
 
   const typeCounts = useMemo(() => {
@@ -134,7 +137,7 @@ const JobsPage: React.FC = () => {
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-2 w-full md:w-auto shrink-0">
-                      <ChoiceButton className="w-full md:w-auto" onClick={() => handleApply(job.id)} isLoading={applying === job.id} disabled={!!applying || !identity}>
+                      <ChoiceButton className="w-full md:w-auto" onClick={() => handleApply(job)} disabled={!identity}>
                         {!identity ? 'Connect' : job.type === 'Collaboration' ? 'Join Team' : 'Auto-Apply'}
                       </ChoiceButton>
                       {identity && mr && (
@@ -230,6 +233,15 @@ const JobsPage: React.FC = () => {
           </>
         )}
       </div>
+      {identity && selectedJob && (
+        <JobApplicationDialog
+          open={jobDialogOpen}
+          onOpenChange={setJobDialogOpen}
+          job={{ ...selectedJob, matchResult: selectedJob.matchResult || { score: selectedJob.matchScore || 0, reason: selectedJob.matchReason || '', matchingSkills: [], missingSkills: [], recommendations: [] } }}
+          identity={identity}
+          onUpdateIdentity={updateIdentity}
+        />
+      )}
     </div>
   );
 };
