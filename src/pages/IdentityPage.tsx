@@ -232,6 +232,7 @@ DID: ${identity.did}`;
   const handleJobClick = (job: typeof topJobMatches[0]) => {
     setSelectedJobForPopup(job);
     setJobPopupOpen(true);
+    setAppSent(false);
   };
 
   const handleOptimizeForJob = async () => {
