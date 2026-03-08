@@ -18,9 +18,19 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import GridLayout, { Layout } from 'react-grid-layout';
+import GridLayout from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
+
+interface LayoutItem {
+  i: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  minW?: number;
+  minH?: number;
+}
 
 const IdentityPage: React.FC = () => {
   const { userIdentity: identity, updateIdentity: onUpdateIdentity } = useWallet();
