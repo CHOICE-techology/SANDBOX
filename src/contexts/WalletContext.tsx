@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { UserIdentity } from '../types';
-import { loadIdentity, saveIdentity, syncIdentity, loadIdentityWithSync } from '../services/storageService';
+import { loadIdentity, saveIdentity, syncIdentity, loadIdentityWithSync, clearIdentity } from '../services/storageService';
 import { generateDID, calculateReputationScore } from '../services/cryptoService';
 import { supabase } from '@/integrations/supabase/client';
 
