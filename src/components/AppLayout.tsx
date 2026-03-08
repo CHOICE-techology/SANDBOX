@@ -49,6 +49,7 @@ export const AppLayout: React.FC<LayoutProps> = ({ children }) => {
       title: 'GROWTH',
       items: [
         { name: 'Education', href: '/education', icon: BookOpen },
+        { name: 'Bounty Board', href: '/bounties', icon: Target },
         { name: 'Jobs & Gigs', href: '/jobs', icon: Briefcase },
       ]
     },
