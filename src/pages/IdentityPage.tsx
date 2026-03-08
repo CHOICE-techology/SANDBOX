@@ -359,7 +359,8 @@ DID: ${identity.did}`;
         <GridLayout
           className="layout"
           layout={layout}
-          gridConfig={{ cols: 12, rowHeight: 50 }}
+          cols={12}
+          rowHeight={50}
           width={containerWidth}
           onLayoutChange={(newLayout: any) => onLayoutChange(newLayout)}
           draggableHandle=".drag-handle"
