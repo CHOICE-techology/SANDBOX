@@ -233,6 +233,15 @@ const JobsPage: React.FC = () => {
           </>
         )}
       </div>
+      {identity && selectedJob && (
+        <JobApplicationDialog
+          open={jobDialogOpen}
+          onOpenChange={setJobDialogOpen}
+          job={{ ...selectedJob, matchResult: selectedJob.matchResult || { score: selectedJob.matchScore || 0, reason: selectedJob.matchReason || '', matchingSkills: [], missingSkills: [], recommendations: [] } }}
+          identity={identity}
+          onUpdateIdentity={updateIdentity}
+        />
+      )}
     </div>
   );
 };
