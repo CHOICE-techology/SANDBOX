@@ -56,6 +56,11 @@ const LessonComplete: React.FC<LessonCompleteProps> = ({ course, correctCount, o
           <span className="block text-2xl font-extrabold text-foreground">+{course.points}</span>
           <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Points</span>
         </div>
+        <div className="bg-card border border-border rounded-2xl px-6 py-4 text-center">
+          <span className="text-primary text-xl font-black block mb-1.5">◈</span>
+          <span className="block text-2xl font-extrabold text-primary">+40</span>
+          <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">CHOICE</span>
+        </div>
       </div>
 
       {/* Earned badge — redesigned */}
