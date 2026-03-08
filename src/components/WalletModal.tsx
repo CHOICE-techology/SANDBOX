@@ -21,7 +21,8 @@ interface WalletModalProps {
 const EDGE_FN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/social-auth`;
 
 export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => {
-  const { connect, authError, userIdentity, updateIdentity } = useWallet();
+  const navigate = useNavigate();
+  const { connect, authError, userIdentity, updateIdentity, isConnected } = useWallet();
   const [connecting, setConnecting] = useState<string | null>(null);
   const [successSet, setSuccessSet] = useState<Set<string>>(new Set());
   const [localError, setLocalError] = useState<string | null>(null);
