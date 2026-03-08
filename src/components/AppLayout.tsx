@@ -128,7 +128,17 @@ export const AppLayout: React.FC<LayoutProps> = ({ children }) => {
             ))}
           </nav>
 
-          <div className="mt-auto pt-8 border-t border-border">
+          <div className="mt-auto pt-8 border-t border-border space-y-4">
+            {/* CHOICE Balance (always visible when connected) */}
+            {address && (
+              <div className="bg-[hsl(var(--dark))] rounded-2xl px-4 py-3 border border-border/10">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">CHOICE</span>
+                  <span className="text-primary font-black text-lg tracking-tighter">◈ {choiceBalance.toLocaleString()}</span>
+                </div>
+              </div>
+            )}
+
             {address ? (
               <div className="bg-muted rounded-3xl p-5 border border-border">
                 <div className="flex items-center gap-2 mb-3">
