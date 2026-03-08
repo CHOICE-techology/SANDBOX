@@ -226,10 +226,17 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
 
           {/* Wallet search + grid */}
           <div className="mb-4">
-            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em]">
-              Connect a wallet
-            </span>
-            <div className="mt-2.5">
+            <div className="flex items-center justify-between mb-2.5">
+              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em]">
+                Connect a wallet
+              </span>
+              {!search && (
+                <span className="text-[9px] text-muted-foreground">
+                  Search for 50+ wallets
+                </span>
+              )}
+            </div>
+            <div className="mt-2">
               <WalletSearchBar value={search} onChange={setSearch} />
               <WalletGrid
                 wallets={filteredWallets}
@@ -237,6 +244,7 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
                 successSet={successSet}
                 detectedIds={detectedIds}
                 onConnect={handleWalletConnect}
+                isSearching={!!search.trim()}
               />
             </div>
           </div>

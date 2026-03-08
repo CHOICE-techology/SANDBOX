@@ -9,7 +9,11 @@ interface WalletGridProps {
   successSet: Set<string>;
   detectedIds: Set<string>;
   onConnect: (walletId: string) => void;
+  isSearching: boolean;
 }
+
+// The 6 most popular wallets to show by default
+const TOP_6_IDS = ['metamask', 'phantom', 'coinbase', 'trust', 'rainbow', 'walletconnect'];
 
 export const WalletGrid: React.FC<WalletGridProps> = ({
   wallets,
@@ -17,18 +21,24 @@ export const WalletGrid: React.FC<WalletGridProps> = ({
   successSet,
   detectedIds,
   onConnect,
+  isSearching,
 }) => {
-  if (wallets.length === 0) {
+  // When not searching, show only top 6 (excluding detected ones)
+  const displayWallets = isSearching
+    ? wallets
+    : wallets.filter(w => TOP_6_IDS.includes(w.id));
+
+  if (displayWallets.length === 0) {
     return (
       <p className="text-sm text-muted-foreground text-center py-6">
-        No wallets match your search.
+        {isSearching ? 'No wallets match your search.' : 'No wallets available.'}
       </p>
     );
   }
 
   return (
     <div className="grid grid-cols-3 gap-2">
-      {wallets.map((wallet) => (
+      {displayWallets.map((wallet) => (
         <button
           key={wallet.id}
           onClick={() => onConnect(wallet.id)}
