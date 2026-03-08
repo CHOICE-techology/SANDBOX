@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { X, Shield } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useWallet } from '@/contexts/WalletContext';
 import { addCredential } from '@/services/storageService';
 import { mockConnectSocial, mockUploadToIPFS } from '@/services/cryptoService';
@@ -20,12 +21,21 @@ interface WalletModalProps {
 const EDGE_FN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/social-auth`;
 
 export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => {
-  const { connect, authError, userIdentity, updateIdentity } = useWallet();
+  const navigate = useNavigate();
+  const { connect, authError, userIdentity, updateIdentity, isConnected } = useWallet();
   const [connecting, setConnecting] = useState<string | null>(null);
   const [successSet, setSuccessSet] = useState<Set<string>>(new Set());
   const [localError, setLocalError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [detectedIds, setDetectedIds] = useState<Set<string>>(new Set());
+
+  // Close modal and navigate when connected
+  useEffect(() => {
+    if (isOpen && isConnected) {
+      onClose();
+      navigate('/');
+    }
+  }, [isOpen, isConnected, onClose, navigate]);
 
   // Detect browser wallets on mount
   useEffect(() => {
