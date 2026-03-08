@@ -40,26 +40,6 @@ const HANDLE_PATTERNS: Record<string, { regex: RegExp; example: string }> = {
 
 
 
-/** Generate human-readable insights from wallet stats */
-function deriveInsights(stats: BlockchainStats): string[] {
-  const insights: string[] = [];
-  const tx = stats.txCount;
-  if (tx > 500) insights.push('Power user — highly active on-chain');
-  else if (tx > 100) insights.push('Regular on-chain activity detected');
-  else if (tx > 10) insights.push('Moderate on-chain presence');
-  else insights.push('Early-stage wallet — limited activity');
-
-  if (stats.activeChains && stats.activeChains.length > 2) {
-    insights.push(`Multi-chain user across ${stats.activeChains.length} networks`);
-  }
-  if (stats.accountAge === '3+ Yrs') insights.push('Long-standing wallet — established history');
-  else if (stats.accountAge === '2+ Yrs') insights.push('Mature wallet with consistent usage');
-
-  if (stats.netValue && !stats.netValue.includes('$0')) {
-    insights.push('Holds real asset value');
-  }
-  return insights.slice(0, 3);
-}
 
 const CredentialsPage: React.FC = () => {
   const { userIdentity: identity, updateIdentity: onUpdateIdentity } = useWallet();
