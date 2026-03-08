@@ -82,6 +82,10 @@ const LessonPage: React.FC = () => {
       const newIdentity = addCredential(identity, badgeVC);
       onUpdateIdentity(newIdentity);
       setCompleted(true);
+      // Grant education reward
+      grantEducationReward(identity.address, course.id).then(r => {
+        if (r.success) triggerRewardAnimation(40, `${course.title} Completed`);
+      });
     } catch (e) {
       console.error(e);
     } finally {
