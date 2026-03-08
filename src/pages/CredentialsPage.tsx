@@ -17,6 +17,9 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+// Platforms that use @handle instead of URL
+const HANDLE_PLATFORMS = new Set(['Telegram', 'Discord', 'Farcaster']);
+
 // URL patterns for each social platform
 const PLATFORM_URL_PATTERNS: Record<string, { regex: RegExp; example: string }> = {
   X: { regex: /^https?:\/\/(www\.)?(twitter\.com|x\.com)\/[a-zA-Z0-9_]+\/?$/, example: 'https://x.com/username' },
@@ -27,9 +30,13 @@ const PLATFORM_URL_PATTERNS: Record<string, { regex: RegExp; example: string }> 
   TikTok: { regex: /^https?:\/\/(www\.)?tiktok\.com\/@[a-zA-Z0-9_.]+\/?$/, example: 'https://tiktok.com/@username' },
   Youtube: { regex: /^https?:\/\/(www\.)?youtube\.com\/(@[a-zA-Z0-9_-]+|channel\/[a-zA-Z0-9_-]+)\/?$/, example: 'https://youtube.com/@username' },
   Meta: { regex: /^https?:\/\/(www\.)?(facebook\.com|meta\.com)\/[a-zA-Z0-9._]+\/?$/, example: 'https://facebook.com/username' },
-  Telegram: { regex: /^https?:\/\/(www\.)?(t\.me|telegram\.me)\/[a-zA-Z0-9_]+\/?$/, example: 'https://t.me/username' },
-  Farcaster: { regex: /^https?:\/\/(www\.)?warpcast\.com\/[a-zA-Z0-9._-]+\/?$/, example: 'https://warpcast.com/username' },
-  Discord: { regex: /^https?:\/\/(www\.)?discord(app)?\.com\/(users\/\d+|channels\/\d+)\/?$/, example: 'https://discord.com/users/123456' },
+};
+
+// Handle validation patterns
+const HANDLE_PATTERNS: Record<string, { regex: RegExp; example: string }> = {
+  Telegram: { regex: /^@?[a-zA-Z][a-zA-Z0-9_]{4,31}$/, example: '@username' },
+  Discord: { regex: /^@?[a-zA-Z0-9_.]{2,32}$/, example: '@username#0000 or @username' },
+  Farcaster: { regex: /^@?[a-zA-Z0-9_.-]{1,20}$/, example: '@username' },
 };
 
 const CredentialsPage: React.FC = () => {
