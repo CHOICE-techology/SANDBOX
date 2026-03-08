@@ -7,14 +7,14 @@ import { mockUploadToIPFS, mockVerifyPhysicalDocument } from '@/services/cryptoS
 import { analyzeWalletHistory, BlockchainStats } from '@/services/blockchainService';
 import { supabase } from '@/integrations/supabase/client';
 import { ChoiceButton } from '@/components/ChoiceButton';
-import { ResponsiveContainer, BarChart, Bar, XAxis, Tooltip } from 'recharts';
+import { WalletHistorySection, WalletEntry } from '@/components/WalletHistorySection';
 import {
-  FileText, Check, Wallet, History,
+  FileText, Check,
   Linkedin, Twitter, Facebook, Instagram, Youtube, Globe,
   Zap, X, Upload, FileCheck,
-  Activity, Github,
+  Github,
   Send, MessageSquare, Music,
-  PlusCircle, CheckCircle, AlertCircle, Plus, TrendingUp, Shield, Layers
+  PlusCircle, CheckCircle, AlertCircle, Shield
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -37,38 +37,9 @@ const HANDLE_PATTERNS: Record<string, { regex: RegExp; example: string }> = {
   Farcaster: { regex: /^@?[a-zA-Z0-9_.-]{1,20}$/, example: '@username' },
 };
 
-const SUPPORTED_CHAINS = [
-  'Ethereum', 'Arbitrum', 'Base', 'Avalanche', 'Bitcoin', 'Solana', 'Cardano', 'Polkadot', 'Tezos'
-];
 
-interface WalletEntry {
-  address: string;
-  chain?: string;
-  stats?: BlockchainStats;
-  analyzing?: boolean;
-  error?: string;
-}
 
-/** Generate human-readable insights from wallet stats */
-function deriveInsights(stats: BlockchainStats): string[] {
-  const insights: string[] = [];
-  const tx = stats.txCount;
-  if (tx > 500) insights.push('Power user — highly active on-chain');
-  else if (tx > 100) insights.push('Regular on-chain activity detected');
-  else if (tx > 10) insights.push('Moderate on-chain presence');
-  else insights.push('Early-stage wallet — limited activity');
 
-  if (stats.activeChains && stats.activeChains.length > 2) {
-    insights.push(`Multi-chain user across ${stats.activeChains.length} networks`);
-  }
-  if (stats.accountAge === '3+ Yrs') insights.push('Long-standing wallet — established history');
-  else if (stats.accountAge === '2+ Yrs') insights.push('Mature wallet with consistent usage');
-
-  if (stats.netValue && !stats.netValue.includes('$0')) {
-    insights.push('Holds real asset value');
-  }
-  return insights.slice(0, 3);
-}
 
 const CredentialsPage: React.FC = () => {
   const { userIdentity: identity, updateIdentity: onUpdateIdentity } = useWallet();
@@ -268,9 +239,7 @@ const CredentialsPage: React.FC = () => {
 
   const docTypeIcons: Record<string, string> = { Diploma: '🎓', Certification: '📜', Award: '🏆', ID: '🪪' };
 
-  const totalTx = wallets.reduce((sum, w) => sum + (w.stats?.txCount || 0), 0);
-  const analyzedCount = wallets.filter(w => w.stats).length;
-  const allActiveChains = [...new Set(wallets.flatMap(w => w.stats?.activeChains || (w.stats?.chain ? [w.stats.chain] : [])))];
+
 
   return (
     <div className="space-y-8 animate-fade-in pb-20">
@@ -283,161 +252,7 @@ const CredentialsPage: React.FC = () => {
       </header>
 
       {/* ═══════════════ 1. WALLET HISTORY ANALYSIS ═══════════════ */}
-      <section className="bg-[hsl(var(--dark))] rounded-2xl p-5 md:p-8 shadow-2xl relative overflow-hidden border border-border/10">
-        <div className="absolute top-0 right-0 w-72 h-72 bg-primary/8 rounded-full blur-[100px] pointer-events-none" />
-        <div className="relative z-10">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-2.5">
-              <div className="bg-primary/10 p-2 rounded-lg border border-primary/20"><Wallet size={18} className="text-primary" /></div>
-              <h2 className="text-lg font-black tracking-tight text-white">Wallet History</h2>
-              <span className="bg-emerald-500/15 text-emerald-400 text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-widest border border-emerald-500/20">Live</span>
-            </div>
-            {analyzedCount > 0 && (
-              <div className="hidden md:flex items-center gap-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                <span>{allActiveChains.length} chain{allActiveChains.length !== 1 ? 's' : ''}</span>
-                <span className="w-px h-3 bg-white/10" />
-                <span>{totalTx.toLocaleString()} txns</span>
-              </div>
-            )}
-          </div>
-
-          {/* Chain tags */}
-          <div className="flex flex-wrap gap-1.5 mb-5">
-            {SUPPORTED_CHAINS.map(c => {
-              const active = allActiveChains.some(ac => ac.toLowerCase() === c.toLowerCase());
-              return (
-                <span key={c} className={cn(
-                  "text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider border transition-all",
-                  active
-                    ? "bg-primary/15 text-primary border-primary/25"
-                    : "bg-white/[0.03] text-slate-600 border-white/5"
-                )}>{c}</span>
-              );
-            })}
-          </div>
-
-          {/* Wallet cards */}
-          <div className="space-y-3 mb-4">
-            {wallets.map((w, i) => (
-              <div key={i} className="bg-white/[0.03] border border-white/8 rounded-xl p-4 transition-all hover:border-white/15">
-                {/* Address row */}
-                <div className="flex flex-wrap items-center gap-2 mb-3">
-                  <code className="text-[11px] text-slate-400 font-mono bg-white/5 px-2.5 py-1 rounded-md truncate max-w-[240px] md:max-w-none">{w.address}</code>
-                  {w.stats?.chain && (
-                    <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border border-primary/20">
-                      {w.stats.chain}
-                    </span>
-                  )}
-                  {!w.stats && !w.analyzing && (
-                    <ChoiceButton onClick={() => analyzeWallet(i)} isLoading={false} className="rounded-lg py-1.5 px-4 font-black text-[9px] uppercase tracking-widest">
-                      Analyze
-                    </ChoiceButton>
-                  )}
-                  {w.analyzing && (
-                    <span className="text-primary text-xs font-bold flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
-                      Scanning blockchain...
-                    </span>
-                  )}
-                </div>
-
-                {w.error && (
-                  <div className="flex items-center gap-2 bg-destructive/10 border border-destructive/30 text-destructive px-3 py-2 rounded-lg text-xs font-medium">
-                    <AlertCircle size={14} /> {w.error}
-                  </div>
-                )}
-
-                {w.stats && (
-                  <div className="space-y-3">
-                    {/* Stats grid */}
-                    <div className="grid grid-cols-3 md:grid-cols-5 gap-1.5">
-                      {[
-                        { label: 'Transactions', value: w.stats.txCount.toLocaleString(), icon: Activity },
-                        { label: 'Age', value: w.stats.accountAge, icon: History },
-                        { label: 'Volume', value: w.stats.totalVolume, accent: true },
-                        { label: 'Assets', value: w.stats.assetsHeld, icon: Layers },
-                        { label: 'Net Value', value: w.stats.netValue, highlight: true },
-                      ].map((stat, si) => (
-                        <div key={si} className={cn(
-                          "px-2.5 py-2 rounded-lg border",
-                          stat.highlight
-                            ? "bg-emerald-500/10 border-emerald-500/20"
-                            : "bg-white/[0.04] border-white/8"
-                        )}>
-                          <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-0.5">{stat.label}</span>
-                          <span className={cn(
-                            "text-sm font-black tracking-tight",
-                            stat.highlight ? "text-emerald-400" : stat.accent ? "text-primary" : "text-white"
-                          )}>{stat.value}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Insights */}
-                    <div className="flex flex-wrap gap-1.5">
-                      {deriveInsights(w.stats).map((insight, ii) => (
-                        <span key={ii} className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-400 bg-white/[0.04] border border-white/8 px-2.5 py-1 rounded-md">
-                          <TrendingUp size={10} className="text-primary shrink-0" />
-                          {insight}
-                        </span>
-                      ))}
-                    </div>
-
-                    {/* Activity chart */}
-                    {w.stats.activityData && (
-                      <div className="h-[90px] mt-1">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={w.stats.activityData}>
-                            <Bar dataKey="tx" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
-                            <XAxis dataKey="name" stroke="#334155" fontSize={8} fontWeight={700} tickLine={false} axisLine={false} />
-                            <Tooltip cursor={{ fill: 'rgba(255,255,255,0.03)' }} contentStyle={{ backgroundColor: 'hsl(222 47% 11%)', border: '1px solid hsl(217 33% 17%)', borderRadius: '8px', color: '#F8FAFC', fontSize: '10px' }} />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-                    )}
-
-                    {/* Active chains */}
-                    {w.stats.activeChains && w.stats.activeChains.length > 1 && (
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest mr-1">Active on</span>
-                        {w.stats.activeChains.map(chain => (
-                          <span key={chain} className="bg-white/5 text-slate-300 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border border-white/8">
-                            {chain}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* Add wallet */}
-          {showAddWallet ? (
-            <div className="flex gap-2 items-center animate-fade-in">
-              <input
-                type="text"
-                value={newWalletAddress}
-                onChange={e => setNewWalletAddress(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && addNewWallet()}
-                placeholder="Paste wallet address (any chain)..."
-                className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder:text-slate-600 outline-none focus:ring-2 focus:ring-primary/30 font-mono"
-                autoFocus
-              />
-              <ChoiceButton onClick={addNewWallet} className="rounded-lg py-2.5 px-5 font-black text-[9px] uppercase tracking-widest">Add</ChoiceButton>
-              <button onClick={() => setShowAddWallet(false)} className="text-slate-600 hover:text-white transition-colors"><X size={18} /></button>
-            </div>
-          ) : (
-            <button onClick={() => setShowAddWallet(true)}
-              className="flex items-center gap-2 text-xs text-slate-500 hover:text-primary font-bold transition-colors group">
-              <Plus size={16} className="group-hover:scale-110 transition-transform" />
-              Add wallet from another chain
-            </button>
-          )}
-        </div>
-      </section>
+      <WalletHistorySection wallets={wallets} setWallets={setWallets} onAnalyze={analyzeWallet} />
 
       {/* ═══════════════ 2. REAL-WORLD PROOFS ═══════════════ */}
       <section className="bg-card border border-border rounded-2xl p-5 md:p-8 shadow-sm">
