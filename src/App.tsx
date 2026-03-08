@@ -11,6 +11,7 @@ import CredentialsPage from "./pages/CredentialsPage";
 import EducationPage from "./pages/EducationPage";
 import LessonPage from "./pages/LessonPage";
 import JobsPage from "./pages/JobsPage";
+import BountyBoardPage from "./pages/BountyBoardPage";
 import AboutPage from "./pages/AboutPage";
 import VerifyPage from "./pages/VerifyPage";
 import WalletManagerPage from "./pages/WalletManagerPage";
