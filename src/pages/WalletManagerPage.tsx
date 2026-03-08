@@ -149,19 +149,19 @@ interface WalletProvider {
 }
 
 const ALL_WALLET_PROVIDERS: WalletProvider[] = [
-  { name: "MetaMask", description: "The most popular EVM browser wallet.", Logo: MetaMaskProviderLogo, chains: ["Ethereum", "Arbitrum", "Base", "Avalanche"] },
-  { name: "Coinbase Wallet", description: "Self-custody wallet by Coinbase.", Logo: CoinbaseProviderLogo, chains: ["Ethereum", "Arbitrum", "Base", "Avalanche", "Solana", "Bitcoin"] },
-  { name: "Phantom", description: "Multi-chain wallet for Solana, Ethereum & Bitcoin.", Logo: PhantomProviderLogo, chains: ["Solana", "Ethereum", "Bitcoin"] },
-  { name: "Rainbow", description: "Beautiful Ethereum wallet for NFTs & DeFi.", Logo: RainbowProviderLogo, chains: ["Ethereum", "Arbitrum", "Base", "Avalanche"] },
-  { name: "WalletConnect", description: "Connect any wallet via QR code scan.", Logo: WalletConnectProviderLogo, chains: ["Ethereum", "Arbitrum", "Base", "Avalanche", "Solana", "Polkadot", "Cardano"] },
-  { name: "Talisman", description: "The gateway to Polkadot & Substrate ecosystems.", Logo: TalismanProviderLogo, chains: ["Polkadot", "Ethereum"] },
-  { name: "Eternl", description: "Feature-rich Cardano wallet for staking & DApps.", Logo: EternlProviderLogo, chains: ["Cardano"] },
-  { name: "Nami", description: "Lightweight Cardano browser wallet.", Logo: NamiProviderLogo, chains: ["Cardano"] },
-  { name: "Temple", description: "Tezos wallet for DeFi, NFTs & staking.", Logo: TempleProviderLogo, chains: ["Tezos"] },
-  { name: "Kukai", description: "Social login wallet for Tezos ecosystem.", Logo: KukaiProviderLogo, chains: ["Tezos"] },
-  { name: "Core", description: "Official Avalanche wallet by Ava Labs.", Logo: CoreProviderLogo, chains: ["Avalanche", "Ethereum"] },
-  { name: "Xverse", description: "Bitcoin wallet for Ordinals, BRC-20 & Stacks.", Logo: XverseProviderLogo, chains: ["Bitcoin"] },
-  { name: "Unisat", description: "Bitcoin wallet for BRC-20 tokens & inscriptions.", Logo: UnisatProviderLogo, chains: ["Bitcoin"] },
+  { name: "MetaMask", description: "The most popular EVM browser wallet.", Logo: MetaMaskProviderLogo, chains: ["Ethereum", "Arbitrum", "Base", "Avalanche"], url: "https://metamask.io/download/" },
+  { name: "Coinbase Wallet", description: "Self-custody wallet by Coinbase.", Logo: CoinbaseProviderLogo, chains: ["Ethereum", "Arbitrum", "Base", "Avalanche", "Solana", "Bitcoin"], url: "https://www.coinbase.com/wallet" },
+  { name: "Phantom", description: "Multi-chain wallet for Solana, Ethereum & Bitcoin.", Logo: PhantomProviderLogo, chains: ["Solana", "Ethereum", "Bitcoin"], url: "https://phantom.app/download" },
+  { name: "Rainbow", description: "Beautiful Ethereum wallet for NFTs & DeFi.", Logo: RainbowProviderLogo, chains: ["Ethereum", "Arbitrum", "Base", "Avalanche"], url: "https://rainbow.me/" },
+  { name: "WalletConnect", description: "Connect any wallet via QR code scan.", Logo: WalletConnectProviderLogo, chains: ["Ethereum", "Arbitrum", "Base", "Avalanche", "Solana", "Polkadot", "Cardano"], url: "https://walletconnect.com/" },
+  { name: "Talisman", description: "The gateway to Polkadot & Substrate ecosystems.", Logo: TalismanProviderLogo, chains: ["Polkadot", "Ethereum"], url: "https://talisman.xyz/download" },
+  { name: "Eternl", description: "Feature-rich Cardano wallet for staking & DApps.", Logo: EternlProviderLogo, chains: ["Cardano"], url: "https://eternl.io/" },
+  { name: "Nami", description: "Lightweight Cardano browser wallet.", Logo: NamiProviderLogo, chains: ["Cardano"], url: "https://namiwallet.io/" },
+  { name: "Temple", description: "Tezos wallet for DeFi, NFTs & staking.", Logo: TempleProviderLogo, chains: ["Tezos"], url: "https://templewallet.com/" },
+  { name: "Kukai", description: "Social login wallet for Tezos ecosystem.", Logo: KukaiProviderLogo, chains: ["Tezos"], url: "https://wallet.kukai.app/" },
+  { name: "Core", description: "Official Avalanche wallet by Ava Labs.", Logo: CoreProviderLogo, chains: ["Avalanche", "Ethereum"], url: "https://core.app/" },
+  { name: "Xverse", description: "Bitcoin wallet for Ordinals, BRC-20 & Stacks.", Logo: XverseProviderLogo, chains: ["Bitcoin"], url: "https://www.xverse.app/" },
+  { name: "Unisat", description: "Bitcoin wallet for BRC-20 tokens & inscriptions.", Logo: UnisatProviderLogo, chains: ["Bitcoin"], url: "https://unisat.io/" },
 ];
 
 /* ══════════════════════════════════════════════
