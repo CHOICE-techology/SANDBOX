@@ -10,26 +10,25 @@ interface DetectedWalletsProps {
   onConnect: (walletId: string) => void;
 }
 
-// Popular wallet IDs for priority ranking
-const POPULAR_IDS = ['metamask', 'phantom', 'coinbase', 'trust', 'rainbow', 'walletconnect'];
+const POPULARITY_RANK: Record<string, number> = {
+  metamask: 1, phantom: 2, coinbase: 3, trust: 4, rainbow: 5, walletconnect: 6,
+  rabby: 7, okx: 8, brave: 9, zerion: 10, exodus: 11, keplr: 12,
+};
 
 export const DetectedWallets: React.FC<DetectedWalletsProps> = ({
-  wallets,
-  connecting,
-  successSet,
-  onConnect,
+  wallets, connecting, successSet, onConnect,
 }) => {
   if (wallets.length === 0) return null;
 
-  // Sort wallets: popular ones first, then alphabetically
-  const sortedWallets = [...wallets].sort((a, b) => {
-    const aPopular = POPULAR_IDS.indexOf(a.id);
-    const bPopular = POPULAR_IDS.indexOf(b.id);
-    if (aPopular !== -1 && bPopular !== -1) return aPopular - bPopular;
-    if (aPopular !== -1) return -1;
-    if (bPopular !== -1) return 1;
-    return a.name.localeCompare(b.name);
+  // Sort by popularity rank, pick the single most popular as the "hero"
+  const sorted = [...wallets].sort((a, b) => {
+    const ra = POPULARITY_RANK[a.id] ?? 999;
+    const rb = POPULARITY_RANK[b.id] ?? 999;
+    return ra - rb;
   });
+
+  const hero = sorted[0];
+  const others = sorted.slice(1);
 
   return (
     <div className="mb-5">
@@ -39,40 +38,55 @@ export const DetectedWallets: React.FC<DetectedWalletsProps> = ({
           Detected in your browser
         </span>
       </div>
-      <div className="space-y-1.5">
-        {sortedWallets.map((wallet) => {
-          const isPopular = POPULAR_IDS.includes(wallet.id);
-          return (
+
+      {/* Hero — most popular detected wallet */}
+      <button
+        onClick={() => onConnect(hero.id)}
+        disabled={connecting === hero.id}
+        className={cn(
+          "w-full flex items-center justify-between p-3.5 rounded-xl border",
+          "border-primary/30 bg-primary/5 dark:bg-primary/10 hover:bg-primary/10 dark:hover:bg-primary/20",
+          "transition-all disabled:opacity-60"
+        )}
+      >
+        <div className="flex items-center gap-3">
+          <img src={hero.logo} alt={hero.name} className="w-8 h-8 object-contain rounded-lg" />
+          <div className="flex flex-col items-start">
+            <span className="font-bold text-sm text-foreground">{hero.name}</span>
+            <span className="text-[9px] text-muted-foreground font-medium">Recommended</span>
+          </div>
+          <Star size={12} className="text-primary fill-primary" />
+        </div>
+        {connecting === hero.id ? (
+          <Loader2 size={16} className="animate-spin text-primary" />
+        ) : successSet.has(hero.id) ? (
+          <Check size={16} className="text-emerald-500" />
+        ) : (
+          <span className="text-xs font-black text-primary uppercase tracking-wider">Connect</span>
+        )}
+      </button>
+
+      {/* Other detected wallets — compact row */}
+      {others.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mt-2">
+          {others.map((wallet) => (
             <button
               key={wallet.id}
               onClick={() => onConnect(wallet.id)}
               disabled={connecting === wallet.id}
               className={cn(
-                "w-full flex items-center justify-between p-3 rounded-xl border",
-                isPopular
-                  ? "border-primary/30 bg-primary/5 dark:bg-primary/10 hover:bg-primary/10 dark:hover:bg-primary/20"
-                  : "border-border bg-emerald-50/50 dark:bg-emerald-950/20 hover:bg-emerald-50 dark:hover:bg-emerald-950/40",
-                "transition-all disabled:opacity-60"
+                "flex items-center gap-2 px-3 py-2 rounded-lg border border-border",
+                "bg-muted/30 hover:bg-muted/60 transition-all disabled:opacity-60 text-xs"
               )}
             >
-              <div className="flex items-center gap-3">
-                <img src={wallet.logo} alt={wallet.name} className="w-7 h-7 object-contain rounded-md" />
-                <span className="font-bold text-sm text-foreground">{wallet.name}</span>
-                {isPopular && (
-                  <Star size={12} className="text-primary fill-primary" />
-                )}
-              </div>
-              {connecting === wallet.id ? (
-                <Loader2 size={16} className="animate-spin text-primary" />
-              ) : successSet.has(wallet.id) ? (
-                <Check size={16} className="text-emerald-500" />
-              ) : (
-                <span className="text-xs font-black text-primary uppercase tracking-wider">Connect</span>
-              )}
+              <img src={wallet.logo} alt={wallet.name} className="w-5 h-5 object-contain rounded" />
+              <span className="font-semibold text-foreground">{wallet.name}</span>
+              {connecting === wallet.id && <Loader2 size={12} className="animate-spin text-primary" />}
+              {successSet.has(wallet.id) && <Check size={12} className="text-emerald-500" />}
             </button>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
