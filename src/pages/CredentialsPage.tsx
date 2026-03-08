@@ -239,10 +239,10 @@ const CredentialsPage: React.FC = () => {
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
             <div className="lg:col-span-7 space-y-8">
-              <p className="text-slate-400 text-lg leading-relaxed font-medium">
-                Real-time analysis across <span className="text-primary">Ethereum</span>, <span className="text-primary">Arbitrum</span>, <span className="text-primary">Base</span>, <span className="text-primary">Polygon</span>, <span className="text-primary">Bitcoin</span>, and <span className="text-primary">Solana</span>. We query live RPC nodes to verify your on-chain activity.
+              <p className="text-slate-400 text-sm leading-relaxed font-medium">
+                Live analysis across <span className="text-primary">Ethereum</span>, <span className="text-primary">Arbitrum</span>, <span className="text-primary">Base</span>, <span className="text-primary">Polygon</span>, <span className="text-primary">Bitcoin</span> &amp; <span className="text-primary">Solana</span>.
               </p>
-              <div className="flex flex-wrap gap-4 items-center">
+              <div className="flex flex-wrap gap-3 items-center">
                 <ChoiceButton onClick={handleAnalyzeWallet} isLoading={isAnalyzing} className="rounded-2xl py-4 px-8 font-black text-xs uppercase tracking-widest shadow-glow-primary">
                   {identity.credentials.some(vc => vc.type.includes('WalletHistoryCredential')) ? 'Refresh Analysis' : 'Analyze Wallet History'}
                 </ChoiceButton>
