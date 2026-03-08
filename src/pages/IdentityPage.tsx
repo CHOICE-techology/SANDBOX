@@ -650,7 +650,7 @@ DID: ${identity.did}`;
               </div>
               <div>
                 <h3 className="text-lg font-bold text-foreground">Invite Friends</h3>
-                <p className="text-muted-foreground text-xs">Share & grow the CHOICE community</p>
+                <p className="text-muted-foreground text-xs">Earn <span className="text-primary font-bold">◈ +25 CHOICE</span> when they reach 50 score</p>
               </div>
             </div>
 
