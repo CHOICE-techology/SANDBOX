@@ -77,11 +77,21 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
         setUserIdentity(identity);
       } else {
-        // Fallback: check localStorage for wallet-only connections
-        const saved = loadIdentity();
-        if (saved) {
-          setAddress(saved.address);
-          setUserIdentity(saved);
+        // Restore persistent wallet connection from localStorage
+        const savedMethod = localStorage.getItem('choice_wallet_method');
+        const savedAddr = localStorage.getItem('choice_wallet_address');
+        if (savedMethod && savedAddr) {
+          setAddress(savedAddr);
+          const saved = loadIdentity();
+          if (saved && saved.address === savedAddr) {
+            setUserIdentity(saved);
+          }
+        } else {
+          const saved = loadIdentity();
+          if (saved) {
+            setAddress(saved.address);
+            setUserIdentity(saved);
+          }
         }
       }
     });
