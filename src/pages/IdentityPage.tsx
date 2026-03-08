@@ -150,7 +150,7 @@ const IdentityPage: React.FC = () => {
         <div className="bg-muted p-6 rounded-full">
           <CheckCircle size={64} className="text-muted-foreground/30" />
         </div>
-        <h2 className="text-2xl font-bold text-foreground">Please connect your wallet to view your identity.</h2>
+        <h2 className="text-2xl font-bold text-foreground">Connect your CHOICE ID to view your identity.</h2>
       </div>
     );
   }
