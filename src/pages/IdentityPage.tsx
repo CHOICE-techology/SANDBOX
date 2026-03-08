@@ -6,6 +6,7 @@ import { calculateReputation } from '@/services/reputationEngine';
 import { calculateJobMatch } from '@/services/jobMatchingService';
 import { ALL_JOBS } from '@/data/jobsData';
 import { ChoiceButton } from '@/components/ChoiceButton';
+import { ChoiceBalanceCard } from '@/components/ChoiceBalanceCard';
 import { Link, useLocation } from 'react-router-dom';
 import {
   Download, Edit2, Sparkles, FileText, Camera, CheckCircle, Info,
@@ -361,6 +362,11 @@ DID: ${identity.did}`;
       {/* END SCOREBOARD                                                 */}
       {/* ═══════════════════════════════════════════════════════════════ */}
 
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* CHOICE BALANCE CARD                                            */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      <ChoiceBalanceCard userId={identity.address} />
+
       {/* ── PROFILE + ON-CHAIN VERIFICATION ROW ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
@@ -644,7 +650,7 @@ DID: ${identity.did}`;
               </div>
               <div>
                 <h3 className="text-lg font-bold text-foreground">Invite Friends</h3>
-                <p className="text-muted-foreground text-xs">Share & grow the CHOICE community</p>
+                <p className="text-muted-foreground text-xs">Earn <span className="text-primary font-bold">◈ +25 CHOICE</span> when they reach 50 score</p>
               </div>
             </div>
 

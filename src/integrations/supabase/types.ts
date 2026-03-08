@@ -14,10 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      choice_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          reason: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          reason: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          reason?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           avatar: string | null
           bio: string | null
+          choice_balance: number
           created_at: string
           credentials: Json
           did: string
@@ -32,6 +60,7 @@ export type Database = {
         Insert: {
           avatar?: string | null
           bio?: string | null
+          choice_balance?: number
           created_at?: string
           credentials?: Json
           did: string
@@ -46,6 +75,7 @@ export type Database = {
         Update: {
           avatar?: string | null
           bio?: string | null
+          choice_balance?: number
           created_at?: string
           credentials?: Json
           did?: string

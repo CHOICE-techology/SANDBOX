@@ -6,6 +6,8 @@ import { addCredential } from '@/services/storageService';
 import { mockUploadToIPFS, mockVerifyPhysicalDocument } from '@/services/cryptoService';
 import { analyzeWalletHistory, BlockchainStats } from '@/services/blockchainService';
 import { supabase } from '@/integrations/supabase/client';
+import { grantWalletAnalysisReward, grantSocialConnectReward } from '@/services/rewardService';
+import { triggerRewardAnimation } from '@/components/RewardAnimation';
 import { ChoiceButton } from '@/components/ChoiceButton';
 import { WalletHistorySection, WalletEntry } from '@/components/WalletHistorySection';
 import {
@@ -107,6 +109,10 @@ const CredentialsPage: React.FC = () => {
         await mockUploadToIPFS(historyVC);
         const newIdentity = addCredential(identity, historyVC);
         onUpdateIdentity(newIdentity);
+        // Grant wallet analysis reward
+        grantWalletAnalysisReward(identity.address, targetWallet.address).then(r => {
+          if (r.success) triggerRewardAnimation(30, 'Wallet Analysis');
+        });
       }
     } catch (e: any) {
       setWallets(prev => prev.map((p, i) => i === index ? { ...p, analyzing: false, error: e.message || 'Analysis failed' } : p));
@@ -193,6 +199,10 @@ const CredentialsPage: React.FC = () => {
       setRecentlyConnected(platformToUse);
       setTimeout(() => setRecentlyConnected(null), 3000);
       setActivePlatform(null);
+      // Grant social connect reward
+      grantSocialConnectReward(identity.address, platformToUse).then(r => {
+        if (r.success) triggerRewardAnimation(100, `${platformToUse} Connected`);
+      });
     } catch (e: any) {
       setLinkError(e.message || 'Analysis failed. Please try again.');
     } finally {

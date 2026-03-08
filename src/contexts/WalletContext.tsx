@@ -4,6 +4,8 @@ import { UserIdentity } from '../types';
 import { loadIdentity, saveIdentity, syncIdentity, loadIdentityWithSync, clearIdentity } from '../services/storageService';
 import { generateDID, calculateReputationScore } from '../services/cryptoService';
 import { supabase } from '@/integrations/supabase/client';
+import { grantWalletConnectReward, grantGoogleConnectReward } from '@/services/rewardService';
+import { triggerRewardAnimation } from '@/components/RewardAnimation';
 
 interface WalletContextType {
   address: string | null;
@@ -78,6 +80,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
     setUserIdentity(identity);
     setIsConnecting(false);
+    // Grant Google/OAuth connect reward
+    grantGoogleConnectReward(addr).then(r => {
+      if (r.success) triggerRewardAnimation(100, 'Identity Connected');
+    });
   }, []);
 
   // Listen for Supabase auth state changes (handles OAuth redirect)
@@ -163,6 +169,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           localStorage.setItem('choice_wallet_address', addr);
           const identity = await resolveIdentity(addr);
           setUserIdentity(identity);
+          // Grant wallet connect reward
+          grantWalletConnectReward(addr).then(r => {
+            if (r.success) triggerRewardAnimation(100, 'Wallet Connected');
+          });
         }
         setIsConnecting(false);
       } else if (method === 'email') {

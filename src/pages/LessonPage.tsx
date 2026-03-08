@@ -7,6 +7,8 @@ import { VerifiableCredential } from '@/types';
 import { addCredential } from '@/services/storageService';
 import { mockUploadToIPFS } from '@/services/cryptoService';
 import { useWallet } from '@/contexts/WalletContext';
+import { grantEducationReward } from '@/services/rewardService';
+import { triggerRewardAnimation } from '@/components/RewardAnimation';
 import LessonContent from '@/components/education/LessonContent';
 import LessonQuiz from '@/components/education/LessonQuiz';
 import LessonComplete from '@/components/education/LessonComplete';
@@ -80,6 +82,10 @@ const LessonPage: React.FC = () => {
       const newIdentity = addCredential(identity, badgeVC);
       onUpdateIdentity(newIdentity);
       setCompleted(true);
+      // Grant education reward
+      grantEducationReward(identity.address, course.id).then(r => {
+        if (r.success) triggerRewardAnimation(40, `${course.title} Completed`);
+      });
     } catch (e) {
       console.error(e);
     } finally {
