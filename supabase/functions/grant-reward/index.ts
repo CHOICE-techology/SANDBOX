@@ -34,11 +34,11 @@ Deno.serve(async (req) => {
       .single();
 
     if (txError) {
-      // Duplicate reward (unique constraint violation)
+      // Duplicate reward (unique constraint violation) — return 200 so monitoring doesn't fire
       if (txError.code === "23505") {
         return new Response(
-          JSON.stringify({ error: "Reward already granted", duplicate: true }),
-          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          JSON.stringify({ success: false, duplicate: true, message: "Reward already granted" }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       throw txError;
