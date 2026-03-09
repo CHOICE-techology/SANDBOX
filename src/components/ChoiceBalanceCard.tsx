@@ -331,7 +331,7 @@ export const ChoiceBalanceCard: React.FC<ChoiceBalanceCardProps> = ({ userId, re
                     )}
                   </div>
                   {!isLoading && (
-                    <div className="mt-1.5 h-1 bg-white/[0.06] rounded-full overflow-hidden">
+                    <div className="mt-1.5 h-1 bg-border rounded-full overflow-hidden">
                       <div
                         className={cn('h-full rounded-full transition-all duration-500', {
                           'bg-primary': key === 'identity',
