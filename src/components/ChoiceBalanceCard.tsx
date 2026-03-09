@@ -234,10 +234,9 @@ export const ChoiceBalanceCard: React.FC<ChoiceBalanceCardProps> = ({ userId, re
 
   return (
     <>
-      <div className="bg-[hsl(var(--dark))] rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden border border-border/10">
-        {/* Glow effects */}
-        <div className="absolute top-0 right-0 w-48 h-48 bg-primary rounded-full blur-[100px] opacity-10 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-violet-500 rounded-full blur-[80px] opacity-10 pointer-events-none" />
+      <div className="bg-card rounded-2xl p-5 md:p-7 shadow-lg relative overflow-hidden border border-border">
+        {/* Subtle glow */}
+        <div className="absolute top-0 right-0 w-40 h-40 bg-primary rounded-full blur-[100px] opacity-[0.06] pointer-events-none" />
 
         <div className="relative z-10">
           {/* Header */}
