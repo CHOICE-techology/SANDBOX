@@ -316,7 +316,7 @@ export const ChoiceBalanceCard: React.FC<ChoiceBalanceCardProps> = ({ userId, re
               return (
                 <div
                   key={key}
-                  className="bg-white/[0.04] rounded-xl px-3 py-3 border border-white/[0.06]"
+                  className="bg-muted/60 rounded-xl px-3 py-3 border border-border"
                 >
                   <div className="flex items-center gap-1.5 mb-1.5">
                     <Icon size={12} className={categoryColors[key]} />
