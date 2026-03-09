@@ -456,7 +456,7 @@ export const ChoiceBalanceCard: React.FC<ChoiceBalanceCardProps> = ({ userId, re
                             <div className="border-t border-border pt-2.5 ml-11">
                               <div className="grid grid-cols-2 gap-2 text-[10px]">
                                 <div>
-                                  <span className="text-slate-600 font-bold uppercase tracking-widest">Status</span>
+                                  <span className="text-muted-foreground font-bold uppercase tracking-widest">Status</span>
                                   <div className="flex items-center gap-1 mt-0.5">
                                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                                     <span className="text-emerald-400 font-bold">Claimed</span>
