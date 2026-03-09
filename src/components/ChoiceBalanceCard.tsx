@@ -463,7 +463,7 @@ export const ChoiceBalanceCard: React.FC<ChoiceBalanceCardProps> = ({ userId, re
                                   </div>
                                 </div>
                                 <div>
-                                  <span className="text-slate-600 font-bold uppercase tracking-widest">Category</span>
+                                  <span className="text-muted-foreground font-bold uppercase tracking-widest">Category</span>
                                   <p className={cn('font-bold mt-0.5 capitalize', categoryColors[category])}>
                                     {category}
                                   </p>
