@@ -382,7 +382,7 @@ export const ChoiceBalanceCard: React.FC<ChoiceBalanceCardProps> = ({ userId, re
               {/* Transaction list */}
               <div className="space-y-1.5 max-h-[320px] overflow-y-auto">
                 {filteredTransactions.length === 0 ? (
-                  <div className="text-center py-4 text-slate-600 text-xs">
+                  <div className="text-center py-4 text-muted-foreground text-xs">
                     No {activeFilter} activity yet
                   </div>
                 ) : (
