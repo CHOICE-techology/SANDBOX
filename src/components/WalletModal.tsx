@@ -154,7 +154,8 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
       const ethereum = (window as any).ethereum;
       if (ethereum) {
         try {
-          await connect('metamask');
+          const walletConnected = await connect('metamask');
+          if (!walletConnected) throw new Error('Wallet connection failed');
           setSuccessSet(prev => new Set(prev).add(walletId));
           setConnecting(null);
           setTimeout(() => onClose(), 800);
