@@ -271,7 +271,7 @@ export const SocialReputationHub: React.FC<SocialReputationHubProps> = ({ identi
           {/* Accent top stripe */}
           <div className="h-[2px] w-full" style={{ background: 'linear-gradient(90deg, hsl(var(--primary)), hsl(var(--secondary)), hsl(var(--primary)))' }} />
 
-          <div className="p-5 md:p-6 flex flex-col sm:flex-row items-center gap-6 border-b border-white/[0.07]">
+          <div className="p-5 md:p-6 flex flex-col sm:flex-row items-center gap-6 border-b border-border">
             <div className="flex-shrink-0">
               <SocialScoreRing key={scoreAnimKey} score={overallScore} size={130} label="Social Score" animate />
             </div>
