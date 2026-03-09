@@ -97,12 +97,27 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
     setLocalError(null);
     const url = `${EDGE_FN_URL}?platform=${encodeURIComponent(platformId)}&origin=${encodeURIComponent(window.location.origin)}`;
     const popup = window.open(url, 'choiceid_auth', 'width=500,height=650,left=200,top=100');
+
+    if (!popup) {
+      setLocalError('Popup blocked. Please allow popups and try again.');
+      setConnecting(null);
+      return;
+    }
+
     const timer = setInterval(() => {
-      if (popup && popup.closed) {
+      if (popup.closed) {
         clearInterval(timer);
         setConnecting(prev => prev === platformId ? null : prev);
       }
     }, 500);
+  };
+
+  const normalizeOAuthError = (provider: 'google' | 'apple', message?: string) => {
+    if (!message) return `${provider} sign-in failed. Please try again.`;
+    if (message.toLowerCase().includes('internal error')) {
+      return `${provider} sign-in is temporarily unavailable. Please retry in a moment.`;
+    }
+    return message;
   };
 
   const handleOAuth = async (provider: 'google' | 'apple') => {
@@ -113,11 +128,11 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
         redirect_uri: window.location.origin,
       });
       if (result.error) {
-        setLocalError(result.error.message || `${provider} sign-in failed`);
+        setLocalError(normalizeOAuthError(provider, result.error.message));
         setConnecting(null);
       }
     } catch (err: any) {
-      setLocalError(err.message || `${provider} connection failed`);
+      setLocalError(normalizeOAuthError(provider, err?.message));
       setConnecting(null);
     }
   };

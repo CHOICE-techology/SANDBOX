@@ -12,7 +12,7 @@ interface WalletContextType {
   isConnected: boolean;
   isConnecting: boolean;
   userIdentity: UserIdentity | null;
-  connect: (method?: string, payload?: Record<string, string>) => Promise<void>;
+  connect: (method?: string, payload?: Record<string, string>) => Promise<boolean>;
   disconnect: () => void;
   updateIdentity: (identity: UserIdentity) => void;
   authError: string | null;
