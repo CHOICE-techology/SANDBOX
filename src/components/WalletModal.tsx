@@ -177,6 +177,7 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
           const addr = resp.publicKey.toString();
           const walletConnected = await connect('wallet', { address: addr } as any);
           if (!walletConnected) throw new Error('Wallet connection failed');
+          setSuccessSet(prev => new Set(prev).add(walletId));
           setConnecting(null);
           setTimeout(() => onClose(), 800);
           return;
