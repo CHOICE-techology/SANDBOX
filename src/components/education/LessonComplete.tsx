@@ -10,6 +10,8 @@ interface LessonCompleteProps {
   onBack: () => void;
 }
 
+const CHOICE_REWARD = (course: Course) => course.choiceReward ?? 40;
+
 const LessonComplete: React.FC<LessonCompleteProps> = ({ course, correctCount, onBack }) => {
   const quizTotal = course.lessons.length;
   const scorePercent = Math.round((correctCount / quizTotal) * 100);
