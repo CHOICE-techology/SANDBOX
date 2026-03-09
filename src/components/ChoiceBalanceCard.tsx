@@ -320,7 +320,7 @@ export const ChoiceBalanceCard: React.FC<ChoiceBalanceCardProps> = ({ userId, re
                 >
                   <div className="flex items-center gap-1.5 mb-1.5">
                     <Icon size={12} className={categoryColors[key]} />
-                    <span className="text-slate-500 text-[8px] font-black uppercase tracking-widest">{label}</span>
+                    <span className="text-muted-foreground text-[8px] font-black uppercase tracking-widest">{label}</span>
                   </div>
                   <div className="flex items-baseline justify-between">
                     <span className="text-white text-sm font-black tracking-tighter">
