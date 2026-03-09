@@ -475,7 +475,7 @@ export const ChoiceBalanceCard: React.FC<ChoiceBalanceCardProps> = ({ userId, re
                                   </p>
                                 </div>
                                 <div>
-                                  <span className="text-slate-600 font-bold uppercase tracking-widest">Amount</span>
+                                  <span className="text-muted-foreground font-bold uppercase tracking-widest">Amount</span>
                                   <p className="text-primary font-black mt-0.5">◈ {tx.amount} CHOICE</p>
                                 </div>
                               </div>
