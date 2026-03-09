@@ -361,7 +361,7 @@ export const ChoiceBalanceCard: React.FC<ChoiceBalanceCardProps> = ({ userId, re
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Filter size={10} className="text-slate-600" />
+                  <Filter size={10} className="text-muted-foreground" />
                   {(['all', 'identity', 'education', 'community', 'finance'] as FilterType[]).map((f) => (
                     <button
                       key={f}
