@@ -82,9 +82,9 @@ const LessonPage: React.FC = () => {
       const newIdentity = addCredential(identity, badgeVC);
       onUpdateIdentity(newIdentity);
       setCompleted(true);
-      // Grant education reward — amount matches the course's actual points value
-      grantReward(identity.address, 'education_reward', `course_${course.id}`, course.points).then(r => {
-        if (r.success) triggerRewardAnimation(course.points, `${course.title} Completed`);
+      // Grant 40 CHOICE education reward on course completion
+      grantReward(identity.address, 'education_reward', `course_${course.id}`, 40).then(r => {
+        if (r.success) triggerRewardAnimation(40, `${course.title} Completed`);
       });
     } catch (e) {
       console.error(e);
