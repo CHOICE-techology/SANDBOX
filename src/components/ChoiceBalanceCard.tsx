@@ -254,7 +254,7 @@ export const ChoiceBalanceCard: React.FC<ChoiceBalanceCardProps> = ({ userId, re
               <button
                 onClick={() => fetchData(true)}
                 className={cn(
-                  'p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors',
+                  'p-2 rounded-xl bg-muted hover:bg-muted/70 border border-border transition-colors',
                   isRefreshing && 'animate-spin'
                 )}
                 title="Refresh"
