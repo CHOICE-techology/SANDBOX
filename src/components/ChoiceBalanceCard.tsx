@@ -290,8 +290,8 @@ export const ChoiceBalanceCard: React.FC<ChoiceBalanceCardProps> = ({ userId, re
             </div>
             <div className="flex gap-3">
               <div className="text-right">
-                <span className="text-white text-lg font-black">{totalTransactions}</span>
-                <p className="text-slate-500 text-[8px] font-bold uppercase tracking-widest">Rewards</p>
+                <span className="text-foreground text-lg font-black">{totalTransactions}</span>
+                <p className="text-muted-foreground text-[8px] font-bold uppercase tracking-widest">Rewards</p>
               </div>
               <div className="text-right">
                 <span className="text-white text-lg font-black flex items-center justify-end gap-0.5">
