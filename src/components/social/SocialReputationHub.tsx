@@ -369,8 +369,8 @@ export const SocialReputationHub: React.FC<SocialReputationHubProps> = ({ identi
       {/* ── Empty state ── */}
       {socialCreds.length === 0 && (
         <div
-          className="rounded-2xl p-8 text-center border border-dashed border-white/10"
-          style={{ background: 'linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--dark)) 100%)' }}
+          className="rounded-2xl p-8 text-center border border-dashed border-border"
+          style={{ background: 'hsl(var(--card))' }}
         >
           <div className="w-14 h-14 rounded-2xl bg-secondary/10 border border-secondary/20 flex items-center justify-center mx-auto mb-4"
             style={{ boxShadow: '0 0 24px hsl(var(--secondary)/0.3)' }}>
