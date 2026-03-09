@@ -370,7 +370,7 @@ export const ChoiceBalanceCard: React.FC<ChoiceBalanceCardProps> = ({ userId, re
                         'px-2 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-wider transition-all',
                         activeFilter === f
                           ? 'bg-primary/20 text-primary border border-primary/30'
-                          : 'text-slate-600 hover:text-slate-400 hover:bg-white/5'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                       )}
                     >
                       {f === 'all' ? 'All' : f.slice(0, 3)}
