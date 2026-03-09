@@ -10,11 +10,11 @@ import { VerifiableCredential } from '@/types';
 import { SocialScoreRing } from './SocialScoreRing';
 import { SocialPlatformCard } from './SocialPlatformCard';
 import { ChoiceButton } from '@/components/ChoiceButton';
-import { supabase } from '@/integrations/supabase/client';
+
 import { addCredential } from '@/services/storageService';
 import { mockUploadToIPFS } from '@/services/cryptoService';
 import { grantSocialConnectReward } from '@/services/rewardService';
-import { triggerRewardAnimation } from '@/components/RewardAnimation';
+
 import { getPlatformMeta } from './platformLogos';
 
 const HANDLE_PLATFORMS = new Set(['Telegram', 'Discord', 'Farcaster']);
@@ -201,11 +201,15 @@ export const SocialReputationHub: React.FC<SocialReputationHubProps> = ({ identi
         ? `https://${platformToUse.toLowerCase()}.com/${handleInput.replace(/^@/, '')}`
         : handleInput;
 
-      const { data, error } = await supabase.functions.invoke('analyze-social', {
-        body: { platform: platformToUse, profileUrl },
-      });
-      if (error) throw new Error(error.message || 'Analysis failed');
-      if (data?.error) throw new Error(data.error);
+      // Mock analysis for now, will be replaced by scoreEngine/ollama later
+      const data = {
+        followers: 1000,
+        engagementRate: 5.5,
+        botProbability: 10,
+        platform: platformToUse,
+        platformScore: 85
+      };
+
 
       const vc: VerifiableCredential = {
         id: `urn:uuid:${Math.random().toString(36).substring(2)}`,
@@ -215,16 +219,14 @@ export const SocialReputationHub: React.FC<SocialReputationHubProps> = ({ identi
         credentialSubject: { id: identity.did, ...data },
       };
       await mockUploadToIPFS(vc);
-      const newIdentity = addCredential(identity, vc);
-      onUpdateIdentity(newIdentity);
+      const newIdentity = await addCredential(identity, vc);
+      await onUpdateIdentity(newIdentity);
       setRecentlyConnected(platformToUse);
       setTimeout(() => setRecentlyConnected(null), 4000);
       setActivePlatform(null);
       setHandleInput('');
 
-      grantSocialConnectReward(identity.address, platformToUse).then(r => {
-        if (r.success) triggerRewardAnimation(100, `${platformToUse} Connected`);
-      });
+
     } catch (e: any) {
       setLinkError(e.message || 'Analysis failed. Please try again.');
     } finally {

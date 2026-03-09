@@ -2,9 +2,9 @@ import React, { useState, useMemo } from 'react';
 import { Target, Lock, CheckCircle, Zap, Gift, Bug, Users, Wallet, BookOpen, Shield, Globe, ArrowRight } from 'lucide-react';
 import { ChoiceButton } from '@/components/ChoiceButton';
 import { useWallet } from '@/contexts/WalletContext';
-import { calculateReputation } from '@/services/reputationEngine';
+import { calculateIdentityScore } from '@/services/scoreEngine';
 import { grantReward } from '@/services/rewardService';
-import { triggerRewardAnimation } from '@/components/RewardAnimation';
+
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -139,7 +139,7 @@ const BountyBoardPage: React.FC = () => {
   const [claimingId, setClaimingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>('all');
 
-  const score = identity ? calculateReputation(identity.credentials)?.score ?? 0 : 0;
+  const score = identity ? calculateIdentityScore(identity.credentials) : 0;
   const choiceBalance = 0; // We show tasks regardless; locking is visual
 
   const filteredTasks = useMemo(() => {
@@ -159,7 +159,7 @@ const BountyBoardPage: React.FC = () => {
     try {
       const result = await grantReward(identity.address, task.type, task.reason, task.reward);
       if (result.success) {
-        triggerRewardAnimation(task.reward, task.title);
+
         const newClaimed = new Set(claimedIds);
         newClaimed.add(task.id);
         setClaimedIds(newClaimed);

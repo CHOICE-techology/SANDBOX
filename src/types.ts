@@ -31,6 +31,22 @@ export interface VerifiableCredential {
   ipfsCid?: string;
 }
 
+export interface AIPersona {
+  name: string;
+  role: string;
+  description: string;
+  traits: string[];
+}
+
+export interface HandshakeProtocol {
+  id: string;
+  initiatorDid: string;
+  targetDid: string;
+  timestamp: number;
+  message: string;
+  signature: string;
+}
+
 export interface UserIdentity {
   address: string;
   did: string;
@@ -41,6 +57,7 @@ export interface UserIdentity {
   reputationScore: number;
   lastAnchorHash?: string;
   lastAnchorTimestamp?: number;
+  aiPersona?: AIPersona;
 }
 
 export interface ReputationProof {
@@ -55,7 +72,6 @@ export interface Job {
   title: string;
   company: string;
   type: 'Full-time' | 'Contract' | 'DAO' | 'Collaboration' | 'Gig';
-  salary: string;
   description: string;
   requiredSkills: string[];
   minScore: number;

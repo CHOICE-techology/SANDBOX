@@ -1,5 +1,3 @@
-import { supabase } from '@/integrations/supabase/client';
-
 export interface BlockchainStats {
   txCount: number;
   accountAge: string;
@@ -12,29 +10,23 @@ export interface BlockchainStats {
   balance?: string;
 }
 
+// Wallet analysis mocked for Phase 2/3 (transitioning to local-first)
 export const analyzeWalletHistory = async (address: string): Promise<BlockchainStats> => {
-  const { data, error } = await supabase.functions.invoke('analyze-wallet', {
-    body: { address },
-  });
-
-  if (error) {
-    console.error('Edge function error:', error);
-    throw new Error('Wallet analysis failed');
-  }
-
-  if (data.error) {
-    throw new Error(data.error);
-  }
-
   return {
-    txCount: data.txCount || 0,
-    accountAge: data.accountAge || 'Unknown',
-    totalVolume: data.totalVolume || '0',
-    assetsHeld: data.assetsHeld || '0',
-    netValue: data.netValue || '$0',
-    activityData: data.activityData || [],
-    chain: data.chain,
-    activeChains: data.activeChains,
-    balance: data.balance,
+    txCount: 42,
+    accountAge: '2 years',
+    totalVolume: '15.5 ETH',
+    assetsHeld: '12 tokens',
+    netValue: '$45,000',
+    activityData: [
+      { name: 'Mon', tx: 2 },
+      { name: 'Tue', tx: 5 },
+      { name: 'Wed', tx: 3 },
+      { name: 'Thu', tx: 8 },
+      { name: 'Fri', tx: 4 },
+    ],
+    chain: 'Ethereum',
+    activeChains: ['Ethereum', 'Polygon', 'Arbitrum'],
+    balance: '1.2 ETH',
   };
 };

@@ -1,11 +1,11 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { UserIdentity } from '../types';
 import { loadIdentity, saveIdentity, syncIdentity, loadIdentityWithSync, clearIdentity } from '../services/storageService';
 import { generateDID, calculateReputationScore } from '../services/cryptoService';
-import { supabase } from '@/integrations/supabase/client';
-import { grantWalletConnectReward, grantGoogleConnectReward } from '@/services/rewardService';
-import { triggerRewardAnimation } from '@/components/RewardAnimation';
+import { grantWalletConnectReward } from '@/services/rewardService';
+
+import { useChoiceStore } from '../store/useChoiceStore';
 
 interface WalletContextType {
   address: string | null;
@@ -14,7 +14,7 @@ interface WalletContextType {
   userIdentity: UserIdentity | null;
   connect: (method?: string, payload?: Record<string, string>) => Promise<boolean>;
   disconnect: () => void;
-  updateIdentity: (identity: UserIdentity) => void;
+  updateIdentity: (identity: UserIdentity) => Promise<void>;
   authError: string | null;
 }
 
@@ -31,26 +31,20 @@ export const useWallet = () => {
       userIdentity: null,
       connect: async () => false,
       disconnect: () => {},
-      updateIdentity: () => {},
+      updateIdentity: async () => {},
       authError: null,
     } as WalletContextType;
   }
   return ctx;
 };
 
-/**
- * Helper: given an address, load identity from DB (source of truth) then fallback to localStorage.
- * If nothing exists, creates a new identity and persists it.
- */
 const resolveIdentity = async (
   addr: string,
   meta?: { displayName?: string; avatar?: string }
 ): Promise<UserIdentity> => {
-  // Try DB first, then localStorage
   const existing = await loadIdentityWithSync(addr);
   if (existing) return existing;
 
-  // Create fresh identity
   const identity: UserIdentity = {
     address: addr,
     did: generateDID(addr),
@@ -64,211 +58,85 @@ const resolveIdentity = async (
 };
 
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [address, setAddress] = useState<string | null>(null);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [userIdentity, setUserIdentity] = useState<UserIdentity | null>(null);
-  const [authError, setAuthError] = useState<string | null>(null);
-  const [isAuthReady, setIsAuthReady] = useState(false);
+  const { login, logout, user, authenticated, ready } = usePrivy();
+  const { wallets } = useWallets();
+  
+  const {
+    userIdentity,
+    setUserIdentity,
+    authError,
+    rehydrate,
+    setConnectionState
+  } = useChoiceStore();
 
-  // Handle user sign-in
-  const handleSignIn = useCallback(async (user: any) => {
-    const addr = user.email || user.id;
-    setAddress(addr);
-    const identity = await resolveIdentity(addr, {
-      displayName: user.user_metadata?.full_name || user.user_metadata?.name || user.email,
-      avatar: user.user_metadata?.avatar_url,
-    });
-    setUserIdentity(identity);
-    setIsConnecting(false);
-    // Grant Google/OAuth connect reward
-    grantGoogleConnectReward(addr).then(r => {
-      if (r.success) triggerRewardAnimation(100, 'Identity Connected');
-    });
-  }, []);
+  const wallet = wallets[0];
+  const address = wallet?.address || user?.wallet?.address || null;
 
-  // Listen for Supabase auth state changes (handles OAuth redirect)
   useEffect(() => {
-    let isMounted = true;
+    rehydrate();
+  }, [rehydrate]);
 
-    // First: restore session (source of truth)
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!isMounted) return;
-      
-      if (session?.user) {
-        await handleSignIn(session.user);
-      } else {
-        // Try persistent wallet connection
-        const savedMethod = localStorage.getItem('choice_wallet_method');
-        const savedAddr = localStorage.getItem('choice_wallet_address');
-        if (savedMethod && savedAddr) {
-          // Verify MetaMask is still connected
-          if (savedMethod === 'metamask') {
-            const ethereum = (window as any).ethereum;
-            if (ethereum) {
-              try {
-                const accounts: string[] = await ethereum.request({ method: 'eth_accounts' });
-                if (accounts.length > 0 && accounts[0].toLowerCase() === savedAddr.toLowerCase()) {
-                  setAddress(accounts[0]);
-                  const identity = await resolveIdentity(accounts[0]);
-                  setUserIdentity(identity);
-                }
-              } catch {}
-            }
-          } else {
-            setAddress(savedAddr);
-            const identity = await resolveIdentity(savedAddr);
-            setUserIdentity(identity);
-          }
-        } else {
-          const saved = loadIdentity();
-          if (saved) {
-            setAddress(saved.address);
-            setUserIdentity(saved);
-          }
-        }
-      }
-      setIsAuthReady(true);
-    });
-
-    // Then: listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!isMounted) return;
-      
-      if (event === 'SIGNED_IN' && session?.user) {
-        // Fire and forget - don't await inside callback
-        handleSignIn(session.user);
-      } else if (event === 'SIGNED_OUT') {
-        setAddress(null);
-        setUserIdentity(null);
-      }
-    });
-
-    return () => {
-      isMounted = false;
-      subscription.unsubscribe();
-    };
-  }, [handleSignIn]);
-
-  const connect = async (method?: string, payload?: Record<string, string>): Promise<boolean> => {
-    setIsConnecting(true);
-    setAuthError(null);
-
-    try {
-      if (method === 'metamask' || method === 'wallet') {
-        const ethereum = (window as any).ethereum;
-        if (!ethereum) {
-          setAuthError('No wallet extension detected. Please install MetaMask.');
-          setIsConnecting(false);
-          return false;
-        }
-        const accounts: string[] = await ethereum.request({ method: 'eth_requestAccounts' });
-        if (accounts.length > 0) {
-          const addr = accounts[0];
-          setAddress(addr);
-          localStorage.setItem('choice_wallet_method', 'metamask');
-          localStorage.setItem('choice_wallet_address', addr);
-          const identity = await resolveIdentity(addr);
-          setUserIdentity(identity);
-          // Grant wallet connect reward
-          grantWalletConnectReward(addr).then(r => {
-            if (r.success) triggerRewardAnimation(100, 'Wallet Connected');
-          });
-          setIsConnecting(false);
-          return true;
-        }
-        setIsConnecting(false);
-        return false;
-      } else if (method === 'phantom') {
-        // Phantom wallet: address already obtained from extension, passed in payload
-        const addr = payload?.address;
-        if (!addr) {
-          setAuthError('No Phantom address provided.');
-          setIsConnecting(false);
-          return false;
-        }
-        setAddress(addr);
-        localStorage.setItem('choice_wallet_method', 'phantom');
-        localStorage.setItem('choice_wallet_address', addr);
-        const identity = await resolveIdentity(addr);
+  useEffect(() => {
+    const handleAuth = async () => {
+      if (ready && authenticated && address) {
+        const identity = await resolveIdentity(address, {
+          displayName: user?.email?.address || user?.google?.email || address,
+        });
         setUserIdentity(identity);
-        grantWalletConnectReward(addr).then(r => {
-          if (r.success) triggerRewardAnimation(100, 'Wallet Connected');
-        });
-        setIsConnecting(false);
-        return true;
-      } else if (method === 'email') {
-        const email = payload?.email;
-        if (!email) {
-          setAuthError('Please enter an email address.');
-          setIsConnecting(false);
-          return false;
+        
+        const savedAddr = localStorage.getItem('choice_wallet_address');
+        if (savedAddr !== address) {
+          localStorage.setItem('choice_wallet_address', address);
+          await grantWalletConnectReward(address);
         }
-        const { error } = await supabase.auth.signInWithOtp({
-          email,
-          options: { emailRedirectTo: window.location.origin },
-        });
-        if (error) {
-          setAuthError(error.message);
-          setIsConnecting(false);
-          return false;
-        }
-        setIsConnecting(false);
-        return true;
-      } else if (method === 'google' || method === 'apple') {
-        setIsConnecting(false);
-        return false;
-      } else {
-        setAuthError('Please select a connection method.');
-        setIsConnecting(false);
-        return false;
+      } else if (ready && !authenticated) {
+        setUserIdentity(null);
+        localStorage.removeItem('choice_wallet_address');
       }
+    };
+
+    handleAuth();
+  }, [ready, authenticated, address, user, setUserIdentity]);
+
+  const connect = async (method?: string): Promise<boolean> => {
+    setConnectionState({ authError: null });
+    try {
+      login();
+      return true;
     } catch (err: any) {
       console.error('Connection failed:', err);
-      setAuthError(err.message || 'Connection failed. Please try again.');
-      setIsConnecting(false);
+      setConnectionState({ authError: err.message || 'Connection failed. Please try again.' });
       return false;
     }
   };
 
   const disconnect = useCallback(async () => {
-    try {
-      // Clear Supabase session
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Sign out error:', error);
-      }
-    } catch (err) {
-      console.error('Sign out failed:', err);
-    }
-    
-    // Always clear local state regardless of signOut result
-    localStorage.removeItem('choice_wallet_method');
-    localStorage.removeItem('choice_wallet_address');
-    clearIdentity();
-    setAddress(null);
+    await logout();
+    await clearIdentity();
     setUserIdentity(null);
-    setAuthError(null);
-  }, []);
+    setConnectionState({ authError: null });
+    localStorage.removeItem('choice_wallet_address');
+  }, [logout, setUserIdentity, setConnectionState]);
 
-  const updateIdentity = (newIdentity: UserIdentity) => {
+  const updateIdentity = async (newIdentity: UserIdentity) => {
     const score = calculateReputationScore(newIdentity.credentials);
     const updated = { ...newIdentity, reputationScore: score };
     setUserIdentity(updated);
-    // Sync to both localStorage and database
-    syncIdentity(updated);
   };
 
+  const value = useMemo(() => ({
+    address,
+    isConnected: authenticated && !!address,
+    isConnecting: !ready,
+    userIdentity,
+    connect,
+    disconnect,
+    updateIdentity,
+    authError,
+  }), [address, authenticated, ready, userIdentity, authError, disconnect]);
+
   return (
-    <WalletContext.Provider value={{
-      address,
-      isConnected: !!address,
-      isConnecting,
-      userIdentity,
-      connect,
-      disconnect,
-      updateIdentity,
-      authError,
-    }}>
+    <WalletContext.Provider value={value}>
       {children}
     </WalletContext.Provider>
   );

@@ -5,7 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { WalletProvider } from "@/contexts/WalletContext";
 import { AppLayout } from "@/components/AppLayout";
-import { RewardAnimationOverlay } from "@/components/RewardAnimation";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+
 import IdentityPage from "./pages/IdentityPage";
 import CredentialsPage from "./pages/CredentialsPage";
 import EducationPage from "./pages/EducationPage";
@@ -18,34 +19,54 @@ import WalletManagerPage from "./pages/WalletManagerPage";
 import ProfileSettingsPage from "./pages/ProfileSettingsPage";
 import NotFound from "./pages/NotFound";
 
+import { PrivyProvider } from '@privy-io/react-auth';
+
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <RewardAnimationOverlay />
-      <BrowserRouter>
-        <WalletProvider>
-          <AppLayout>
-            <Routes>
-              <Route path="/" element={<IdentityPage />} />
-              <Route path="/credentials" element={<CredentialsPage />} />
-              <Route path="/education" element={<EducationPage />} />
-              <Route path="/education/:courseId" element={<LessonPage />} />
-              <Route path="/jobs" element={<JobsPage />} />
-              <Route path="/bounties" element={<BountyBoardPage />} />
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="/verify" element={<VerifyPage />} />
-              <Route path="/wallet/create" element={<WalletManagerPage />} />
-              <Route path="/profile/settings" element={<ProfileSettingsPage />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </AppLayout>
-        </WalletProvider>
-      </BrowserRouter>
-    </TooltipProvider>
+    <PrivyProvider
+      appId={import.meta.env.VITE_PRIVY_APP_ID || ""}
+      config={{
+        appearance: {
+          theme: 'dark',
+          accentColor: '#676FFF',
+          logo: '/logo.png', // Fallback to a generic logo if available
+        },
+        embeddedWallets: {
+          ethereum: {
+            createOnLogin: 'users-without-wallets',
+          },
+        },
+      }}
+    >
+      <ErrorBoundary>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+
+          <BrowserRouter>
+            <WalletProvider>
+              <AppLayout>
+                <Routes>
+                  <Route path="/" element={<IdentityPage />} />
+                  <Route path="/credentials" element={<CredentialsPage />} />
+                  <Route path="/education" element={<EducationPage />} />
+                  <Route path="/education/:courseId" element={<LessonPage />} />
+                  <Route path="/jobs" element={<JobsPage />} />
+                  <Route path="/bounties" element={<BountyBoardPage />} />
+                  <Route path="/about" element={<AboutPage />} />
+                  <Route path="/verify" element={<VerifyPage />} />
+                  <Route path="/wallet/create" element={<WalletManagerPage />} />
+                  <Route path="/profile/settings" element={<ProfileSettingsPage />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </AppLayout>
+            </WalletProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ErrorBoundary>
+    </PrivyProvider>
   </QueryClientProvider>
 );
 

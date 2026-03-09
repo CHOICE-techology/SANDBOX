@@ -1,12 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { ConnectGuideAnimation } from '@/components/ConnectGuideAnimation';
+
 import { UserIdentity, GeneratedCV, Job } from '@/types';
 import { mockGenerateCV, mockGenerateBio, generateReputationHash } from '@/services/cryptoService';
-import { calculateReputation } from '@/services/reputationEngine';
+import { calculateReputationBreakdown } from '@/services/scoreEngine';
 import { calculateJobMatch } from '@/services/jobMatchingService';
 import { ALL_JOBS } from '@/data/jobsData';
 import { ChoiceButton } from '@/components/ChoiceButton';
-import { ChoiceBalanceCard } from '@/components/ChoiceBalanceCard';
+
 import { Link, useLocation } from 'react-router-dom';
 import {
   Download, Edit2, Sparkles, FileText, Camera, CheckCircle, Info,
@@ -46,12 +46,12 @@ const IdentityPage: React.FC = () => {
   const [jobPopupOpen, setJobPopupOpen] = useState(false);
   const [selectedJobForPopup, setSelectedJobForPopup] = useState<(Job & { matchResult: { score: number; reason: string; matchingSkills: string[]; missingSkills: string[]; recommendations: string[] } }) | null>(null);
 
-  const reputation = identity ? calculateReputation(identity.credentials) : null;
+  const reputation = identity ? calculateReputationBreakdown(identity.credentials) : null;
   const score = reputation?.score ?? 0;
-  const physical = reputation?.breakdown.categories.physical ?? 0;
-  const social = reputation?.breakdown.categories.social ?? 0;
-  const finance = reputation?.breakdown.categories.finance ?? 0;
-  const education = reputation?.breakdown.categories.education ?? 0;
+  const physical = reputation?.categories.physical ?? 0;
+  const social = reputation?.categories.social ?? 0;
+  const finance = reputation?.categories.finance ?? 0;
+  const education = reputation?.categories.education ?? 0;
 
   const safePercent = (val: number, max: number) => {
     const result = (val / max) * 100;
@@ -154,7 +154,7 @@ const IdentityPage: React.FC = () => {
         </div>
         <h2 className="text-2xl font-bold text-foreground">Connect your CHOICE ID to view your identity.</h2>
         <p className="text-muted-foreground text-sm max-w-sm">It only takes a few seconds — here's how:</p>
-        <ConnectGuideAnimation />
+
       </div>
     );
   }
@@ -281,8 +281,8 @@ DID: ${identity.did}`;
       {/* ═══════════════════════════════════════════════════════════════ */}
       {/* HERO: TRUST SCORE — SCOREBOARD (UNCHANGED)                    */}
       {/* ═══════════════════════════════════════════════════════════════ */}
-      <div className="bg-card border border-border rounded-[2.5rem] shadow-2xl overflow-hidden">
-        <div className="bg-[#020617] p-6 md:p-12 relative">
+      <div className="glass border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden relative group transition-all duration-500 hover:shadow-glow-primary/20">
+        <div className="bg-[#020617]/40 p-6 md:p-12 relative">
           <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
             <CheckCircle size={400} className="text-white" />
           </div>
@@ -320,7 +320,7 @@ DID: ${identity.did}`;
                   <PolarGrid stroke="#334155" strokeDasharray="3 3" />
                   <PolarAngleAxis dataKey="subject" tick={{ fill: '#94A3B8', fontSize: 11, fontWeight: 'bold' }} />
                   <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                  <Radar name="Score" dataKey="value" stroke="#00E5FF" strokeWidth={3} fill="#00E5FF" fillOpacity={0.2} />
+                  <Radar name="Score" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={3} fill="hsl(var(--primary))" fillOpacity={0.3} />
                   <Tooltip
                     contentStyle={{ backgroundColor: '#0F172A', borderColor: '#1E293B', color: '#F8FAFC', borderRadius: '12px' }}
                     itemStyle={{ color: '#00E5FF' }}
@@ -365,15 +365,15 @@ DID: ${identity.did}`;
       {/* ═══════════════════════════════════════════════════════════════ */}
       {/* CHOICE BALANCE CARD                                            */}
       {/* ═══════════════════════════════════════════════════════════════ */}
-      <ChoiceBalanceCard userId={identity.address} />
+
 
       {/* ── PROFILE + ON-CHAIN VERIFICATION ROW ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
         {/* PROFILE CARD — larger, central */}
         <div className="lg:col-span-5">
-          <div className="bg-card border border-border rounded-3xl p-8 md:p-10 shadow-xl flex flex-col items-center text-center relative overflow-hidden h-full">
-            <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-primary/5 to-transparent"></div>
+          <div className="glass border-white/10 rounded-3xl p-8 md:p-10 shadow-xl flex flex-col items-center text-center relative overflow-hidden h-full group transition-all hover:bg-white/5">
+            <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-primary/10 to-transparent"></div>
 
             {/* Settings button */}
             <Link
@@ -428,8 +428,8 @@ DID: ${identity.did}`;
             </div>
 
             {/* Bio */}
-            <div className="bg-muted p-5 rounded-2xl text-muted-foreground text-sm border border-border w-full relative">
-              <span className="absolute -top-2 left-5 bg-card px-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Bio</span>
+            <div className="bg-white/5 p-5 rounded-2xl text-muted-foreground text-sm border border-white/10 w-full relative">
+              <span className="absolute -top-2 left-5 bg-background/80 backdrop-blur-sm px-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider rounded">Bio</span>
               {identity.bio ? <p className="leading-relaxed text-sm">{identity.bio}</p> : <p className="italic text-muted-foreground/50 text-sm">No bio yet. Generate a CV to create one.</p>}
             </div>
 
@@ -441,8 +441,8 @@ DID: ${identity.did}`;
 
         {/* ON-CHAIN VERIFICATION — transaction-style */}
         <div className="lg:col-span-7">
-          <div className="bg-card border border-border rounded-3xl shadow-xl overflow-hidden h-full flex flex-col">
-            <div className="bg-gradient-to-r from-primary/5 to-secondary/5 p-5 md:p-6 border-b border-border">
+          <div className="glass border-white/10 rounded-3xl shadow-xl overflow-hidden h-full flex flex-col transition-all hover:bg-white/5">
+            <div className="bg-gradient-to-r from-primary/10 to-secondary/10 p-5 md:p-6 border-b border-white/10">
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="bg-primary/10 p-2.5 rounded-xl">
@@ -537,7 +537,7 @@ DID: ${identity.did}`;
 
         {/* SMART RECOMMENDATIONS — left column */}
         <div className="lg:col-span-7">
-          <div className="bg-card border border-border rounded-3xl p-6 md:p-8 shadow-xl h-full">
+          <div className="glass border-white/10 rounded-3xl p-6 md:p-8 shadow-xl h-full transition-all hover:bg-white/5">
             <h3 className="font-bold text-foreground mb-6 flex items-center gap-2 text-xl">
               <Sparkles className="text-primary" size={22} /> Smart Recommendations
             </h3>
@@ -578,7 +578,7 @@ DID: ${identity.did}`;
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-foreground font-bold text-sm group-hover:text-primary transition-colors">{job.title}</p>
-                        <p className="text-muted-foreground text-xs">{job.company} · {job.type} · {job.salary}</p>
+                        <p className="text-muted-foreground text-xs">{job.company} · {job.type}</p>
                       </div>
                       <ArrowRight size={16} className="text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
                     </button>
@@ -595,7 +595,7 @@ DID: ${identity.did}`;
         {/* RIGHT COLUMN: CV + Invite Friends stacked */}
         <div className="lg:col-span-5 flex flex-col gap-8">
           {/* CHOICE CV */}
-          <div className="bg-card border border-border rounded-3xl p-6 shadow-xl">
+          <div className="glass border-white/10 rounded-3xl p-6 shadow-xl transition-all hover:bg-white/5">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
                 <FileText size={18} className="text-primary" /> CHOICE CV
@@ -643,7 +643,7 @@ DID: ${identity.did}`;
           </div>
 
           {/* INVITE FRIENDS */}
-          <div className="bg-card border border-border rounded-3xl p-6 shadow-xl flex-1 flex flex-col">
+          <div className="glass border-white/10 rounded-[2rem] p-6 shadow-xl flex-1 flex flex-col transition-all hover:bg-white/5">
             <div className="flex items-center gap-3 mb-4">
               <div className="bg-primary/10 p-3 rounded-xl shrink-0">
                 <Gift size={24} className="text-primary" />
@@ -811,7 +811,7 @@ DID: ${identity.did}`;
                 <DialogTitle className="flex items-center gap-2">
                   <Briefcase size={20} className="text-primary" /> {selectedJobForPopup.title}
                 </DialogTitle>
-                <DialogDescription>{selectedJobForPopup.company} · {selectedJobForPopup.type} · {selectedJobForPopup.salary}</DialogDescription>
+                <DialogDescription>{selectedJobForPopup.company} · {selectedJobForPopup.type}</DialogDescription>
               </DialogHeader>
 
               <div className="mt-4 space-y-5">

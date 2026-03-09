@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+
 
 export interface ChoiceTransaction {
   id: string;
@@ -28,45 +28,15 @@ const REWARD_CONFIG = {
 /**
  * Grant a CHOICE coin reward. Prevents duplicates via unique constraint.
  */
+// MOCKED reward system for Phase 2/3 (transitioning to local-first)
 export const grantReward = async (
   userId: string,
   type: string,
   reason: string,
   amount: number
 ): Promise<RewardResult> => {
-  try {
-    // Use fetch directly to have full control over response handling
-    // supabase.functions.invoke throws on non-2xx, making 409 handling unreliable
-    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-    const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-    const url = `https://${projectId}.supabase.co/functions/v1/grant-reward`;
-
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': anonKey,
-        'Authorization': `Bearer ${anonKey}`,
-      },
-      body: JSON.stringify({ user_id: userId, amount, type, reason }),
-    });
-
-    const body = await res.json();
-
-    // Check for duplicate flag (now returned as 200 instead of 409)
-    if (body?.duplicate) {
-      return { success: false, duplicate: true };
-    }
-
-    if (!res.ok || body?.error) {
-      return { success: false, error: body?.error || `HTTP ${res.status}` };
-    }
-
-    return { success: true, amount: body?.amount ?? amount };
-  } catch (e: any) {
-    console.error('Grant reward failed:', e);
-    return { success: false, error: e.message };
-  }
+  console.log(`[Mock Reward] ${amount} CHOICE to ${userId} for ${type}:${reason}`);
+  return { success: true, amount };
 };
 
 /**
@@ -94,40 +64,14 @@ export const grantReferralReward = (userId: string, referredUserId: string) =>
  * Fetch user's CHOICE coin balance
  */
 export const getChoiceBalance = async (userId: string): Promise<number> => {
-  try {
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .select('choice_balance')
-      .eq('wallet_address', userId)
-      .maybeSingle();
-
-    if (error || !data) return 0;
-    return (data as any).choice_balance ?? 0;
-  } catch {
-    return 0;
-  }
+  return 0; // Will be replaced by PGLite in Phase 5
 };
 
 /**
  * Fetch user's transaction history
  */
 export const getTransactionHistory = async (userId: string): Promise<ChoiceTransaction[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('choice_transactions')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(50);
-
-    if (error) {
-      console.error('Fetch transactions error:', error);
-      return [];
-    }
-    return (data as any[]) ?? [];
-  } catch {
-    return [];
-  }
+  return []; // Will be replaced by PGLite in Phase 5
 };
 
 /**

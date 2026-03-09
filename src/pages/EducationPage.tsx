@@ -4,7 +4,7 @@ import { ChoiceButton } from '@/components/ChoiceButton';
 import { Award, CheckCircle, Lock, PlayCircle, Star, Trophy, Zap, Sparkles } from 'lucide-react';
 import { useWallet } from '@/contexts/WalletContext';
 import { COURSES } from '@/data/coursesData';
-import CourseIcon from '@/components/education/CourseIcon';
+
 
 const LEVEL_STYLES: Record<string, { bg: string; text: string; border: string }> = {
   Beginner: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' },
@@ -76,7 +76,6 @@ const EducationPage: React.FC = () => {
                   <div className={`absolute -inset-3 rounded-full bg-gradient-to-br ${course.badgeColor} opacity-20 blur-xl group-hover:opacity-60 transition-opacity duration-500`} />
                   <div className={`absolute -inset-1 rounded-full bg-gradient-to-br ${course.badgeColor} opacity-30 blur-md group-hover:opacity-50 transition-opacity`} />
                   <div className={`relative w-full h-full rounded-full bg-gradient-to-br ${course.badgeColor} flex items-center justify-center shadow-lg border-2 border-white/25 group-hover:border-white/50 transition-all`}>
-                    <CourseIcon courseId={course.id} size={24} className="text-white drop-shadow-md" />
                   </div>
                   {/* Checkmark overlay */}
                   <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 border-2 border-card flex items-center justify-center shadow-sm">
@@ -116,7 +115,6 @@ const EducationPage: React.FC = () => {
                 <div className="flex items-center gap-3">
                   <div className={`relative w-10 h-10 rounded-xl bg-gradient-to-br ${course.badgeColor} flex items-center justify-center shadow-md transition-shadow`}>
                     <div className={`absolute -inset-1 rounded-xl bg-gradient-to-br ${course.badgeColor} opacity-20 blur-md group-hover:opacity-60 transition-opacity duration-500`} />
-                    <CourseIcon courseId={course.id} size={18} className="relative text-white drop-shadow-sm" />
                   </div>
                   <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-md border ${level.bg} ${level.text} ${level.border}`}>
                     {course.level}

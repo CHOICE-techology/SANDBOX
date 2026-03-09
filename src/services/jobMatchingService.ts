@@ -1,5 +1,5 @@
 import { Job, JobMatchResult, VerifiableCredential, UserIdentity } from '../types';
-import { calculateReputation } from './reputationEngine';
+import { calculateIdentityScore } from './scoreEngine';
 
 // Skills the user implicitly has based on credentials
 function deriveUserSkills(credentials: VerifiableCredential[]): string[] {
@@ -109,8 +109,7 @@ function fuzzySkillMatch(userSkill: string, requiredSkill: string): boolean {
 }
 
 export function calculateJobMatch(job: Job, identity: UserIdentity): JobMatchResult {
-  const reputation = calculateReputation(identity.credentials);
-  const score = reputation.score;
+  const score = calculateIdentityScore(identity.credentials);
   const userSkills = deriveUserSkills(identity.credentials);
 
   let totalPoints = 0;

@@ -1,5 +1,5 @@
-import { VerifiableCredential, Job, UserIdentity, GeneratedCV } from '../types';
-import { calculateReputation } from './reputationEngine';
+import { VerifiableCredential, UserIdentity, GeneratedCV } from '../types';
+import { calculateIdentityScore } from './scoreEngine';
 
 export const sha256 = async (message: string): Promise<string> => {
   const msgBuffer = new TextEncoder().encode(message);
@@ -14,7 +14,7 @@ export const generateDID = (address: string): string => {
 };
 
 export const calculateReputationScore = (credentials: VerifiableCredential[]): number => {
-  return calculateReputation(credentials).score;
+  return calculateIdentityScore(credentials);
 };
 
 export const generateReputationHash = async (address: string, score: number): Promise<string> => {

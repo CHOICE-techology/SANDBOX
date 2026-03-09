@@ -2,11 +2,11 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Job, JobMatchResult } from '@/types';
 import { calculateJobMatch } from '@/services/jobMatchingService';
 import { ChoiceButton } from '@/components/ChoiceButton';
-import { JobApplicationDialog } from '@/components/JobApplicationDialog';
+
 import { DollarSign, Zap, Star, MapPin, Search, CheckCircle, AlertTriangle, ArrowUpRight, ChevronDown, ChevronUp, Lock } from 'lucide-react';
 import { useWallet } from '@/contexts/WalletContext';
 import { ALL_JOBS } from '@/data/jobsData';
-import { calculateReputation } from '@/services/reputationEngine';
+import { calculateIdentityScore } from '@/services/scoreEngine';
 import { getChoiceBalance } from '@/services/rewardService';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -25,7 +25,7 @@ const JobsPage: React.FC = () => {
   const [jobDialogOpen, setJobDialogOpen] = useState(false);
   const [choiceBalance, setChoiceBalance] = useState(0);
 
-  const score = identity ? calculateReputation(identity.credentials)?.score ?? 0 : 0;
+  const score = identity ? calculateIdentityScore(identity.credentials) : 0;
 
   useEffect(() => {
     if (identity?.address) {
@@ -85,13 +85,13 @@ const JobsPage: React.FC = () => {
       <div className="relative">
         <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <input type="text" placeholder="Search jobs by title, company, or description..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-          className="w-full pl-11 pr-4 py-3 rounded-xl border border-border bg-card text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+          className="w-full pl-11 pr-4 py-3 rounded-xl glass border-white/10 text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
       </div>
 
       <div className="flex flex-wrap gap-2">
         {['All', 'Full-time', 'Contract', 'DAO', 'Collaboration', 'Gig'].map(type => (
           <button key={type} onClick={() => setFilterType(type)}
-            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${filterType === type ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30' : 'bg-card border border-border text-muted-foreground hover:bg-muted'}`}>
+            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${filterType === type ? 'bg-primary text-primary-foreground shadow-glow-primary' : 'glass border-white/10 text-muted-foreground hover:bg-white/5'}`}>
             {type} <span className="text-xs opacity-70 ml-1">({typeCounts[type] || 0})</span>
           </button>
         ))}
@@ -125,9 +125,9 @@ const JobsPage: React.FC = () => {
               const requiredBalance = job.minScore >= 70 ? 50 : 0;
               const isJobLocked = identity && (score < requiredScore || (requiredBalance > 0 && choiceBalance < requiredBalance));
               return (
-                <div key={job.id} className={`bg-card border ${isJobLocked ? 'border-border opacity-60' : idx === 0 && identity ? 'border-emerald-400 ring-2 ring-emerald-100' : 'border-border'} rounded-2xl shadow-sm hover:shadow-lg transition-all relative overflow-hidden`}>
+                <div key={job.id} className={`glass ${isJobLocked ? 'border-white/5 opacity-50' : idx === 0 && identity ? 'border-emerald-500/50 shadow-glow-primary/20 bg-white/5' : 'border-white/10'} rounded-3xl shadow-xl hover:shadow-2xl hover:bg-white/5 transition-all duration-300 relative overflow-hidden group`}>
                   {idx === 0 && identity && !isJobLocked && (
-                    <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-bold uppercase px-3 py-1 rounded-bl-xl">Top AI Pick</div>
+                    <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-black uppercase px-3 py-1 rounded-bl-xl shadow-glow-primary">Top AI Pick</div>
                   )}
                   {isJobLocked && (
                     <div className="absolute top-0 right-0 bg-muted text-muted-foreground text-[10px] font-bold uppercase px-3 py-1 rounded-bl-xl flex items-center gap-1 z-10">
@@ -137,8 +137,8 @@ const JobsPage: React.FC = () => {
                   <div className={`p-5 flex flex-col md:flex-row gap-4 items-start md:items-center ${isJobLocked ? 'blur-[1px]' : ''}`}>
                     {identity && (
                       <div className="flex flex-col items-center justify-center min-w-[64px]">
-                        <div className={`relative w-14 h-14 flex items-center justify-center rounded-full border-4 ${mc.border} ${mc.text}`}>
-                          <span className="font-bold text-base">{job.matchScore}%</span>
+                        <div className={`relative w-14 h-14 flex items-center justify-center rounded-full border-[3px] shadow-inner ${mc.border} ${mc.text}`}>
+                          <span className="font-black text-base">{job.matchScore}%</span>
                         </div>
                         <span className="text-[10px] font-bold uppercase text-muted-foreground mt-1">Match</span>
                       </div>
@@ -148,15 +148,16 @@ const JobsPage: React.FC = () => {
                       <div className="flex flex-wrap items-center gap-2 text-muted-foreground text-sm mt-1 mb-2">
                         <span className="font-semibold text-primary">{job.company}</span>
                         <span>•</span>
-                        <span className={`px-2 py-0.5 rounded text-xs font-bold ${job.type === 'Collaboration' ? 'bg-purple-100 text-purple-700' : job.type === 'Gig' ? 'bg-emerald-100 text-emerald-700' : job.type === 'DAO' ? 'bg-indigo-100 text-indigo-700' : 'bg-muted text-muted-foreground'}`}>{job.type}</span>
+                        <span className={`px-2 py-0.5 rounded-lg text-xs font-bold ${job.type === 'Collaboration' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' : job.type === 'Gig' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : job.type === 'DAO' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'bg-white/5 text-muted-foreground border border-white/10'}`}>{job.type}</span>
                       </div>
                       <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{job.description}</p>
-                      <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1"><DollarSign size={14} /> {job.salary}</div>
-                        <div className="flex items-center gap-1"><MapPin size={14} /> Remote</div>
-                        <div className="flex items-center gap-1"><Star size={14} className="text-amber-400" /> Min Score: {job.minScore}</div>
+                      <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground mt-1">
+                        <div className="flex items-center gap-1.5"><MapPin size={14} className="text-muted-foreground/60" /> Remote</div>
+                        <div className="flex items-center gap-1.5"><Star size={14} className="text-amber-400" /> <span className="font-semibold text-foreground">Min Score: {job.minScore}</span></div>
                         {requiredBalance > 0 && (
-                          <div className="flex items-center gap-1 text-primary"><span className="font-bold">◈</span> {requiredBalance}+ CHOICE</div>
+                          <div className="flex items-center gap-1.5 text-primary bg-primary/10 px-2 py-0.5 rounded-lg border border-primary/20">
+                            <span className="font-black">◈</span> <span className="font-black">{requiredBalance}+ CHOICE</span>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -189,7 +190,7 @@ const JobsPage: React.FC = () => {
 
                   {/* Expanded match details */}
                   {identity && mr && isExpanded && (
-                    <div className="border-t border-border px-5 py-4 bg-muted/30 space-y-3">
+                    <div className="border-t border-white/10 px-5 py-6 bg-white/5 backdrop-blur-sm space-y-4">
                       {/* AI Insight */}
                       <div className="flex items-start gap-2 text-xs text-muted-foreground">
                         <Zap size={12} className="text-amber-500 mt-0.5 shrink-0" />
@@ -270,15 +271,7 @@ const JobsPage: React.FC = () => {
           </>
         )}
       </div>
-      {identity && selectedJob && (
-        <JobApplicationDialog
-          open={jobDialogOpen}
-          onOpenChange={setJobDialogOpen}
-          job={{ ...selectedJob, matchResult: selectedJob.matchResult || { score: selectedJob.matchScore || 0, reason: selectedJob.matchReason || '', matchingSkills: [], missingSkills: [], recommendations: [] } }}
-          identity={identity}
-          onUpdateIdentity={updateIdentity}
-        />
-      )}
+
     </div>
   );
 };

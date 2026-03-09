@@ -1,142 +1,124 @@
 import { UserIdentity, VerifiableCredential } from '../types';
-import { supabase } from '@/integrations/supabase/client';
+import { LocalVault } from '../lib/vault/localVault';
+import { toast } from '@/hooks/use-toast';
 
 const STORAGE_KEY = 'choice_id_storage_v1';
-const MAX_LOCAL_CREDENTIALS = 20; // Prevent quota overflow
 
-// ─── localStorage helpers (cache / fallback) ───
-
-/** Trim credentials to prevent localStorage quota overflow */
-const trimForStorage = (identity: UserIdentity): UserIdentity => {
-  if (identity.credentials.length <= MAX_LOCAL_CREDENTIALS) return identity;
-  return {
-    ...identity,
-    credentials: identity.credentials.slice(-MAX_LOCAL_CREDENTIALS),
-  };
-};
-
-export const loadIdentity = (): UserIdentity | null => {
+export const loadIdentity = async (): Promise<UserIdentity | null> => {
   try {
+    const db = await LocalVault.getInstance();
+    const res = await db.query('SELECT * FROM identities LIMIT 1');
+    if (res.rows.length === 0) return null;
+
+    const row = res.rows[0] as any;
+    const identity: UserIdentity = {
+      did: row.did,
+      address: row.address,
+      displayName: row.display_name,
+      avatar: row.avatar,
+      bio: row.bio,
+      lastAnchorHash: row.last_anchor_hash,
+      lastAnchorTimestamp: row.last_anchor_timestamp,
+      credentials: [],
+      reputationScore: 0 // Will be calculated by caller or during load
+    };
+
+    // Load credentials
+    const credsRes = await db.query('SELECT * FROM credentials WHERE did = $1', [identity.did]);
+    identity.credentials = credsRes.rows.map((r: any) => ({
+      id: r.id,
+      type: r.type,
+      issuer: r.issuer,
+      issuanceDate: r.issuance_date,
+      credentialSubject: r.subject_data
+    }));
+
+    return identity;
+  } catch (e) {
+    toast({
+      title: "Identity Load Error",
+      description: "Failed to load identity from local vault.",
+      variant: "destructive",
+    });
+    // Fallback to localStorage for migration or if PGLite fails
     const data = localStorage.getItem(STORAGE_KEY);
     return data ? JSON.parse(data) : null;
-  } catch (e) {
-    console.error("Failed to load identity", e);
-    return null;
   }
 };
 
-export const saveIdentity = (identity: UserIdentity) => {
+export const saveIdentity = async (identity: UserIdentity) => {
   try {
-    const trimmed = trimForStorage(identity);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
-  } catch (e) {
-    // If still too large, clear and retry with minimal data
-    if (e instanceof DOMException && e.name === 'QuotaExceededError') {
-      try {
-        localStorage.removeItem(STORAGE_KEY);
-        const minimal = { ...identity, credentials: identity.credentials.slice(-5) };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(minimal));
-      } catch {
-        console.warn('localStorage completely full, skipping local cache');
-      }
-    } else {
-      console.error("Failed to save identity", e);
+    const db = await LocalVault.getInstance();
+    
+    // UPSERT identity
+    await db.query(`
+      INSERT INTO identities (did, address, display_name, avatar, bio, last_anchor_hash, last_anchor_timestamp)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      ON CONFLICT (did) DO UPDATE SET
+        address = EXCLUDED.address,
+        display_name = EXCLUDED.display_name,
+        avatar = EXCLUDED.avatar,
+        bio = EXCLUDED.bio,
+        last_anchor_hash = EXCLUDED.last_anchor_hash,
+        last_anchor_timestamp = EXCLUDED.last_anchor_timestamp
+    `, [
+      identity.did, 
+      identity.address, 
+      identity.displayName, 
+      identity.avatar, 
+      identity.bio,
+      identity.lastAnchorHash,
+      identity.lastAnchorTimestamp
+    ]);
+
+    // Update credentials - for simplicity in this MVP, we replace all
+    await db.query('DELETE FROM credentials WHERE did = $1', [identity.did]);
+    for (const vc of identity.credentials) {
+      await db.query(`
+        INSERT INTO credentials (id, did, type, issuer, issuance_date, subject_data)
+        VALUES ($1, $2, $3, $4, $5, $6)
+      `, [vc.id, identity.did, vc.type, vc.issuer, vc.issuanceDate, vc.credentialSubject]);
     }
+
+    // Keep localStorage in sync for now as a backup (Phase 4 requirement)
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(identity));
+  } catch (e) {
+    toast({
+      title: "Storage Error",
+      description: "Failed to save your identity locally.",
+      variant: "destructive",
+    });
   }
 };
 
-export const clearIdentity = () => {
-  localStorage.removeItem(STORAGE_KEY);
+export const clearIdentity = async () => {
+  try {
+    const db = await LocalVault.getInstance();
+    await db.query('DELETE FROM credentials');
+    await db.query('DELETE FROM identities');
+    localStorage.removeItem(STORAGE_KEY);
+  } catch (e) {
+    console.error("Failed to clear identity", e);
+  }
 };
 
-export const addCredential = (currentIdentity: UserIdentity, vc: VerifiableCredential): UserIdentity => {
+export const addCredential = async (currentIdentity: UserIdentity, vc: VerifiableCredential): Promise<UserIdentity> => {
   const updated = {
     ...currentIdentity,
     credentials: [...currentIdentity.credentials, vc]
   };
-  saveIdentity(updated);
+  await saveIdentity(updated);
   return updated;
 };
 
-// ─── Database persistence ───
-
-export const loadIdentityFromDB = async (walletAddress: string): Promise<UserIdentity | null> => {
-  try {
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .select('*')
-      .eq('wallet_address', walletAddress)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Failed to load identity from DB:', error.message);
-      return null;
-    }
-
-    if (!data) return null;
-
-    return {
-      address: data.wallet_address,
-      did: data.did,
-      displayName: data.display_name ?? undefined,
-      avatar: data.avatar ?? undefined,
-      bio: data.bio ?? undefined,
-      credentials: (data.credentials as any[]) ?? [],
-      reputationScore: data.reputation_score ?? 0,
-      lastAnchorHash: data.last_anchor_hash ?? undefined,
-      lastAnchorTimestamp: data.last_anchor_timestamp ? Number(data.last_anchor_timestamp) : undefined,
-    };
-  } catch (e) {
-    console.error('Failed to load identity from DB:', e);
-    return null;
-  }
-};
-
-export const saveIdentityToDB = async (identity: UserIdentity): Promise<void> => {
-  try {
-    const { error } = await supabase
-      .from('user_profiles')
-      .upsert(
-        {
-          wallet_address: identity.address,
-          did: identity.did,
-          display_name: identity.displayName ?? null,
-          avatar: identity.avatar ?? null,
-          bio: identity.bio ?? null,
-          credentials: identity.credentials as any,
-          reputation_score: identity.reputationScore,
-          last_anchor_hash: identity.lastAnchorHash ?? null,
-          last_anchor_timestamp: identity.lastAnchorTimestamp ?? null,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'wallet_address' }
-      );
-
-    if (error) {
-      console.error('Failed to save identity to DB:', error.message);
-    }
-  } catch (e) {
-    console.error('Failed to save identity to DB:', e);
-  }
-};
-
 export const syncIdentity = async (identity: UserIdentity): Promise<void> => {
-  saveIdentity(identity);
-  await saveIdentityToDB(identity);
+  await saveIdentity(identity);
 };
 
 export const loadIdentityWithSync = async (walletAddress: string): Promise<UserIdentity | null> => {
-  const dbIdentity = await loadIdentityFromDB(walletAddress);
-  if (dbIdentity) {
-    saveIdentity(dbIdentity);
-    return dbIdentity;
-  }
-
-  const localIdentity = loadIdentity();
+  const localIdentity = await loadIdentity();
   if (localIdentity && localIdentity.address === walletAddress) {
-    await saveIdentityToDB(localIdentity);
     return localIdentity;
   }
-
   return null;
 };

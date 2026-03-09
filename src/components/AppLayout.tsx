@@ -68,9 +68,16 @@ export const AppLayout: React.FC<LayoutProps> = ({ children }) => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground font-sans">
+    <div className="flex min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 relative overflow-hidden">
+      {/* Dynamic Background Blobs */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px] animate-blob" />
+        <div className="absolute bottom-[10%] right-[-5%] w-[35%] h-[35%] bg-secondary/10 rounded-full blur-[100px] animate-blob [animation-delay:2s]" />
+        <div className="absolute top-[40%] right-[10%] w-[25%] h-[25%] bg-accent/5 rounded-full blur-[80px] animate-blob [animation-delay:4s]" />
+      </div>
+
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-background border-b border-border z-40 px-6 flex items-center justify-between">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 glass z-40 px-6 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
           <span className="text-xl font-black tracking-tighter flex items-center">
             CHOICE<span className="text-primary ml-0.5">iD</span>
@@ -83,15 +90,15 @@ export const AppLayout: React.FC<LayoutProps> = ({ children }) => {
 
       {/* Mobile Overlay */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 bg-dark/40 backdrop-blur-sm z-50 animate-fade-in" onClick={() => setIsMobileMenuOpen(false)} />
+        <div className="lg:hidden fixed inset-0 bg-dark/20 backdrop-blur-md z-50 animate-fade-in" onClick={() => setIsMobileMenuOpen(false)} />
       )}
 
       {/* Sidebar */}
       <aside className={cn(
-        "fixed inset-y-0 left-0 w-64 bg-background border-r border-border flex flex-col z-50 transition-transform duration-300 lg:translate-x-0 overflow-y-auto",
+        "fixed inset-y-0 left-0 w-64 glass-dark border-r border-white/5 flex flex-col z-50 transition-transform duration-300 lg:translate-x-0 overflow-y-auto",
         isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
       )}>
-        <div className="flex flex-col min-h-full p-8">
+        <div className="flex flex-col min-h-full p-8 relative z-10">
           <div className="lg:hidden flex justify-end mb-4">
             <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-muted-foreground hover:text-foreground transition-colors">
               <X size={24} />
@@ -107,7 +114,7 @@ export const AppLayout: React.FC<LayoutProps> = ({ children }) => {
           <nav className="flex-1 space-y-10">
             {navSections.map((section) => (
               <div key={section.title}>
-                <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.25em] mb-5">
+                <h3 className="text-[10px] font-black text-white/40 uppercase tracking-[0.25em] mb-5">
                   {section.title}
                 </h3>
                 <div className="space-y-2">
@@ -117,13 +124,13 @@ export const AppLayout: React.FC<LayoutProps> = ({ children }) => {
                       to={item.href}
                       onClick={() => setIsMobileMenuOpen(false)}
                       className={cn(
-                        "flex items-center gap-3 px-4 py-2.5 rounded-2xl text-sm font-bold transition-all",
+                        "flex items-center gap-3 px-4 py-2.5 rounded-2xl text-sm font-bold transition-all group",
                         isActive(item.href)
-                          ? "bg-primary/10 text-primary"
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                          ? "bg-primary/20 text-white shadow-glow-primary border border-white/10"
+                          : "text-white/60 hover:bg-white/5 hover:text-white"
                       )}
                     >
-                      <item.icon size={20} className={isActive(item.href) ? "text-primary" : "text-muted-foreground"} />
+                      <item.icon size={20} className={cn("transition-colors", isActive(item.href) ? "text-primary" : "text-white/40 group-hover:text-white")} />
                       {item.name}
                     </Link>
                   ))}
@@ -132,27 +139,27 @@ export const AppLayout: React.FC<LayoutProps> = ({ children }) => {
             ))}
           </nav>
 
-          <div className="mt-auto pt-8 border-t border-border space-y-4">
-            {/* CHOICE Balance (always visible when connected) */}
+          <div className="mt-auto pt-8 border-t border-white/10 space-y-4">
+            {/* CHOICE Balance */}
             {address && (
-              <div className="bg-[hsl(var(--dark))] rounded-2xl px-4 py-3 border border-border/10">
+              <div className="bg-white/5 rounded-2xl px-4 py-3 border border-white/10 shadow-inner group transition-all hover:bg-white/10">
                 <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">CHOICE</span>
-                  <span className="text-primary font-black text-lg tracking-tighter">◈ {choiceBalance.toLocaleString()}</span>
+                  <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] group-hover:text-white/50">CHOICE</span>
+                  <span className="text-primary font-black text-lg tracking-tighter drop-shadow-glow">◈ {choiceBalance.toLocaleString()}</span>
                 </div>
               </div>
             )}
 
             {address ? (
-              <div className="bg-muted rounded-3xl p-5 border border-border">
+              <div className="bg-white/5 rounded-[2rem] p-5 border border-white/10 backdrop-blur-sm">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">CONNECTED</span>
+                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
+                  <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">SOVEREIGN MODE</span>
                 </div>
-                <div className="text-[11px] font-mono text-muted-foreground truncate mb-5">{address}</div>
+                <div className="text-[11px] font-mono text-white/30 truncate mb-5">{address}</div>
                 <button
                   onClick={() => { disconnect(); setIsMobileMenuOpen(false); }}
-                  className="flex items-center gap-2 text-xs font-black text-accent hover:opacity-70 transition-opacity uppercase tracking-wider"
+                  className="flex items-center gap-2 text-xs font-black text-accent hover:text-accent/80 transition-colors uppercase tracking-wider"
                 >
                   <LogOut size={14} strokeWidth={3} /> Disconnect
                 </button>
@@ -160,7 +167,7 @@ export const AppLayout: React.FC<LayoutProps> = ({ children }) => {
             ) : (
               <button
                 onClick={() => setIsWalletModalOpen(true)}
-                className="w-full bg-primary text-primary-foreground font-black py-4 rounded-2xl shadow-glow-primary hover:opacity-90 transition-all transform active:scale-95 uppercase text-xs tracking-widest flex items-center justify-center gap-2"
+                className="w-full bg-primary text-primary-foreground font-black py-4 rounded-2xl shadow-glow-primary hover:brightness-110 transition-all transform active:scale-95 uppercase text-[10px] tracking-widest flex items-center justify-center gap-2"
               >
                 <PlusCircle size={18} /> Connect CHOICE ID
               </button>
@@ -171,20 +178,20 @@ export const AppLayout: React.FC<LayoutProps> = ({ children }) => {
 
       <WalletModal isOpen={isWalletModalOpen} onClose={() => setIsWalletModalOpen(false)} />
 
-      <main className="flex-1 lg:ml-64 min-h-screen pt-16 lg:pt-0 flex flex-col">
+      <main className="flex-1 lg:ml-64 min-h-screen pt-16 lg:pt-0 flex flex-col relative z-10">
         {status && (
           <div className="fixed top-20 lg:top-4 right-4 lg:right-8 z-[60] animate-slide-in-right">
-            <div className="bg-dark text-background px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-border/10 backdrop-blur-xl">
+            <div className="glass-dark text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-white/10 backdrop-blur-2xl">
               <div className={cn(
                 "w-2 h-2 rounded-full",
-                status === 'Connecting...' ? "bg-amber-400 animate-pulse" : "bg-emerald-400"
+                status === 'Connecting...' ? "bg-amber-400 animate-pulse outline outline-4 outline-amber-400/20" : "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]"
               )} />
               <span className="text-[10px] font-black uppercase tracking-[0.2em]">{status}</span>
             </div>
           </div>
         )}
 
-        <div className="max-w-6xl mx-auto px-6 md:px-12 py-10 md:py-16 flex-1">
+        <div className="max-w-6xl mx-auto px-6 md:px-12 py-10 md:py-16 flex-1 w-full">
           {children}
         </div>
 

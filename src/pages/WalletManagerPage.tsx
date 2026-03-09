@@ -219,8 +219,8 @@ const WalletManagerPage: React.FC = () => {
           }
         };
         await mockUploadToIPFS(walletVC);
-        const newIdentity = addCredential(identity, walletVC);
-        onUpdateIdentity(newIdentity);
+        const newIdentity = await addCredential(identity, walletVC);
+        await onUpdateIdentity(newIdentity);
       }
     }
   };

@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { ConnectGuideAnimation } from '@/components/ConnectGuideAnimation';
+
 import { useWallet } from '@/contexts/WalletContext';
 import { VerifiableCredential } from '@/types';
 import { addCredential } from '@/services/storageService';
 import { mockUploadToIPFS, mockVerifyPhysicalDocument } from '@/services/cryptoService';
 import { analyzeWalletHistory } from '@/services/blockchainService';
 import { grantWalletAnalysisReward } from '@/services/rewardService';
-import { triggerRewardAnimation } from '@/components/RewardAnimation';
+
 import { ChoiceButton } from '@/components/ChoiceButton';
-import { WalletHistorySection, WalletEntry } from '@/components/WalletHistorySection';
+
 import { SocialReputationHub } from '@/components/social/SocialReputationHub';
 import {
   FileText, Upload, FileCheck,
@@ -18,63 +18,21 @@ import { cn } from '@/lib/utils';
 
 const CredentialsPage: React.FC = () => {
   const { userIdentity: identity, updateIdentity: onUpdateIdentity } = useWallet();
-  const [wallets, setWallets] = useState<WalletEntry[]>([]);
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [docType, setDocType] = useState<'Diploma' | 'Certification' | 'Award' | 'ID'>('Diploma');
   const [isVerifyingDoc, setIsVerifyingDoc] = useState(false);
 
-  useEffect(() => {
-    if (identity && wallets.length === 0) {
-      setWallets([{ address: identity.address }]);
-    }
-  }, [identity]);
+
 
   if (!identity) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4">
       <h2 className="text-xl font-bold text-foreground">Connect your CHOICE ID to access credentials.</h2>
       <p className="text-muted-foreground text-sm max-w-sm">Here's how it works:</p>
-      <ConnectGuideAnimation />
     </div>
   );
 
-  const analyzeWallet = async (index: number) => {
-    let targetWallet: WalletEntry | undefined;
-    setWallets(prev => {
-      targetWallet = prev[index];
-      return prev.map((p, i) => i === index ? { ...p, analyzing: true, error: undefined } : p);
-    });
-    await new Promise(r => setTimeout(r, 0));
-    if (!targetWallet) return;
-    try {
-      const stats = await analyzeWalletHistory(targetWallet.address);
-      setWallets(prev => prev.map((p, i) => i === index ? { ...p, stats, analyzing: false, chain: stats.chain } : p));
-      if (index === 0) {
-        const historyVC: VerifiableCredential = {
-          id: `urn:uuid:${Math.random().toString(36).substring(2)}`,
-          type: ['VerifiableCredential', 'WalletHistoryCredential'],
-          issuer: 'did:ethr:0xAnalyticsOracle',
-          issuanceDate: new Date().toISOString(),
-          credentialSubject: { id: identity.did, ...stats }
-        };
-        await mockUploadToIPFS(historyVC);
-        const newIdentity = addCredential(identity, historyVC);
-        onUpdateIdentity(newIdentity);
-        grantWalletAnalysisReward(identity.address, targetWallet.address).then(r => {
-          if (r.success) triggerRewardAnimation(30, 'Wallet Analysis');
-        });
-      }
-    } catch (e: any) {
-      setWallets(prev => prev.map((p, i) => i === index ? { ...p, analyzing: false, error: e.message || 'Analysis failed' } : p));
-    }
-  };
 
-  const addNewWallet = (address: string) => {
-    if (!address.trim()) return;
-    if (wallets.some(w => w.address.toLowerCase() === address.toLowerCase())) return;
-    const newIndex = wallets.length;
-    setWallets(prev => [...prev, { address: address.trim() }]);
-    setTimeout(() => analyzeWallet(newIndex), 100);
-  };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) setSelectedFile(event.target.files[0]);
@@ -94,8 +52,8 @@ const CredentialsPage: React.FC = () => {
           credentialSubject: { id: identity.did, documentType: docType, fileName: selectedFile.name, verificationStatus: 'Verified', issuer: result.issuer }
         };
         await mockUploadToIPFS(docVC);
-        const newIdentity = addCredential(identity, docVC);
-        onUpdateIdentity(newIdentity);
+        const newIdentity = await addCredential(identity, docVC);
+        await onUpdateIdentity(newIdentity);
         setSelectedFile(null);
       }
     } catch (e) { console.error('Doc verification failed', e); }
@@ -119,7 +77,7 @@ const CredentialsPage: React.FC = () => {
       </header>
 
       {/* ═══════════════ 1. WALLET HISTORY ANALYSIS ═══════════════ */}
-      <WalletHistorySection wallets={wallets} setWallets={setWallets} onAnalyze={analyzeWallet} />
+
 
       {/* ═══════════════ 2. REAL-WORLD PROOFS ═══════════════ */}
       <section className="bg-card border border-border rounded-2xl p-5 md:p-8 shadow-sm">
