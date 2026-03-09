@@ -354,7 +354,7 @@ export const ChoiceBalanceCard: React.FC<ChoiceBalanceCardProps> = ({ userId, re
               {/* Activity header with filters */}
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-slate-500 text-[9px] font-black uppercase tracking-widest">Recent Activity</span>
+                  <span className="text-muted-foreground text-[9px] font-black uppercase tracking-widest">Recent Activity</span>
                   <div className="flex items-center gap-1 ml-1">
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                     <span className="text-emerald-400 text-[9px] font-bold">Live</span>
