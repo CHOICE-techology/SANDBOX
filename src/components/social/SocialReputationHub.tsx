@@ -442,7 +442,7 @@ export const SocialReputationHub: React.FC<SocialReputationHubProps> = ({ identi
                 { icon: TrendingUp,label: 'Influence Score', color: 'text-primary' },
                 { icon: Activity,  label: 'Engagement',     color: 'text-secondary' },
               ].map(({ icon: Icon, label, color }) => (
-                <div key={label} className="bg-white/[0.04] border border-white/[0.07] rounded-xl p-2.5 text-center">
+                <div key={label} className="bg-muted/60 border border-border rounded-xl p-2.5 text-center">
                   <Icon size={14} className={cn('mx-auto mb-1', color)} />
                   <span className="text-[9px] font-black text-muted-foreground uppercase tracking-wide">{label}</span>
                 </div>
