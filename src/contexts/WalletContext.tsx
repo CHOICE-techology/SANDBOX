@@ -29,7 +29,7 @@ export const useWallet = () => {
       isConnected: false,
       isConnecting: false,
       userIdentity: null,
-      connect: async () => {},
+      connect: async () => false,
       disconnect: () => {},
       updateIdentity: () => {},
       authError: null,
