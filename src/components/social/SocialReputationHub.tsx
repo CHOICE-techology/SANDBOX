@@ -329,7 +329,7 @@ export const SocialReputationHub: React.FC<SocialReputationHubProps> = ({ identi
                   'border bg-card/60 backdrop-blur-sm',
                   isConnected
                     ? 'border-primary/30 bg-primary/5 cursor-default'
-                    : 'border-white/[0.08] hover:border-white/20 hover:shadow-lg hover:-translate-y-0.5 active:scale-95',
+                    : 'border-border hover:border-primary/30 hover:shadow-md hover:-translate-y-0.5 active:scale-95',
                   justConnected && 'animate-scale-in',
                 )}
                 style={isConnected && meta ? { boxShadow: `0 0 14px ${meta.color}33` } : undefined}
