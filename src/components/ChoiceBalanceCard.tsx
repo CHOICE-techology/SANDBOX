@@ -417,7 +417,7 @@ export const ChoiceBalanceCard: React.FC<ChoiceBalanceCardProps> = ({ userId, re
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5">
-                              <p className="text-white text-xs font-bold truncate">{getRewardLabel(tx.type)}</p>
+                              <p className="text-foreground text-xs font-bold truncate">{getRewardLabel(tx.type)}</p>
                               {isNew && (
                                 <span className="px-1.5 py-0.5 rounded-full bg-primary/20 text-primary text-[7px] font-black uppercase tracking-widest shrink-0">
                                   New
