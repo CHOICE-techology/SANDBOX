@@ -194,8 +194,9 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
   const handleEmailConnect = async (email: string) => {
     setConnecting('email');
     setLocalError(null);
-    await connect('email', { email });
+    const sent = await connect('email', { email });
     setConnecting(null);
+    return sent;
   };
 
   const error = localError || authError;
