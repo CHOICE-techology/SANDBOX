@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { User, FileBadge, BookOpen, Briefcase, PlusCircle, LogOut, Menu, X, Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { WalletModal } from './WalletModal';
 import { useWallet } from '@/contexts/WalletContext';
 import { getChoiceBalance } from '@/services/rewardService';
 
@@ -14,7 +13,6 @@ export const AppLayout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const { address, isConnecting, isConnected, disconnect } = useWallet();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [choiceBalance, setChoiceBalance] = useState(0);
 
@@ -166,7 +164,6 @@ export const AppLayout: React.FC<LayoutProps> = ({ children }) => {
               </div>
             ) : (
               <button
-                onClick={() => setIsWalletModalOpen(true)}
                 className="w-full bg-primary text-primary-foreground font-black py-4 rounded-2xl shadow-glow-primary hover:brightness-110 transition-all transform active:scale-95 uppercase text-[10px] tracking-widest flex items-center justify-center gap-2"
               >
                 <PlusCircle size={18} /> Connect CHOICE ID
@@ -176,7 +173,6 @@ export const AppLayout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       </aside>
 
-      <WalletModal isOpen={isWalletModalOpen} onClose={() => setIsWalletModalOpen(false)} />
 
       <main className="flex-1 lg:ml-64 min-h-screen pt-16 lg:pt-0 flex flex-col relative z-10">
         {status && (
