@@ -20,7 +20,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-
+import { cn } from '@/lib/utils';
 const IdentityPage: React.FC = () => {
   const {
     userIdentity: identity,
