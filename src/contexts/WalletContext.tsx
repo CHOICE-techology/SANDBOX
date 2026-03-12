@@ -214,6 +214,7 @@ const PrivyWalletProvider: React.FC<{ children: React.ReactNode }> = ({ children
         displayName: user?.email?.address || user?.google?.email || `Guest ${address}`,
       });
       setUserIdentity(identity);
+      setConnectionState({ authError: null, address, isConnected: true, isConnecting: false });
       setForceDisconnected(false);
       return true;
     } catch (err) {
