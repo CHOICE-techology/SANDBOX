@@ -285,7 +285,14 @@ const FallbackWalletProvider: React.FC<{ children: React.ReactNode }> = ({ child
   return <WalletContext.Provider value={value}>{children}</WalletContext.Provider>;
 };
 
-const hasPrivy = !!import.meta.env.VITE_PRIVY_APP_ID;
+const rawPrivyAppId = import.meta.env.VITE_PRIVY_APP_ID;
+const sanitizedPrivyAppId = typeof rawPrivyAppId === 'string' ? rawPrivyAppId.trim() : '';
+const hasPrivy = Boolean(sanitizedPrivyAppId) && ![
+  'undefined',
+  'null',
+  'your-privy-app-id',
+  'changeme',
+].includes(sanitizedPrivyAppId.toLowerCase());
 
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   if (hasPrivy) return <PrivyWalletProvider>{children}</PrivyWalletProvider>;
