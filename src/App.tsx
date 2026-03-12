@@ -75,9 +75,9 @@ const App = () => (
         appId={sanitizedPrivyAppId}
         config={{
           appearance: {
-            theme: 'dark',
-            accentColor: '#676FFF',
-            logo: '/logo.png',
+            theme: 'light',
+            accentColor: '#0ea5e9',
+            showWalletLoginFirst: false,
           },
           loginMethods: ['wallet', 'email', 'google', 'twitter', 'discord', 'github', 'apple'],
           embeddedWallets: {

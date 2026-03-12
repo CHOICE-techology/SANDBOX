@@ -20,7 +20,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-
+import { cn } from '@/lib/utils';
 const IdentityPage: React.FC = () => {
   const {
     userIdentity: identity,
@@ -158,6 +158,10 @@ const IdentityPage: React.FC = () => {
     } catch {}
     return null;
   }, [identity?.lastAnchorHash, identity?.lastAnchorTimestamp, score, navState]);
+
+  const isVerificationPending = Boolean(
+    verificationData && (!verificationData.explorerUrl || String(verificationData.txHash || '').startsWith('pending_'))
+  );
 
   if (isLoadingIdentity && !address) {
     return (
@@ -492,13 +496,13 @@ DID: ${identity.did}`;
                     <Shield size={20} className="text-primary" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-foreground">Verify Proofs On-Chain</h3>
-                    <p className="text-muted-foreground text-xs">Anchor your reputation hash to Arbitrum.</p>
+                    <h3 className="text-lg font-bold text-foreground">Submit Proofs for Manual Verification</h3>
+                    <p className="text-muted-foreground text-xs">Request review before final on-chain anchoring.</p>
                   </div>
                 </div>
                 <Link to="/verify" className="shrink-0">
                   <ChoiceButton size="sm" className="shadow-lg hover:shadow-xl transition-all">
-                    VERIFY NOW <CheckCircle className="ml-1.5" size={14} />
+                    OPEN REQUEST <CheckCircle className="ml-1.5" size={14} />
                   </ChoiceButton>
                 </Link>
               </div>
@@ -521,10 +525,17 @@ DID: ${identity.did}`;
 
                 {/* Transaction-style record */}
                 <div className="bg-muted rounded-2xl border border-border overflow-hidden">
-                  <div className="bg-emerald-50 border-b border-emerald-100 px-5 py-3 flex items-center gap-2">
-                    <CheckCircle size={14} className="text-emerald-600" />
-                    <span className="text-xs font-bold text-emerald-700">Transaction Confirmed</span>
-                    <span className="ml-auto text-[10px] text-emerald-600 font-mono">Arbitrum Sepolia</span>
+                  <div className={cn(
+                    "border-b px-5 py-3 flex items-center gap-2",
+                    isVerificationPending ? "bg-amber-500/10 border-amber-500/20" : "bg-emerald-500/10 border-emerald-500/20"
+                  )}>
+                    <CheckCircle size={14} className={isVerificationPending ? "text-amber-600" : "text-emerald-600"} />
+                    <span className={cn("text-xs font-bold", isVerificationPending ? "text-amber-700" : "text-emerald-700")}>
+                      {isVerificationPending ? 'Pending Manual Review' : 'Transaction Confirmed'}
+                    </span>
+                    <span className={cn("ml-auto text-[10px] font-mono", isVerificationPending ? "text-amber-700" : "text-emerald-600")}>
+                      {isVerificationPending ? 'Awaiting anchor' : 'Arbitrum Sepolia'}
+                    </span>
                   </div>
                   <div className="divide-y divide-border">
                     <div className="flex items-center justify-between px-5 py-3.5">
@@ -534,31 +545,35 @@ DID: ${identity.did}`;
                       </div>
                       <span className="text-sm font-semibold text-foreground">{verificationData.date || 'Not available'}</span>
                     </div>
-                    <div className="flex items-center justify-between px-5 py-3.5">
-                      <div className="flex items-center gap-2">
-                        <Award size={14} className="text-muted-foreground" />
-                        <span className="text-xs font-semibold text-muted-foreground">Anchored Score</span>
+                    {!isVerificationPending && (
+                      <div className="flex items-center justify-between px-5 py-3.5">
+                        <div className="flex items-center gap-2">
+                          <Award size={14} className="text-muted-foreground" />
+                          <span className="text-xs font-semibold text-muted-foreground">Anchored Score</span>
+                        </div>
+                        <span className="text-sm font-bold text-foreground">{verificationData.score}<span className="text-muted-foreground font-normal">/100</span></span>
                       </div>
-                      <span className="text-sm font-bold text-foreground">{verificationData.score}<span className="text-muted-foreground font-normal">/100</span></span>
-                    </div>
+                    )}
                     <div className="flex items-center justify-between px-5 py-3.5 gap-3">
                       <div className="flex items-center gap-2 shrink-0">
                         <Hash size={14} className="text-muted-foreground" />
-                        <span className="text-xs font-semibold text-muted-foreground">TX Hash</span>
+                        <span className="text-xs font-semibold text-muted-foreground">{isVerificationPending ? 'Request ID' : 'TX Hash'}</span>
                       </div>
                       <span className="text-xs font-mono text-primary truncate">{verificationData.txHash}</span>
                     </div>
                   </div>
-                  <div className="px-5 py-3.5 border-t border-border bg-muted/50">
-                    <a
-                      href={verificationData.explorerUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 text-sm font-bold text-secondary hover:text-primary transition-colors bg-secondary/10 hover:bg-secondary/15 px-4 py-2.5 rounded-xl w-full"
-                    >
-                      View on Arbiscan <ExternalLink size={14} />
-                    </a>
-                  </div>
+                  {!isVerificationPending && verificationData.explorerUrl && (
+                    <div className="px-5 py-3.5 border-t border-border bg-muted/50">
+                      <a
+                        href={verificationData.explorerUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-2 text-sm font-bold text-secondary hover:text-primary transition-colors bg-secondary/10 hover:bg-secondary/15 px-4 py-2.5 rounded-xl w-full"
+                      >
+                        View on Arbiscan <ExternalLink size={14} />
+                      </a>
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
