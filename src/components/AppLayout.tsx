@@ -78,7 +78,7 @@ export const AppLayout: React.FC<LayoutProps> = ({ children }) => {
       </div>
 
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 glass z-40 px-6 flex items-center justify-between">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-card border-b border-border z-40 px-6 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
           <span className="text-xl font-black tracking-tighter flex items-center">
             CHOICE<span className="text-primary ml-0.5">iD</span>
