@@ -71,7 +71,7 @@ export const WalletModal: React.FC = () => {
 
   return (
     <Dialog open={isWalletModalOpen} onOpenChange={setWalletModalOpen}>
-      <DialogContent className="sm:max-w-md p-0 gap-0 border-border bg-card rounded-2xl overflow-hidden">
+      <DialogContent className="sm:max-w-md p-0 gap-0 border-border/60 bg-white/90 backdrop-blur-xl rounded-2xl overflow-hidden shadow-2xl">
         <DialogHeader className="sr-only">
           <DialogTitle>Connect your CHOICE ID</DialogTitle>
           <DialogDescription>
