@@ -1,4 +1,5 @@
 import { VerifiableCredential } from '@/types';
+import { COURSES } from '@/data/coursesData';
 
 /**
  * Reputation score system (0-100)
