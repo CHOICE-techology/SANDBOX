@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, Shield, TrendingUp, Users, Activity, Star } from 'lucide-react';
+import { ChevronDown, ChevronUp, Shield, TrendingUp, Users, Activity, Star, Globe } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SocialMetricBar } from './SocialMetricBar';
 import { VerifiableCredential } from '@/types';
