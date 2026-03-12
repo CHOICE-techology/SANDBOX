@@ -198,6 +198,7 @@ const PrivyWalletProvider: React.FC<{ children: React.ReactNode }> = ({ children
       address: null,
       isConnected: false,
       isConnecting: false,
+      userIdentity: null,
     });
     localStorage.removeItem('choice_wallet_address');
   }, [logout, setUserIdentity, setConnectionState]);
