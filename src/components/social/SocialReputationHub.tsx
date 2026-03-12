@@ -204,14 +204,10 @@ export const SocialReputationHub: React.FC<SocialReputationHubProps> = ({ identi
         ? `https://${platformToUse.toLowerCase()}.com/${handleInput.replace(/^@/, '')}`
         : handleInput;
 
-      // Mock analysis for now, will be replaced by scoreEngine/ollama later
-      const data = {
-        followers: 1000,
-        engagementRate: 5.5,
-        botProbability: 10,
-        platform: platformToUse,
-        platformScore: 85
-      };
+      const socialData = await mockConnectSocial(
+        platformToUse,
+        handleInput.replace(/^@/, '')
+      );
 
 
       const vc: VerifiableCredential = {
