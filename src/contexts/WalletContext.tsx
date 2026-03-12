@@ -89,33 +89,74 @@ const PrivyWalletProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const syncSession = async () => {
-      if (!address || forceDisconnected) {
-        if (ready && !authenticated && !rawAddress) {
-          setUserIdentity(null);
-          localStorage.removeItem('choice_wallet_address');
-        }
+      if (!ready) {
         setPendingConnect(false);
+        setUserIdentity(null);
+        setConnectionState({
+          address: null,
+          isConnected: false,
+          isConnecting: false,
+          authError: null,
+        });
+        return;
+      }
+
+      if (!authenticated || forceDisconnected) {
+        setPendingConnect(false);
+        setUserIdentity(null);
+        setConnectionState({
+          address: null,
+          isConnected: false,
+          isConnecting: false,
+          authError: null,
+        });
+        localStorage.removeItem('choice_wallet_address');
+        return;
+      }
+
+      if (!rawAddress) {
+        setPendingConnect(false);
+        setConnectionState({
+          address: null,
+          isConnected: false,
+          isConnecting: false,
+          authError: 'No wallet address detected. Please reconnect.',
+        });
         return;
       }
 
       try {
-        const identity = await resolveIdentity(address, {
-          displayName: user?.email?.address || user?.google?.email || `Guest ${address}`,
+        const identity = await resolveIdentity(rawAddress, {
+          displayName: displayNameHint || `Guest ${rawAddress}`,
         });
         setUserIdentity(identity);
+        setConnectionState({
+          address: rawAddress,
+          isConnected: true,
+          isConnecting: false,
+          authError: null,
+        });
 
         const savedAddr = localStorage.getItem('choice_wallet_address');
-        if (savedAddr !== address) {
-          localStorage.setItem('choice_wallet_address', address);
-          await grantWalletConnectReward(address);
+        if (savedAddr !== rawAddress) {
+          localStorage.setItem('choice_wallet_address', rawAddress);
+          await grantWalletConnectReward(rawAddress);
         }
+      } catch (err) {
+        console.warn('Session sync failed', err);
+        setConnectionState({
+          address: rawAddress,
+          isConnected: false,
+          isConnecting: false,
+          authError: 'Failed to load your profile. Please try Create Profile.',
+        });
       } finally {
         setPendingConnect(false);
       }
     };
 
     void syncSession();
-  }, [address, rawAddress, forceDisconnected, ready, authenticated, user, setUserIdentity]);
+  }, [ready, authenticated, rawAddress, forceDisconnected, displayNameHint, setUserIdentity, setConnectionState]);
 
   const connect = async (): Promise<boolean> => {
     setForceDisconnected(false);
