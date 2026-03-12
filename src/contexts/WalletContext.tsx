@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useCallback, useMemo } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { UserIdentity } from '../types';
 import { loadIdentityWithSync, syncIdentity, clearIdentity } from '../services/storageService';
@@ -14,6 +14,7 @@ interface WalletContextType {
   userIdentity: UserIdentity | null;
   connect: (method?: string, payload?: Record<string, string>) => Promise<boolean>;
   disconnect: () => void;
+  createProfile: () => Promise<boolean>;
   updateIdentity: (identity: UserIdentity) => Promise<void>;
   authError: string | null;
 }
@@ -28,6 +29,7 @@ const noopContext: WalletContextType = {
   userIdentity: null,
   connect: async () => false,
   disconnect: () => {},
+  createProfile: async () => false,
   updateIdentity: async () => {},
   authError: null,
 };
@@ -55,6 +57,7 @@ const resolveIdentity = async (
 
   const identity: UserIdentity = {
     ...createGuestIdentity(addr),
+    displayName: meta?.displayName || `Guest ${addr}`,
     avatar: meta?.avatar,
   };
 
@@ -62,10 +65,11 @@ const resolveIdentity = async (
   return identity;
 };
 
-// Inner provider that uses Privy hooks (only rendered when PrivyProvider is present)
 const PrivyWalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { login, logout, user, authenticated, ready } = usePrivy();
   const { wallets } = useWallets();
+  const [pendingConnect, setPendingConnect] = useState(false);
+  const [forceDisconnected, setForceDisconnected] = useState(false);
 
   const {
     userIdentity,
@@ -76,43 +80,62 @@ const PrivyWalletProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setConnectionState,
   } = useChoiceStore();
 
-  const wallet = wallets[0];
-  const address = wallet?.address || user?.wallet?.address || null;
-
-  useEffect(() => { void rehydrate(); }, [rehydrate]);
+  const rawAddress = wallets[0]?.address || user?.wallet?.address || null;
+  const address = forceDisconnected ? null : rawAddress;
 
   useEffect(() => {
-    const handleAuth = async () => {
-      if (ready && authenticated && address) {
+    void rehydrate();
+  }, [rehydrate]);
+
+  useEffect(() => {
+    const syncSession = async () => {
+      if (!address || forceDisconnected) {
+        if (ready && !authenticated && !rawAddress) {
+          setUserIdentity(null);
+          localStorage.removeItem('choice_wallet_address');
+        }
+        setPendingConnect(false);
+        return;
+      }
+
+      try {
         const identity = await resolveIdentity(address, {
-          displayName: user?.email?.address || user?.google?.email || address,
+          displayName: user?.email?.address || user?.google?.email || `Guest ${address}`,
         });
         setUserIdentity(identity);
+
         const savedAddr = localStorage.getItem('choice_wallet_address');
         if (savedAddr !== address) {
           localStorage.setItem('choice_wallet_address', address);
           await grantWalletConnectReward(address);
         }
-      } else if (ready && !authenticated) {
-        setUserIdentity(null);
-        localStorage.removeItem('choice_wallet_address');
+      } finally {
+        setPendingConnect(false);
       }
     };
-    void handleAuth();
-  }, [ready, authenticated, address, user, setUserIdentity]);
+
+    void syncSession();
+  }, [address, rawAddress, forceDisconnected, ready, authenticated, user, setUserIdentity]);
 
   const connect = async (): Promise<boolean> => {
+    setForceDisconnected(false);
     setConnectionState({ authError: null });
+    setPendingConnect(true);
+
     try {
       login();
       return true;
     } catch (err: any) {
-      setConnectionState({ authError: err.message || 'Connection failed.' });
+      setPendingConnect(false);
+      setConnectionState({ authError: err?.message || 'Connection failed.' });
       return false;
     }
   };
 
   const disconnect = useCallback(async () => {
+    setForceDisconnected(true);
+    setPendingConnect(false);
+
     try {
       await logout();
     } catch (err) {
@@ -121,9 +144,34 @@ const PrivyWalletProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     await clearIdentity();
     setUserIdentity(null);
-    setConnectionState({ authError: null });
+    setConnectionState({
+      authError: null,
+      address: null,
+      isConnected: false,
+      isConnecting: false,
+    });
     localStorage.removeItem('choice_wallet_address');
   }, [logout, setUserIdentity, setConnectionState]);
+
+  const createProfile = useCallback(async (): Promise<boolean> => {
+    if (!address) {
+      setConnectionState({ authError: 'No wallet detected. Please connect first.' });
+      return false;
+    }
+
+    try {
+      const identity = await resolveIdentity(address, {
+        displayName: user?.email?.address || user?.google?.email || `Guest ${address}`,
+      });
+      setUserIdentity(identity);
+      setForceDisconnected(false);
+      return true;
+    } catch (err) {
+      console.warn('Profile creation failed', err);
+      setConnectionState({ authError: 'Failed to create profile. Please try again.' });
+      return false;
+    }
+  }, [address, user, setUserIdentity, setConnectionState]);
 
   const updateIdentity = async (newIdentity: UserIdentity) => {
     const score = calculateReputationScore(newIdentity.credentials);
@@ -132,24 +180,34 @@ const PrivyWalletProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const value = useMemo(() => ({
     address,
-    isConnected: authenticated && !!address,
-    isConnecting: !ready,
-    isLoadingIdentity: isRehydrating || (authenticated && !!address && !userIdentity),
+    isConnected: !!address && (authenticated || !!userIdentity),
+    isConnecting: pendingConnect,
+    isLoadingIdentity: isRehydrating && !address,
     userIdentity,
     connect,
     disconnect,
+    createProfile,
     updateIdentity,
     authError,
-  }), [address, authenticated, ready, isRehydrating, userIdentity, authError, disconnect]);
+  }), [address, authenticated, userIdentity, pendingConnect, isRehydrating, authError, disconnect, createProfile]);
 
   return <WalletContext.Provider value={value}>{children}</WalletContext.Provider>;
 };
 
-// Fallback provider when Privy is not configured
 const FallbackWalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { userIdentity, isRehydrating, setUserIdentity, authError, rehydrate } = useChoiceStore();
+  const { userIdentity, isRehydrating, setUserIdentity, authError, rehydrate, setConnectionState } = useChoiceStore();
 
-  useEffect(() => { void rehydrate(); }, [rehydrate]);
+  useEffect(() => {
+    void rehydrate();
+  }, [rehydrate]);
+
+  const createProfile = useCallback(async () => {
+    if (!userIdentity?.address) {
+      setConnectionState({ authError: 'No wallet detected. Please connect first.' });
+      return false;
+    }
+    return true;
+  }, [userIdentity?.address, setConnectionState]);
 
   const value = useMemo(() => ({
     address: userIdentity?.address || null,
@@ -157,16 +215,25 @@ const FallbackWalletProvider: React.FC<{ children: React.ReactNode }> = ({ child
     isConnecting: false,
     isLoadingIdentity: isRehydrating,
     userIdentity,
-    connect: async () => { console.warn('Privy not configured'); return false; },
-    disconnect: () => { setUserIdentity(null); },
-    updateIdentity: async (i: UserIdentity) => { setUserIdentity(i); },
+    connect: async () => {
+      console.warn('Privy not configured');
+      return false;
+    },
+    disconnect: () => {
+      void clearIdentity();
+      setUserIdentity(null);
+      localStorage.removeItem('choice_wallet_address');
+    },
+    createProfile,
+    updateIdentity: async (i: UserIdentity) => {
+      setUserIdentity(i);
+    },
     authError,
-  }), [userIdentity, isRehydrating, authError, setUserIdentity]);
+  }), [userIdentity, isRehydrating, authError, setUserIdentity, createProfile]);
 
   return <WalletContext.Provider value={value}>{children}</WalletContext.Provider>;
 };
 
-// Export the right provider based on whether Privy is available
 const hasPrivy = !!import.meta.env.VITE_PRIVY_APP_ID;
 
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
