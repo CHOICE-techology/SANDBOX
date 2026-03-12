@@ -71,7 +71,7 @@ export const SocialPlatformCard: React.FC<SocialPlatformCardProps> = ({ vc, isNe
               {meta ? (
                 <img src={meta.logo} alt={platform} className="w-6 h-6 object-contain" />
               ) : (
-                <span className="text-foreground text-[10px] font-black">{platform.slice(0, 2).toUpperCase()}</span>
+                <Globe size={15} className="text-muted-foreground" />
               )}
             </div>
             <div>
