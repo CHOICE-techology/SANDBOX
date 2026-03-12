@@ -81,8 +81,8 @@ const IdentityPage: React.FC = () => {
   const getTier = (s: number) => {
     if (s >= 80) return { label: 'Grand Master', color: 'text-primary' };
     if (s >= 60) return { label: 'Expert Verified', color: 'text-secondary' };
-    if (s >= 30) return { label: 'Verified Identity', color: 'text-muted-foreground/50' };
-    return { label: 'New Entrant', color: 'text-muted-foreground' };
+    if (s >= 30) return { label: 'Verified Identity', color: 'text-secondary' };
+    return { label: 'New Entrant', color: 'text-foreground' };
   };
 
   const tier = getTier(score);

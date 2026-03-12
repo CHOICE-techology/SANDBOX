@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { UserIdentity } from '../types';
 import { loadIdentityWithSync, syncIdentity, clearIdentity } from '../services/storageService';

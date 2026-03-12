@@ -95,8 +95,14 @@ const CredentialsPage: React.FC = () => {
       };
 
       await mockUploadToIPFS(walletVC);
-      const newIdentity = await addCredential(identity, walletVC);
-      await onUpdateIdentity(newIdentity);
+      const dedupedIdentity = {
+        ...identity,
+        credentials: [
+          ...identity.credentials.filter((vc: VerifiableCredential) => !vc.type.includes('WalletHistoryCredential')),
+          walletVC,
+        ],
+      };
+      await onUpdateIdentity(dedupedIdentity);
       await grantWalletAnalysisReward(identity.address, identity.address);
     } catch (e) {
       console.error('Wallet analysis failed', e);
