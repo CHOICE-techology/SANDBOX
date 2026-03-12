@@ -204,7 +204,7 @@ const PrivyWalletProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [logout, setUserIdentity, setConnectionState]);
 
   const createProfile = useCallback(async (): Promise<boolean> => {
-    if (!address) {
+    if (!address || !authenticated) {
       setConnectionState({ authError: 'No wallet detected. Please connect first.' });
       return false;
     }
