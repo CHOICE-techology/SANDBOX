@@ -158,7 +158,7 @@ const PrivyWalletProvider: React.FC<{ children: React.ReactNode }> = ({ children
     void syncSession();
   }, [ready, authenticated, rawAddress, forceDisconnected, displayNameHint, setUserIdentity, setConnectionState]);
 
-  const connect = async (_method?: string, _payload?: Record<string, string>): Promise<boolean> => {
+  const connect = async (method?: string, _payload?: Record<string, string>): Promise<boolean> => {
     setForceDisconnected(false);
     setConnectionState({
       authError: null,
@@ -167,8 +167,25 @@ const PrivyWalletProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
     setPendingConnect(true);
 
+    const normalizedMethod = (method || '').toLowerCase();
+    const socialMethodMap: Record<string, string> = {
+      google: 'google',
+      x: 'twitter',
+      twitter: 'twitter',
+      discord: 'discord',
+      github: 'github',
+      apple: 'apple',
+      email: 'email',
+    };
+
     try {
-      await Promise.resolve(login());
+      if (normalizedMethod && socialMethodMap[normalizedMethod]) {
+        await Promise.resolve(login({ loginMethods: [socialMethodMap[normalizedMethod]] } as any));
+      } else if (normalizedMethod) {
+        await Promise.resolve(login({ loginMethods: ['wallet'] } as any));
+      } else {
+        await Promise.resolve(login());
+      }
       return true;
     } catch (err: any) {
       setPendingConnect(false);
