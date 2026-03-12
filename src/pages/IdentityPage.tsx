@@ -48,10 +48,21 @@ const IdentityPage: React.FC = () => {
   const [isCreatingProfile, setIsCreatingProfile] = useState(false);
   const [affiliateLink, setAffiliateLink] = useState('');
   const [invitedCount] = useState(() => Math.floor(Math.random() * 5));
+  const [choiceBalance, setChoiceBalance] = useState(0);
+  const [recentTxs, setRecentTxs] = useState<ChoiceTransaction[]>([]);
+  const [showAllTxs, setShowAllTxs] = useState(false);
 
-  // Popup states
-  const [cvPopupOpen, setCvPopupOpen] = useState(false);
-  const [jobPopupOpen, setJobPopupOpen] = useState(false);
+  // Fetch CHOICE balance & transactions
+  useEffect(() => {
+    if (!identity?.address) return;
+    const refresh = () => {
+      getChoiceBalance(identity.address).then(setChoiceBalance);
+      getTransactionHistory(identity.address).then(txs => setRecentTxs(txs.slice(0, 10)));
+    };
+    refresh();
+    window.addEventListener('choice-rewards-updated', refresh);
+    return () => window.removeEventListener('choice-rewards-updated', refresh);
+  }, [identity?.address]);
   const [selectedJobForPopup, setSelectedJobForPopup] = useState<(Job & { matchResult: { score: number; reason: string; matchingSkills: string[]; missingSkills: string[]; recommendations: string[] } }) | null>(null);
 
   const reputation = identity ? calculateReputationBreakdown(identity.credentials) : null;
