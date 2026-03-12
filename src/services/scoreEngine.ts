@@ -124,9 +124,12 @@ export const calculateReputationBreakdown = (credentials: VerifiableCredential[]
     if (countedKeys.has(key)) return;
 
     if (type === 'EducationCredential') {
-      // Each education document = 5 points, max 20 (4 docs)
+      // Look up actual course points from coursesData
+      const courseName = String(sub.courseName || '').toLowerCase();
+      const course = COURSES.find(c => c.title.toLowerCase() === courseName);
+      const pts = course ? course.points : 3; // fallback to 3 if not found
       categories.education = Math.min(
-        categories.education + SCORE_WEIGHTS.EducationCredential,
+        categories.education + pts,
         SCORE_CAPS.education
       );
     } else if (type === 'PhysicalCredential') {
