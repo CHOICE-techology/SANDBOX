@@ -84,6 +84,13 @@ const PrivyWalletProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const address = forceDisconnected || !ready || !authenticated ? null : rawAddress;
   const displayNameHint = user?.email?.address || user?.google?.email;
 
+  const clearConnectTimeout = useCallback(() => {
+    if (connectTimeoutRef.current) {
+      window.clearTimeout(connectTimeoutRef.current);
+      connectTimeoutRef.current = null;
+    }
+  }, []);
+
   useEffect(() => {
     void rehydrate();
   }, [rehydrate]);
