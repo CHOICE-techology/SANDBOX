@@ -96,7 +96,7 @@ export const AppLayout: React.FC<LayoutProps> = ({ children }) => {
 
       {/* Sidebar */}
       <aside className={cn(
-        "fixed inset-y-0 left-0 w-64 glass-dark border-r border-white/5 flex flex-col z-50 transition-transform duration-300 lg:translate-x-0 overflow-y-auto",
+        "fixed inset-y-0 left-0 w-64 bg-card border-r border-border flex flex-col z-50 transition-transform duration-300 lg:translate-x-0 overflow-y-auto",
         isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex flex-col min-h-full p-8 relative z-10">
@@ -107,7 +107,7 @@ export const AppLayout: React.FC<LayoutProps> = ({ children }) => {
           </div>
 
           <Link to="/" className="flex items-center gap-2 mb-12" onClick={() => setIsMobileMenuOpen(false)}>
-            <span className="text-xl font-black tracking-tighter flex items-center">
+            <span className="text-xl font-black tracking-tighter flex items-center text-foreground">
               CHOICE<span className="text-primary ml-0.5">iD</span>
             </span>
           </Link>
@@ -115,7 +115,7 @@ export const AppLayout: React.FC<LayoutProps> = ({ children }) => {
           <nav className="flex-1 space-y-10">
             {navSections.map((section) => (
               <div key={section.title}>
-                <h3 className="text-[10px] font-black text-white/40 uppercase tracking-[0.25em] mb-5">
+                <h3 className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-[0.25em] mb-5">
                   {section.title}
                 </h3>
                 <div className="space-y-2">
@@ -127,11 +127,11 @@ export const AppLayout: React.FC<LayoutProps> = ({ children }) => {
                       className={cn(
                         "flex items-center gap-3 px-4 py-2.5 rounded-2xl text-sm font-bold transition-all group",
                         isActive(item.href)
-                          ? "bg-primary/20 text-white shadow-glow-primary border border-white/10"
-                          : "text-white/60 hover:bg-white/5 hover:text-white"
+                          ? "bg-primary/10 text-primary border border-primary/20"
+                          : "text-foreground/70 hover:bg-muted hover:text-foreground"
                       )}
                     >
-                      <item.icon size={20} className={cn("transition-colors", isActive(item.href) ? "text-primary" : "text-white/40 group-hover:text-white")} />
+                      <item.icon size={20} className={cn("transition-colors", isActive(item.href) ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
                       {item.name}
                     </Link>
                   ))}
@@ -140,33 +140,34 @@ export const AppLayout: React.FC<LayoutProps> = ({ children }) => {
             ))}
           </nav>
 
-          <div className="mt-auto pt-8 border-t border-white/10 space-y-4">
+          <div className="mt-auto pt-8 border-t border-border space-y-4">
             {/* CHOICE Balance */}
             {address && (
-              <div className="bg-white/5 rounded-2xl px-4 py-3 border border-white/10 shadow-inner group transition-all hover:bg-white/10">
+              <div className="bg-primary/5 rounded-2xl px-4 py-3 border border-primary/20 group transition-all hover:bg-primary/10">
                 <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] group-hover:text-white/50">CHOICE</span>
-                  <span className="text-primary font-black text-lg tracking-tighter drop-shadow-glow">◈ {choiceBalance.toLocaleString()}</span>
+                  <span className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em]">CHOICE</span>
+                  <span className="text-primary font-black text-lg tracking-tighter">◈ {choiceBalance.toLocaleString()}</span>
                 </div>
               </div>
             )}
 
             {address ? (
-              <div className="bg-white/5 rounded-[2rem] p-5 border border-white/10 backdrop-blur-sm">
+              <div className="bg-muted/50 rounded-[2rem] p-5 border border-border">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
-                  <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">SOVEREIGN MODE</span>
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">CONNECTED</span>
                 </div>
-                <div className="text-[11px] font-mono text-white/30 truncate mb-5">{address}</div>
+                <div className="text-[11px] font-mono text-muted-foreground truncate mb-5">{address}</div>
                 <button
                   onClick={() => { disconnect(); setIsMobileMenuOpen(false); }}
-                  className="flex items-center gap-2 text-xs font-black text-accent hover:text-accent/80 transition-colors uppercase tracking-wider"
+                  className="flex items-center gap-2 text-xs font-black text-destructive hover:text-destructive/80 transition-colors uppercase tracking-wider"
                 >
                   <LogOut size={14} strokeWidth={3} /> Disconnect
                 </button>
               </div>
             ) : (
               <button
+                onClick={() => setWalletModalOpen(true)}
                 className="w-full bg-primary text-primary-foreground font-black py-4 rounded-2xl shadow-glow-primary hover:brightness-110 transition-all transform active:scale-95 uppercase text-[10px] tracking-widest flex items-center justify-center gap-2"
               >
                 <PlusCircle size={18} /> Connect CHOICE ID
