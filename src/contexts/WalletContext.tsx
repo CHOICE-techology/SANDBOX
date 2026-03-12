@@ -151,7 +151,7 @@ const PrivyWalletProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const savedAddr = localStorage.getItem('choice_wallet_address');
         if (savedAddr !== rawAddress) {
           localStorage.setItem('choice_wallet_address', rawAddress);
-          // No auto CHOICE reward for wallet connect — rewards come from bounties/education only
+          await grantWalletConnectReward(rawAddress);
         }
       } catch (err) {
         console.warn('Session sync failed', err);

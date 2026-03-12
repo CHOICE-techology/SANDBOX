@@ -1,26 +1,16 @@
 import { VerifiableCredential } from '@/types';
-import { COURSES } from '@/data/coursesData';
 
 /**
  * Reputation score system (0-100)
- * - Social: max 40, split across platforms weighted by activity metrics
- *   · TOTAL_SOCIAL_PLATFORMS = 7 (X, GitHub, LinkedIn, YouTube, Telegram, Discord, Farcaster)
- *   · Each platform gets a quality score (0-1) from followers/engagement/authenticity
- *   · Points = quality * (40 / 7) per platform, sum capped at 40
- * - Education: 4 documents × 5 pts each = max 20
- * - Physical: per unique document type, 5 pts each, capped at 20
+ * - Social: equal points per unique platform, capped at 40
+ * - Education: uses course banner points from credentialSubject.points, capped at 30
+ * - Physical: per unique document type, capped at 20
  * - Finance: wallet credentials, capped at 10
- *   Total max = 40 + 20 + 20 + 10 = 90 (leaving headroom; 100 requires excellence)
  */
-
-export const TOTAL_SOCIAL_PLATFORMS = 7; // X, GitHub, LinkedIn, YouTube, Telegram, Discord, Farcaster
-
-const MAX_POINTS_PER_PLATFORM = 40 / TOTAL_SOCIAL_PLATFORMS; // ~5.71 per platform
-
 export const SCORE_WEIGHTS = {
-  SocialCredential: 0,       // dynamic per-platform quality scoring
-  EducationCredential: 0,    // dynamic — uses actual course points from coursesData
-  PhysicalCredential: 5,     // 5 pts per unique doc type
+  SocialCredential: 5,       // 5 per platform, 8 platforms = 40 max
+  EducationCredential: 0,    // uses course.points from banner directly
+  PhysicalCredential: 10,
   WalletCreatedCredential: 5,
   WalletHistoryCredential: 10,
 };
@@ -28,7 +18,7 @@ export const SCORE_WEIGHTS = {
 export const SCORE_CAPS = {
   social: 40,
   physical: 20,
-  education: 30,   // sum of all course points (3+3+4+3+3+4+4+3+3 = 30)
+  education: 30,
   finance: 10,
 };
 
@@ -42,34 +32,6 @@ export interface ScoreBreakdown {
   };
 }
 
-/**
- * Calculate a quality multiplier (0-1) for a social platform credential
- * based on real activity metrics: followers, engagement rate, bot probability.
- */
-const getPlatformQuality = (vc: VerifiableCredential): number => {
-  const sub = vc.credentialSubject as any;
-
-  // If an explicit platformScore is set (0-100), use it directly
-  if (typeof sub.platformScore === 'number') {
-    return Math.min(sub.platformScore, 100) / 100;
-  }
-
-  const followers = Number(sub.followers) || 0;
-  const engagementRate = parseFloat(sub.engagementRate) || 0;
-  const botProbability = parseFloat(sub.botProbability) ?? 50;
-
-  // Follower component (log scale, max ~0.35 at 1M+)
-  const followerScore = Math.min(0.35, Math.log10(Math.max(followers, 1)) / 6 * 0.35);
-
-  // Engagement component (max 0.40 at 8%+ engagement)
-  const engScore = Math.min(0.40, engagementRate / 8 * 0.40);
-
-  // Authenticity component (max 0.25 when bot probability is 0%)
-  const authScore = Math.max(0, 0.25 * (1 - botProbability / 100));
-
-  return Math.min(1, followerScore + engScore + authScore);
-};
-
 export const calculateReputationBreakdown = (credentials: VerifiableCredential[]): ScoreBreakdown => {
   if (!credentials || credentials.length === 0) {
     return {
@@ -81,62 +43,41 @@ export const calculateReputationBreakdown = (credentials: VerifiableCredential[]
   const countedKeys = new Set<string>();
   const categories = { social: 0, education: 0, physical: 0, finance: 0 };
 
-  // ── Social: score each platform by quality, cap total at 40 ──
-  const platformScores = new Map<string, number>(); // platform → best quality
-  credentials.forEach((vc) => {
-    const types = Array.isArray(vc.type) ? vc.type : [vc.type];
-    if (!types.includes('SocialCredential')) return;
-    const sub = vc.credentialSubject as any;
-    const platform = String(sub.platform || '').toLowerCase();
-    if (!platform) return;
-    const quality = getPlatformQuality(vc);
-    const existing = platformScores.get(platform) ?? 0;
-    if (quality > existing) platformScores.set(platform, quality);
-  });
-
-  let socialTotal = 0;
-  platformScores.forEach((quality) => {
-    // Each platform can contribute up to MAX_POINTS_PER_PLATFORM (~5.71)
-    // weighted by its quality score (0-1)
-    socialTotal += quality * MAX_POINTS_PER_PLATFORM;
-  });
-  categories.social = Math.min(Math.round(socialTotal), SCORE_CAPS.social);
-
-  // ── Education, Physical, Finance ──
   credentials.forEach((vc) => {
     const types = Array.isArray(vc.type) ? vc.type : [vc.type];
     const type = types.find((t) => t in SCORE_WEIGHTS) as keyof typeof SCORE_WEIGHTS | undefined;
-    if (!type || type === 'SocialCredential') return;
+
+    if (!type) return;
 
     const sub = vc.credentialSubject as any;
-    let key = type as string;
+    let key = type;
 
-    if (type === 'EducationCredential' && sub.courseName) {
-      key = `edu:${String(sub.courseName).toLowerCase()}`;
+    if (type === 'SocialCredential' && sub.platform) {
+      key = `social:${String(sub.platform).toLowerCase()}` as keyof typeof SCORE_WEIGHTS;
+    } else if (type === 'EducationCredential' && sub.courseName) {
+      key = `edu:${String(sub.courseName).toLowerCase()}` as keyof typeof SCORE_WEIGHTS;
     } else if (type === 'PhysicalCredential' && sub.documentType) {
-      key = `doc:${String(sub.documentType).toLowerCase()}`;
+      key = `doc:${String(sub.documentType).toLowerCase()}` as keyof typeof SCORE_WEIGHTS;
     } else if (type === 'WalletCreatedCredential' && sub.chain) {
-      key = `wallet:${String(sub.chain).toLowerCase()}`;
+      key = `wallet:${String(sub.chain).toLowerCase()}` as keyof typeof SCORE_WEIGHTS;
     } else if (type === 'WalletHistoryCredential') {
-      key = 'wallet-history';
+      key = 'wallet-history' as keyof typeof SCORE_WEIGHTS;
     }
 
-    if (countedKeys.has(key)) return;
+    const dedupeKey = String(key);
+    if (countedKeys.has(dedupeKey)) return;
 
-    if (type === 'EducationCredential') {
-      // Look up actual course points from coursesData
-      const courseName = String(sub.courseName || '').toLowerCase();
-      const course = COURSES.find(c => c.title.toLowerCase() === courseName);
-      const pts = course ? course.points : 3; // fallback to 3 if not found
-      categories.education = Math.min(
-        categories.education + pts,
-        SCORE_CAPS.education
-      );
+    if (type === 'SocialCredential') {
+      categories.social = Math.min(categories.social + SCORE_WEIGHTS.SocialCredential, SCORE_CAPS.social);
+    } else if (type === 'EducationCredential') {
+      // Use the course banner points directly (e.g., 3 or 4 pts per course)
+      const rawCoursePoints = Number(sub.points);
+      const coursePoints = Number.isFinite(rawCoursePoints) && rawCoursePoints > 0
+        ? Math.min(rawCoursePoints, 10)
+        : 3; // sensible default if missing
+      categories.education = Math.min(categories.education + coursePoints, SCORE_CAPS.education);
     } else if (type === 'PhysicalCredential') {
-      categories.physical = Math.min(
-        categories.physical + SCORE_WEIGHTS.PhysicalCredential,
-        SCORE_CAPS.physical
-      );
+      categories.physical = Math.min(categories.physical + SCORE_WEIGHTS.PhysicalCredential, SCORE_CAPS.physical);
     } else if (type === 'WalletCreatedCredential' || type === 'WalletHistoryCredential') {
       const financePoints = type === 'WalletHistoryCredential'
         ? SCORE_WEIGHTS.WalletHistoryCredential
@@ -144,7 +85,7 @@ export const calculateReputationBreakdown = (credentials: VerifiableCredential[]
       categories.finance = Math.min(categories.finance + financePoints, SCORE_CAPS.finance);
     }
 
-    countedKeys.add(key);
+    countedKeys.add(dedupeKey);
   });
 
   const totalScore = categories.social + categories.education + categories.physical + categories.finance;

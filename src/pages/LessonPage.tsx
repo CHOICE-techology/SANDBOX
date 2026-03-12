@@ -77,10 +77,6 @@ const LessonPage: React.FC = () => {
       await mockUploadToIPFS(badgeVC);
       const newIdentity = await addCredential(identity, badgeVC);
       await onUpdateIdentity(newIdentity);
-
-      // Grant CHOICE reward for course completion
-      await grantEducationReward(identity.address, course.id);
-
       setCompleted(true);
 
     } catch (e) {

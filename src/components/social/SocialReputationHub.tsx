@@ -201,15 +201,15 @@ export const SocialReputationHub: React.FC<SocialReputationHubProps> = ({ identi
         ? `https://${platformToUse.toLowerCase()}.com/${handleInput.replace(/^@/, '')}`
         : handleInput;
 
-      // Mock analysis — realistic modest scores for unverified profiles
+      // Mock analysis for now, will be replaced by scoreEngine/ollama later
       const data = {
-        followers: Math.floor(Math.random() * 500) + 50,
-        engagementRate: +(Math.random() * 3 + 0.5).toFixed(1),
-        botProbability: Math.floor(Math.random() * 30) + 10,
+        followers: 1000,
+        engagementRate: 5.5,
+        botProbability: 10,
         platform: platformToUse,
-        posts: Math.floor(Math.random() * 200) + 10,
-        comments: Math.floor(Math.random() * 100) + 5,
+        platformScore: 85
       };
+
 
       const vc: VerifiableCredential = {
         id: `urn:uuid:${Math.random().toString(36).substring(2)}`,
@@ -221,7 +221,7 @@ export const SocialReputationHub: React.FC<SocialReputationHubProps> = ({ identi
       await mockUploadToIPFS(vc);
       const newIdentity = await addCredential(identity, vc);
       await onUpdateIdentity(newIdentity);
-      // No auto CHOICE reward for social connect — rewards come from bounties only
+      await grantSocialConnectReward(identity.address, platformToUse);
       setRecentlyConnected(platformToUse);
       setTimeout(() => setRecentlyConnected(null), 4000);
       setActivePlatform(null);
@@ -262,7 +262,7 @@ export const SocialReputationHub: React.FC<SocialReputationHubProps> = ({ identi
           </div>
         </div>
         <span className="bg-secondary/10 text-secondary text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-secondary/20 hidden sm:inline-flex">
-          {socialCreds.length > 0 ? `${Math.min(Math.round((connectedPlatforms.size / 7) * 40), 40)}/40 pts` : '+40 pts max'}
+          {socialCreds.length > 0 ? `${Math.min(socialCreds.length * 5, 40)}/40 pts` : '+40 pts max'}
         </span>
       </div>
 
@@ -343,12 +343,7 @@ export const SocialReputationHub: React.FC<SocialReputationHubProps> = ({ identi
                   <Check size={9} className="text-emerald-400" />
                 ) : (
                   <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider group-hover:text-primary transition-colors">
-                    +{(() => {
-                      const futureCount = connectedPlatforms.size + 1;
-                      const currentPts = Math.round((connectedPlatforms.size / 7) * 40);
-                      const futurePts = Math.min(Math.round((futureCount / 7) * 40), 40);
-                      return futurePts - currentPts;
-                    })()} pts
+                    +5 pts
                   </span>
                 )}
               </button>

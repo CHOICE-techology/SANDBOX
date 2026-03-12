@@ -50,7 +50,6 @@ const IdentityPage: React.FC = () => {
   const [invitedCount] = useState(() => Math.floor(Math.random() * 5));
   const [choiceBalance, setChoiceBalance] = useState(0);
   const [recentTxs, setRecentTxs] = useState<ChoiceTransaction[]>([]);
-  const [allTxs, setAllTxs] = useState<ChoiceTransaction[]>([]);
   const [showAllTxs, setShowAllTxs] = useState(false);
 
   // Fetch CHOICE balance & transactions
@@ -58,10 +57,7 @@ const IdentityPage: React.FC = () => {
     if (!identity?.address) return;
     const refresh = () => {
       getChoiceBalance(identity.address).then(setChoiceBalance);
-      getTransactionHistory(identity.address).then(txs => {
-        setAllTxs(txs);
-        setRecentTxs(txs.slice(0, 10));
-      });
+      getTransactionHistory(identity.address).then(txs => setRecentTxs(txs.slice(0, 10)));
     };
     refresh();
     window.addEventListener('choice-rewards-updated', refresh);
@@ -454,10 +450,10 @@ DID: ${identity.did}`;
         {/* Category Breakdown */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
           {(() => {
-            const idTotal = allTxs.filter(tx => getRewardCategory(tx.type) === 'identity').reduce((s, tx) => s + tx.amount, 0);
-            const eduTotal = allTxs.filter(tx => getRewardCategory(tx.type) === 'education').reduce((s, tx) => s + tx.amount, 0);
-            const comTotal = allTxs.filter(tx => getRewardCategory(tx.type) === 'community').reduce((s, tx) => s + tx.amount, 0);
-            const finTotal = allTxs.filter(tx => getRewardCategory(tx.type) === 'finance').reduce((s, tx) => s + tx.amount, 0);
+            const idTotal = recentTxs.filter(tx => getRewardCategory(tx.type) === 'identity').reduce((s, tx) => s + tx.amount, 0);
+            const eduTotal = recentTxs.filter(tx => getRewardCategory(tx.type) === 'education').reduce((s, tx) => s + tx.amount, 0);
+            const comTotal = recentTxs.filter(tx => getRewardCategory(tx.type) === 'community').reduce((s, tx) => s + tx.amount, 0);
+            const finTotal = recentTxs.filter(tx => getRewardCategory(tx.type) === 'finance').reduce((s, tx) => s + tx.amount, 0);
             const total = choiceBalance || 1;
             return [
               { label: 'Identity', amount: idTotal, pct: Math.round((idTotal / total) * 100), color: 'bg-primary' },
