@@ -179,6 +179,16 @@ const PrivyWalletProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
     setPendingConnect(true);
 
+    clearConnectTimeout();
+    connectTimeoutRef.current = window.setTimeout(() => {
+      setPendingConnect(false);
+      setConnectionState({
+        authError: 'Connection timed out. Please try again.',
+        isConnecting: false,
+        isConnected: false,
+      });
+    }, 15000);
+
     const normalizedMethod = (method || '').toLowerCase();
     const socialMethodMap: Record<string, string> = {
       google: 'google',
@@ -187,6 +197,7 @@ const PrivyWalletProvider: React.FC<{ children: React.ReactNode }> = ({ children
       discord: 'discord',
       github: 'github',
       apple: 'apple',
+      telegram: 'telegram',
       email: 'email',
     };
 
@@ -200,6 +211,7 @@ const PrivyWalletProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       return true;
     } catch (err: any) {
+      clearConnectTimeout();
       setPendingConnect(false);
       setConnectionState({
         authError: err?.message || 'Connection failed.',
