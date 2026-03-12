@@ -6,7 +6,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { WalletProvider } from "@/contexts/WalletContext";
 import { AppLayout } from "@/components/AppLayout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
+import Index from "./pages/Index";
 import IdentityPage from "./pages/IdentityPage";
 import CredentialsPage from "./pages/CredentialsPage";
 import EducationPage from "./pages/EducationPage";
@@ -41,11 +43,47 @@ const AppContent = () => (
         <WalletProvider>
           <AppLayout>
             <Routes>
-              <Route path="/" element={<IdentityPage />} />
-              <Route path="/credentials" element={<CredentialsPage />} />
-              <Route path="/education" element={<EducationPage />} />
-              <Route path="/education/:courseId" element={<LessonPage />} />
-              <Route path="/jobs" element={<JobsPage />} />
+              <Route path="/" element={<Index />} />
+              <Route
+                path="/identity"
+                element={
+                  <ProtectedRoute>
+                    <IdentityPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/credentials"
+                element={
+                  <ProtectedRoute>
+                    <CredentialsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/education"
+                element={
+                  <ProtectedRoute>
+                    <EducationPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/education/:courseId"
+                element={
+                  <ProtectedRoute>
+                    <LessonPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/jobs"
+                element={
+                  <ProtectedRoute>
+                    <JobsPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/bounties" element={<BountyBoardPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/verify" element={<VerifyPage />} />
@@ -71,6 +109,7 @@ const App = () => (
             accentColor: '#676FFF',
             logo: '/logo.png',
           },
+          loginMethods: ['wallet', 'email', 'google', 'twitter', 'discord', 'github', 'apple'],
           embeddedWallets: {
             ethereum: {
               createOnLogin: 'users-without-wallets',

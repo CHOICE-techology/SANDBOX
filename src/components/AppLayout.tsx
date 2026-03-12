@@ -33,13 +33,19 @@ export const AppLayout: React.FC<LayoutProps> = ({ children }) => {
   }, [address, isConnected]);
 
   useEffect(() => {
-    if (isConnecting) setStatus('Connecting...');
-    else if (isConnected) {
+    if (isConnecting) {
+      setStatus('Connecting...');
+      return;
+    }
+
+    if (isConnected) {
       setStatus('Connected!');
       const timer = setTimeout(() => setStatus('Transaction Analysis Complete'), 2000);
       const hideTimer = setTimeout(() => setStatus(null), 5000);
       return () => { clearTimeout(timer); clearTimeout(hideTimer); };
     }
+
+    setStatus(null);
   }, [isConnecting, isConnected]);
 
   const navSections = [
