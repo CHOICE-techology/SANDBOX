@@ -139,6 +139,7 @@ const CredentialsPage: React.FC = () => {
     { name: 'Jan', tx: 0 }, { name: 'Feb', tx: 0 }, { name: 'Mar', tx: 0 },
     { name: 'Apr', tx: 0 }, { name: 'May', tx: 0 }, { name: 'Jun', tx: 0 },
   ];
+  const detectedProtocols: DetectedProtocol[] = walletSubject?.protocols || walletStats?.protocols || [];
 
   const docTypeIconComponents: Record<string, React.ElementType> = {
     Diploma: GraduationCap,
