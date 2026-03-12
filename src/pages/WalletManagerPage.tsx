@@ -138,11 +138,11 @@ interface WalletProvider {
 }
 
 const ALL_WALLET_PROVIDERS: WalletProvider[] = [
-  { name: "MetaMask", description: "The most popular EVM browser wallet.", Logo: MetaMaskProviderLogo, chains: ["Ethereum", "Arbitrum", "Base", "Avalanche"], url: "https://metamask.io/download/" },
-  { name: "Coinbase Wallet", description: "Self-custody wallet by Coinbase.", Logo: CoinbaseProviderLogo, chains: ["Ethereum", "Arbitrum", "Base", "Avalanche", "Solana", "Bitcoin"], url: "https://www.coinbase.com/wallet" },
-  { name: "Phantom", description: "Multi-chain wallet for Solana, Ethereum & Bitcoin.", Logo: PhantomProviderLogo, chains: ["Solana", "Ethereum", "Bitcoin"], url: "https://phantom.app/download" },
-  { name: "Rainbow", description: "Beautiful Ethereum wallet for NFTs & DeFi.", Logo: RainbowProviderLogo, chains: ["Ethereum", "Arbitrum", "Base", "Avalanche"], url: "https://rainbow.me/" },
-  { name: "WalletConnect", description: "Connect any wallet via QR code scan.", Logo: WalletConnectProviderLogo, chains: ["Ethereum", "Arbitrum", "Base", "Avalanche", "Solana", "Polkadot", "Cardano"], url: "https://walletconnect.com/" },
+  { name: "MetaMask", description: "The most popular EVM browser wallet.", Logo: MetaMaskProviderLogo, chains: ["Ethereum", "Arbitrum", "Base", "Avalanche", "Polygon", "Optimism", "BNB Chain", "zkSync", "Starknet"], url: "https://metamask.io/download/" },
+  { name: "Coinbase Wallet", description: "Self-custody wallet by Coinbase.", Logo: CoinbaseProviderLogo, chains: ["Ethereum", "Arbitrum", "Base", "Avalanche", "Solana", "Bitcoin", "Polygon", "Optimism", "BNB Chain"], url: "https://www.coinbase.com/wallet" },
+  { name: "Phantom", description: "Multi-chain wallet for Solana, Ethereum & Bitcoin.", Logo: PhantomProviderLogo, chains: ["Solana", "Ethereum", "Bitcoin", "Polygon", "Sui"], url: "https://phantom.app/download" },
+  { name: "Rainbow", description: "Beautiful Ethereum wallet for NFTs & DeFi.", Logo: RainbowProviderLogo, chains: ["Ethereum", "Arbitrum", "Base", "Avalanche", "Polygon", "Optimism"], url: "https://rainbow.me/" },
+  { name: "WalletConnect", description: "Connect any wallet via QR code scan.", Logo: WalletConnectProviderLogo, chains: ["Ethereum", "Arbitrum", "Base", "Avalanche", "Solana", "Polkadot", "Cardano", "Polygon", "Optimism", "BNB Chain", "Cosmos", "Near"], url: "https://walletconnect.com/" },
   { name: "Talisman", description: "The gateway to Polkadot & Substrate ecosystems.", Logo: TalismanProviderLogo, chains: ["Polkadot", "Ethereum"], url: "https://talisman.xyz/download" },
   { name: "Eternl", description: "Feature-rich Cardano wallet for staking & DApps.", Logo: EternlProviderLogo, chains: ["Cardano"], url: "https://eternl.io/" },
   { name: "Nami", description: "Lightweight Cardano browser wallet.", Logo: NamiProviderLogo, chains: ["Cardano"], url: "https://namiwallet.io/" },
