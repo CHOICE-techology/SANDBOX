@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Job, JobMatchResult } from '@/types';
+import { Job, JobMatchResult, GeneratedCV } from '@/types';
 import { calculateJobMatch } from '@/services/jobMatchingService';
+import { mockGenerateCV } from '@/services/cryptoService';
 import { ChoiceButton } from '@/components/ChoiceButton';
 
-import { DollarSign, Zap, Star, MapPin, Search, CheckCircle, AlertTriangle, ArrowUpRight, ChevronDown, ChevronUp, Lock, Send, FileText, X } from 'lucide-react';
+import { DollarSign, Zap, Star, MapPin, Search, CheckCircle, AlertTriangle, ArrowUpRight, ChevronDown, ChevronUp, Lock, Send, FileText, X, Sparkles, Eye, PenTool, ArrowRight } from 'lucide-react';
 import { useWallet } from '@/contexts/WalletContext';
 import { useChoiceStore } from '@/store/useChoiceStore';
 import { ALL_JOBS } from '@/data/jobsData';
@@ -14,10 +15,25 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 const ITEMS_PER_PAGE = 15;
+const APPLIED_JOBS_KEY = 'choice_job_applications_v1';
 
 type JobWithMatch = Job & { matchResult?: JobMatchResult };
+
+const getAppliedJobs = (): Set<string> => {
+  try {
+    const raw = localStorage.getItem(APPLIED_JOBS_KEY);
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch { return new Set(); }
+};
+
+const saveAppliedJobs = (ids: Set<string>) => {
+  localStorage.setItem(APPLIED_JOBS_KEY, JSON.stringify([...ids]));
+};
+
+type ApplyStep = 'description' | 'optimize' | 'coverLetter' | 'cvPreview' | 'sent';
 
 const JobsPage: React.FC = () => {
   const { userIdentity: identity, isConnected, updateIdentity } = useWallet();
@@ -31,8 +47,17 @@ const JobsPage: React.FC = () => {
   const [selectedJob, setSelectedJob] = useState<JobWithMatch | null>(null);
   const [jobDialogOpen, setJobDialogOpen] = useState(false);
   const [choiceBalance, setChoiceBalance] = useState(0);
+  const [appliedJobs, setAppliedJobs] = useState<Set<string>>(getAppliedJobs);
+
+  // Multi-step apply flow
+  const [applyStep, setApplyStep] = useState<ApplyStep>('description');
+  const [cv, setCv] = useState<GeneratedCV | null>(null);
+  const [optimizedCV, setOptimizedCV] = useState<GeneratedCV | null>(null);
+  const [coverLetter, setCoverLetter] = useState<string | null>(null);
+  const [isGeneratingCV, setIsGeneratingCV] = useState(false);
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  const [isGeneratingCover, setIsGeneratingCover] = useState(false);
   const [isSendingApp, setIsSendingApp] = useState(false);
-  const [appSent, setAppSent] = useState(false);
 
   const score = identity ? calculateIdentityScore(identity.credentials) : 0;
 
@@ -63,15 +88,74 @@ const JobsPage: React.FC = () => {
   useEffect(() => { setVisibleCount(ITEMS_PER_PAGE); }, [filterType, searchQuery]);
 
   const handleApply = (job: JobWithMatch) => {
-    if (!isConnected) {
-      setWalletModalOpen(true);
-      return;
-    }
+    if (!isConnected) { setWalletModalOpen(true); return; }
     if (!identity) return;
+    if (appliedJobs.has(job.id)) return; // Already applied
     const matchResult = job.matchResult || { score: job.matchScore || 0, reason: job.matchReason || '', matchingSkills: [], missingSkills: [], recommendations: [] };
     setSelectedJob({ ...job, matchResult });
     setJobDialogOpen(true);
-    setAppSent(false);
+    setApplyStep('description');
+    setCv(null);
+    setOptimizedCV(null);
+    setCoverLetter(null);
+  };
+
+  const handleGenerateCV = async () => {
+    if (!identity) return;
+    setIsGeneratingCV(true);
+    try {
+      const generated = await mockGenerateCV(identity);
+      setCv(generated);
+      setApplyStep('optimize');
+    } catch (e) { console.error(e); }
+    finally { setIsGeneratingCV(false); }
+  };
+
+  const handleOptimize = async () => {
+    if (!cv || !selectedJob) return;
+    setIsOptimizing(true);
+    try {
+      await new Promise(r => setTimeout(r, 1500));
+      const jd = `${selectedJob.title} at ${selectedJob.company}. ${selectedJob.description}. Skills: ${selectedJob.requiredSkills.join(', ')}`;
+      const jdLower = jd.toLowerCase();
+      const prioritizedSkills = [...cv.skills].sort((a, b) => {
+        const aMatch = jdLower.includes(a.toLowerCase()) ? -1 : 1;
+        const bMatch = jdLower.includes(b.toLowerCase()) ? -1 : 1;
+        return aMatch - bMatch;
+      });
+      setOptimizedCV({
+        ...cv,
+        summary: `Tailored professional with verified credentials for ${selectedJob.title} at ${selectedJob.company}. ${cv.summary}`,
+        skills: prioritizedSkills,
+      });
+      setApplyStep('coverLetter');
+    } catch (e) { console.error(e); }
+    finally { setIsOptimizing(false); }
+  };
+
+  const handleGenerateCoverLetter = async () => {
+    if (!cv || !selectedJob) return;
+    setIsGeneratingCover(true);
+    try {
+      await new Promise(r => setTimeout(r, 2000));
+      const topSkills = cv.skills.slice(0, 4).join(', ');
+      const letter = `Dear Hiring Manager at ${selectedJob.company},
+
+I am writing to express my strong interest in the ${selectedJob.title} position. As a verified Web3 professional with a CHOICE Trust Score of ${score}/100, I bring a unique combination of on-chain credentials and real-world expertise.
+
+My verified profile demonstrates proficiency in ${topSkills}, backed by cryptographic proofs anchored on-chain.${cv.experience.length > 0 ? ` With experience as ${cv.experience[0].role} at ${cv.experience[0].company}, I have a proven track record.` : ''}
+
+${cv.education.length > 0 ? `My education includes ${cv.education[0].degree} from ${cv.education[0].institution}.` : ''}
+
+I am excited about the opportunity to contribute to ${selectedJob.company}'s mission.
+
+Best regards,
+${identity?.displayName || 'CHOICE ID Holder'}
+DID: ${identity?.did}`;
+      setCoverLetter(letter);
+      setApplyStep('cvPreview');
+    } catch (e) { console.error(e); }
+    finally { setIsGeneratingCover(false); }
   };
 
   const handleSendApplication = async () => {
@@ -79,7 +163,11 @@ const JobsPage: React.FC = () => {
     setIsSendingApp(true);
     try {
       await new Promise(r => setTimeout(r, 2000));
-      setAppSent(true);
+      const newApplied = new Set(appliedJobs);
+      newApplied.add(selectedJob.id);
+      setAppliedJobs(newApplied);
+      saveAppliedJobs(newApplied);
+      setApplyStep('sent');
       toast({
         title: 'Application Sent!',
         description: `Your CHOICE ID profile was sent to ${selectedJob.company} for the ${selectedJob.title} role.`,
@@ -103,6 +191,8 @@ const JobsPage: React.FC = () => {
     if (score >= 50) return { border: 'border-amber-500', text: 'text-amber-600', bg: 'bg-amber-50' };
     return { border: 'border-border', text: 'text-muted-foreground', bg: 'bg-muted' };
   };
+
+  const displayCV = optimizedCV || cv;
 
   return (
     <div className="space-y-8 animate-fade-in pb-10">
@@ -157,27 +247,41 @@ const JobsPage: React.FC = () => {
               const requiredScore = job.minScore;
               const requiredBalance = job.minScore >= 70 ? 50 : 0;
               const isJobLocked = identity && (score < requiredScore || (requiredBalance > 0 && choiceBalance < requiredBalance));
+              const isApplied = appliedJobs.has(job.id);
+
               return (
-                <div key={job.id} className={`glass ${isJobLocked ? 'border-white/5 opacity-50' : idx === 0 && identity ? 'border-emerald-500/50 shadow-glow-primary/20 bg-white/5' : 'border-white/10'} rounded-3xl shadow-xl hover:shadow-2xl hover:bg-white/5 transition-all duration-300 relative overflow-hidden group`}>
-                  {idx === 0 && identity && !isJobLocked && (
+                <div key={job.id} className={cn(
+                  'glass rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 relative overflow-hidden group',
+                  isApplied ? 'border-emerald-500/40 bg-emerald-500/5' :
+                  isJobLocked ? 'border-white/5 opacity-50' :
+                  idx === 0 && identity ? 'border-emerald-500/50 shadow-glow-primary/20 bg-white/5' : 'border-white/10',
+                  'hover:bg-white/5'
+                )}>
+                  {/* Applied badge */}
+                  {isApplied && (
+                    <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-black uppercase px-3 py-1 rounded-bl-xl shadow-lg flex items-center gap-1 z-10">
+                      <CheckCircle size={10} /> Applied
+                    </div>
+                  )}
+                  {idx === 0 && identity && !isJobLocked && !isApplied && (
                     <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-black uppercase px-3 py-1 rounded-bl-xl shadow-glow-primary">Top AI Pick</div>
                   )}
-                  {isJobLocked && (
+                  {isJobLocked && !isApplied && (
                     <div className="absolute top-0 right-0 bg-muted text-muted-foreground text-[10px] font-bold uppercase px-3 py-1 rounded-bl-xl flex items-center gap-1 z-10">
                       <Lock size={10} /> Locked
                     </div>
                   )}
-                  <div className={`p-5 flex flex-col md:flex-row gap-4 items-start md:items-center ${isJobLocked ? 'blur-[1px]' : ''}`}>
+                  <div className={`p-5 flex flex-col md:flex-row gap-4 items-start md:items-center ${isJobLocked && !isApplied ? 'blur-[1px]' : ''}`}>
                     {identity && (
                       <div className="flex flex-col items-center justify-center min-w-[64px]">
-                        <div className={`relative w-14 h-14 flex items-center justify-center rounded-full border-[3px] shadow-inner ${mc.border} ${mc.text}`}>
+                        <div className={`relative w-14 h-14 flex items-center justify-center rounded-full border-[3px] shadow-inner ${isApplied ? 'border-emerald-500 text-emerald-600' : `${mc.border} ${mc.text}`}`}>
                           <span className="font-black text-base">{job.matchScore}%</span>
                         </div>
                         <span className="text-[10px] font-bold uppercase text-muted-foreground mt-1">Match</span>
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-bold text-foreground">{job.title}</h3>
+                      <h3 className={cn("text-lg font-bold", isApplied ? "text-emerald-700" : "text-foreground")}>{job.title}</h3>
                       <div className="flex flex-wrap items-center gap-2 text-muted-foreground text-sm mt-1 mb-2">
                         <span className="font-semibold text-primary">{job.company}</span>
                         <span>•</span>
@@ -195,7 +299,11 @@ const JobsPage: React.FC = () => {
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-2 w-full md:w-auto shrink-0">
-                      {isJobLocked ? (
+                      {isApplied ? (
+                        <div className="px-4 py-2 rounded-xl bg-emerald-100 text-emerald-700 text-sm font-bold flex items-center gap-2">
+                          <CheckCircle size={14} /> Applied
+                        </div>
+                      ) : isJobLocked ? (
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <div className="px-4 py-2 rounded-xl bg-muted text-muted-foreground text-sm font-bold flex items-center gap-2 cursor-not-allowed">
@@ -208,10 +316,10 @@ const JobsPage: React.FC = () => {
                         </Tooltip>
                       ) : (
                         <ChoiceButton className="w-full md:w-auto" onClick={() => handleApply(job)}>
-                          {!isConnected ? 'Connect to Apply' : job.type === 'Collaboration' ? 'Join Team' : 'Auto-Apply'}
+                          {!isConnected ? 'Connect to Apply' : 'Apply Now'}
                         </ChoiceButton>
                       )}
-                      {identity && mr && (
+                      {identity && mr && !isApplied && (
                         <button onClick={() => setExpandedJob(isExpanded ? null : job.id)}
                           className="text-xs text-primary flex items-center gap-1 hover:underline">
                           {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -222,7 +330,7 @@ const JobsPage: React.FC = () => {
                   </div>
 
                   {/* Expanded match details */}
-                  {identity && mr && isExpanded && (
+                  {identity && mr && isExpanded && !isApplied && (
                     <div className="border-t border-white/10 px-5 py-6 bg-white/5 backdrop-blur-sm space-y-4">
                       <div className="flex items-start gap-2 text-xs text-muted-foreground">
                         <Zap size={12} className="text-amber-500 mt-0.5 shrink-0" />
@@ -298,64 +406,174 @@ const JobsPage: React.FC = () => {
         )}
       </div>
 
-      {/* Application Dialog */}
+      {/* Multi-Step Application Dialog */}
       <Dialog open={jobDialogOpen} onOpenChange={setJobDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold">
-              {appSent ? 'Application Sent!' : `Apply: ${selectedJob?.title}`}
+              {applyStep === 'sent' ? '✅ Application Sent!' : `Apply: ${selectedJob?.title}`}
             </DialogTitle>
             <DialogDescription>
-              {appSent
+              {applyStep === 'sent'
                 ? `Your verified CHOICE ID profile has been sent to ${selectedJob?.company}.`
-                : `Send your CHOICE ID profile to ${selectedJob?.company} for the ${selectedJob?.title} role.`}
+                : `${selectedJob?.company} · ${selectedJob?.type}`}
             </DialogDescription>
           </DialogHeader>
 
-          {selectedJob && !appSent && (
+          {selectedJob && applyStep === 'description' && (
             <div className="space-y-4 pt-2">
-              <div className="bg-muted/50 rounded-xl p-4 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Match Score</span>
-                  <span className="font-bold text-foreground">{selectedJob.matchScore}%</span>
+              {/* Job Description */}
+              <div className="bg-muted/50 rounded-xl p-4 border border-border">
+                <h4 className="font-bold text-foreground text-sm mb-2">Job Description</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">{selectedJob.description}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-muted/50 rounded-xl p-3 border border-border">
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase">Match Score</span>
+                  <p className="text-lg font-black text-foreground">{selectedJob.matchScore}%</p>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Your Trust Score</span>
-                  <span className="font-bold text-foreground">{score}/100</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Company</span>
-                  <span className="font-bold text-primary">{selectedJob.company}</span>
+                <div className="bg-muted/50 rounded-xl p-3 border border-border">
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase">Your Trust Score</span>
+                  <p className="text-lg font-black text-foreground">{score}/100</p>
                 </div>
               </div>
 
-              {selectedJob.matchResult?.matchingSkills && selectedJob.matchResult.matchingSkills.length > 0 && (
+              {selectedJob.requiredSkills.length > 0 && (
                 <div>
-                  <span className="text-xs font-bold text-muted-foreground uppercase">Matching Skills</span>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase">Required Skills</span>
                   <div className="flex flex-wrap gap-1 mt-1">
-                    {selectedJob.matchResult.matchingSkills.map((s, i) => (
-                      <span key={i} className="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded text-[11px] font-medium">{s}</span>
-                    ))}
+                    {selectedJob.requiredSkills.map((s, i) => {
+                      const matched = selectedJob.matchResult?.matchingSkills?.includes(s);
+                      return (
+                        <span key={i} className={cn(
+                          'px-2 py-0.5 rounded text-[11px] font-medium',
+                          matched ? 'bg-emerald-100 text-emerald-700' : 'bg-muted text-muted-foreground'
+                        )}>{s}</span>
+                      );
+                    })}
                   </div>
                 </div>
               )}
 
-              <ChoiceButton
-                onClick={handleSendApplication}
-                isLoading={isSendingApp}
-                className="w-full"
-              >
+              <ChoiceButton onClick={handleGenerateCV} isLoading={isGeneratingCV} className="w-full">
+                <Sparkles size={14} className="mr-2" /> Generate CV & Continue
+              </ChoiceButton>
+            </div>
+          )}
+
+          {selectedJob && applyStep === 'optimize' && cv && (
+            <div className="space-y-4 pt-2">
+              <div className="bg-muted/50 rounded-xl p-4 border border-border">
+                <h4 className="font-bold text-foreground text-sm mb-2 flex items-center gap-2">
+                  <FileText size={14} className="text-primary" /> Your CV Summary
+                </h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">{cv.summary}</p>
+                <div className="flex flex-wrap gap-1 mt-3">
+                  {cv.skills.slice(0, 8).map((s, i) => (
+                    <span key={i} className="bg-foreground text-background px-2 py-0.5 rounded text-[10px] font-bold">{s}</span>
+                  ))}
+                </div>
+              </div>
+
+              <ChoiceButton onClick={handleOptimize} isLoading={isOptimizing} className="w-full">
+                <PenTool size={14} className="mr-2" /> Optimize for {selectedJob.title}
+              </ChoiceButton>
+            </div>
+          )}
+
+          {selectedJob && applyStep === 'coverLetter' && (
+            <div className="space-y-4 pt-2">
+              {optimizedCV && (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                  <h4 className="font-bold text-emerald-800 text-sm mb-1 flex items-center gap-2">
+                    <CheckCircle size={14} /> CV Optimized
+                  </h4>
+                  <p className="text-xs text-emerald-700 line-clamp-2">{optimizedCV.summary}</p>
+                </div>
+              )}
+
+              <ChoiceButton onClick={handleGenerateCoverLetter} isLoading={isGeneratingCover} className="w-full">
+                <PenTool size={14} className="mr-2" /> Generate Cover Letter
+              </ChoiceButton>
+            </div>
+          )}
+
+          {selectedJob && applyStep === 'cvPreview' && (
+            <div className="space-y-4 pt-2">
+              {/* Cover Letter */}
+              {coverLetter && (
+                <div className="bg-muted/50 rounded-xl p-4 border border-border">
+                  <h4 className="font-bold text-foreground text-sm mb-2 flex items-center gap-2">
+                    <PenTool size={14} className="text-primary" /> Cover Letter
+                  </h4>
+                  <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-sans leading-relaxed">{coverLetter}</pre>
+                </div>
+              )}
+
+              {/* Full CV Preview */}
+              {displayCV && (
+                <div className="bg-muted/50 rounded-xl p-4 border border-border">
+                  <h4 className="font-bold text-foreground text-sm mb-3 flex items-center gap-2">
+                    <Eye size={14} className="text-primary" /> Full CV Preview
+                  </h4>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase">Summary</span>
+                      <p className="text-xs text-foreground">{displayCV.summary}</p>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase">Skills</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {displayCV.skills.map((s, i) => (
+                          <span key={i} className="bg-foreground text-background px-2 py-0.5 rounded text-[10px] font-bold">{s}</span>
+                        ))}
+                      </div>
+                    </div>
+                    {displayCV.experience.length > 0 && (
+                      <div>
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase">Experience</span>
+                        {displayCV.experience.map((exp, i) => (
+                          <div key={i} className="mt-1">
+                            <p className="text-xs font-bold text-foreground">{exp.role} at {exp.company}</p>
+                            <p className="text-[10px] text-muted-foreground">{exp.duration}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {displayCV.education.length > 0 && (
+                      <div>
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase">Education</span>
+                        {displayCV.education.map((edu, i) => (
+                          <div key={i} className="mt-1">
+                            <p className="text-xs font-bold text-foreground">{edu.degree}</p>
+                            <p className="text-[10px] text-muted-foreground">{edu.institution}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <ChoiceButton onClick={handleSendApplication} isLoading={isSendingApp} className="w-full">
                 <Send size={14} className="mr-2" /> Send Application via CHOICE ID
               </ChoiceButton>
             </div>
           )}
 
-          {appSent && (
-            <div className="text-center py-4 space-y-3">
-              <CheckCircle size={48} className="text-emerald-500 mx-auto" />
-              <p className="text-sm text-muted-foreground">
-                Your verified credentials have been shared. You'll hear back from {selectedJob?.company} if there's a match.
-              </p>
+          {applyStep === 'sent' && (
+            <div className="text-center py-6 space-y-4">
+              <CheckCircle size={56} className="text-emerald-500 mx-auto" />
+              <div>
+                <p className="text-foreground font-bold text-lg">Application Successfully Sent!</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Your verified credentials and cover letter have been shared with {selectedJob?.company}. You'll hear back if there's a match.
+                </p>
+              </div>
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-700">
+                This job is now marked as applied in your dashboard.
+              </div>
               <ChoiceButton variant="outline" onClick={() => setJobDialogOpen(false)} className="w-full">
                 Close
               </ChoiceButton>
