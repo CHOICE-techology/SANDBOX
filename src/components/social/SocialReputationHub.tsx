@@ -16,6 +16,7 @@ import { mockUploadToIPFS, mockConnectSocial } from '@/services/cryptoService';
 import { grantSocialConnectReward } from '@/services/rewardService';
 
 import { getPlatformMeta } from './platformLogos';
+import { calculateReputationBreakdown } from '@/services/scoreEngine';
 
 const HANDLE_PLATFORMS = new Set(['Telegram', 'Discord', 'Farcaster']);
 
