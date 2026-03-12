@@ -49,7 +49,7 @@ const IdentityPage: React.FC = () => {
   const [affiliateLink, setAffiliateLink] = useState('');
   const [invitedCount] = useState(() => Math.floor(Math.random() * 5));
   const [choiceBalance, setChoiceBalance] = useState(0);
-  const [recentTxs, setRecentTxs] = useState<ChoiceTransaction[]>([]);
+  const [txHistory, setTxHistory] = useState<ChoiceTransaction[]>([]);
   const [showAllTxs, setShowAllTxs] = useState(false);
 
   // Fetch CHOICE balance & transactions
