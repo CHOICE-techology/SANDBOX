@@ -63,6 +63,10 @@ const IdentityPage: React.FC = () => {
     window.addEventListener('choice-rewards-updated', refresh);
     return () => window.removeEventListener('choice-rewards-updated', refresh);
   }, [identity?.address]);
+
+  // Popup states
+  const [cvPopupOpen, setCvPopupOpen] = useState(false);
+  const [jobPopupOpen, setJobPopupOpen] = useState(false);
   const [selectedJobForPopup, setSelectedJobForPopup] = useState<(Job & { matchResult: { score: number; reason: string; matchingSkills: string[]; missingSkills: string[]; recommendations: string[] } }) | null>(null);
 
   const reputation = identity ? calculateReputationBreakdown(identity.credentials) : null;
