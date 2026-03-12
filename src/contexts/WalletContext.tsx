@@ -73,7 +73,6 @@ const PrivyWalletProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const {
     userIdentity,
-    isRehydrating,
     setUserIdentity,
     authError,
     rehydrate,
