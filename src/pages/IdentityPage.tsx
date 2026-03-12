@@ -364,8 +364,8 @@ DID: ${identity.did}`;
             <div className="h-[240px] md:h-[280px] w-full relative flex items-center justify-center">
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart cx="50%" cy="50%" outerRadius="70%" data={chartData}>
-                  <PolarGrid stroke="#334155" strokeDasharray="3 3" />
-                  <PolarAngleAxis dataKey="subject" tick={{ fill: '#94A3B8', fontSize: 11, fontWeight: 'bold' }} />
+                  <PolarGrid stroke="#475569" strokeDasharray="3 3" />
+                  <PolarAngleAxis dataKey="subject" tick={{ fill: '#CBD5E1', fontSize: 11, fontWeight: 'bold' }} />
                   <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
                   <Radar name="Score" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={3} fill="hsl(var(--primary))" fillOpacity={0.3} />
                   <Tooltip
