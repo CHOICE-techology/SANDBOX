@@ -8,7 +8,7 @@ import { VerifiableCredential } from '@/types';
  * - Finance: wallet credentials, capped at 10
  */
 export const SCORE_WEIGHTS = {
-  SocialCredential: 5,       // 5 per platform, 8 platforms = 40 max
+  SocialCredential: 0,       // dynamic: 40 / total connected platforms
   EducationCredential: 0,    // uses course.points from banner directly
   PhysicalCredential: 10,
   WalletCreatedCredential: 5,
