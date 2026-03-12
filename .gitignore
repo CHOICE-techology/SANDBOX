@@ -32,3 +32,4 @@ dist-ssr
 .env.production
 node_modules
 dist
+.vercel
