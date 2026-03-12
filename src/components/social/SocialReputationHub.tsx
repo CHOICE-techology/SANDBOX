@@ -215,7 +215,7 @@ export const SocialReputationHub: React.FC<SocialReputationHubProps> = ({ identi
         type: ['VerifiableCredential', 'SocialCredential'],
         issuer: `did:web:${platformToUse.toLowerCase().replace(/\s+/g, '')}.com`,
         issuanceDate: new Date().toISOString(),
-        credentialSubject: { id: identity.did, ...data },
+        credentialSubject: { id: identity.did, ...socialData, platform: platformToUse, profileUrl },
       };
       await mockUploadToIPFS(vc);
       const newIdentity = await addCredential(identity, vc);
