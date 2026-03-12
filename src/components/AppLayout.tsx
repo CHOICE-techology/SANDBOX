@@ -46,7 +46,7 @@ export const AppLayout: React.FC<LayoutProps> = ({ children }) => {
     {
       title: 'PERSONAL',
       items: [
-        { name: 'My Identity', href: '/', icon: User },
+        { name: 'My Identity', href: '/identity', icon: User },
         { name: 'Credentials', href: '/credentials', icon: FileBadge },
       ]
     },
