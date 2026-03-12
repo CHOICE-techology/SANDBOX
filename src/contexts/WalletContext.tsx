@@ -80,7 +80,8 @@ const PrivyWalletProvider: React.FC<{ children: React.ReactNode }> = ({ children
   } = useChoiceStore();
 
   const rawAddress = wallets[0]?.address || user?.wallet?.address || null;
-  const address = forceDisconnected ? null : rawAddress;
+  const address = forceDisconnected || !ready || !authenticated ? null : rawAddress;
+  const displayNameHint = user?.email?.address || user?.google?.email;
 
   useEffect(() => {
     void rehydrate();
