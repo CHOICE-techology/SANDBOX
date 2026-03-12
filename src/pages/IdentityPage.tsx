@@ -22,7 +22,13 @@ import {
 import { useToast } from '@/hooks/use-toast';
 
 const IdentityPage: React.FC = () => {
-  const { userIdentity: identity, isLoadingIdentity, updateIdentity: onUpdateIdentity } = useWallet();
+  const {
+    userIdentity: identity,
+    address,
+    isLoadingIdentity,
+    createProfile,
+    updateIdentity: onUpdateIdentity,
+  } = useWallet();
   const { toast } = useToast();
   const location = useLocation();
   const navState = location.state as { verificationSuccess?: boolean; verificationData?: any } | null;
@@ -38,6 +44,7 @@ const IdentityPage: React.FC = () => {
   const [selectedJobForCover, setSelectedJobForCover] = useState<Job | null>(null);
   const [isSendingApp, setIsSendingApp] = useState(false);
   const [appSent, setAppSent] = useState(false);
+  const [isCreatingProfile, setIsCreatingProfile] = useState(false);
   const [affiliateLink, setAffiliateLink] = useState('');
   const [invitedCount] = useState(() => Math.floor(Math.random() * 5));
 
@@ -152,7 +159,7 @@ const IdentityPage: React.FC = () => {
     return null;
   }, [identity?.lastAnchorHash, identity?.lastAnchorTimestamp, score, navState]);
 
-  if (isLoadingIdentity) {
+  if (isLoadingIdentity && !address) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4">
         <div className="w-10 h-10 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
@@ -168,9 +175,29 @@ const IdentityPage: React.FC = () => {
         <div className="bg-muted p-6 rounded-full">
           <CheckCircle size={64} className="text-muted-foreground/30" />
         </div>
-        <h2 className="text-2xl font-bold text-foreground">Connect your CHOICE ID to view your identity.</h2>
-        <p className="text-muted-foreground text-sm max-w-sm">It only takes a few seconds — here's how:</p>
-
+        <h2 className="text-2xl font-bold text-foreground">
+          {address ? 'Wallet connected, profile missing.' : 'Connect your CHOICE ID to view your identity.'}
+        </h2>
+        <p className="text-muted-foreground text-sm max-w-sm">
+          {address
+            ? 'Create your guest profile to unlock Identity, Credentials, Jobs, and Lessons.'
+            : 'It only takes a few seconds — here\'s how:'}
+        </p>
+        {address && (
+          <ChoiceButton
+            isLoading={isCreatingProfile}
+            onClick={async () => {
+              setIsCreatingProfile(true);
+              try {
+                await createProfile();
+              } finally {
+                setIsCreatingProfile(false);
+              }
+            }}
+          >
+            Create Profile
+          </ChoiceButton>
+        )}
       </div>
     );
   }
