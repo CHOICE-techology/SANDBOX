@@ -83,11 +83,10 @@ export const saveIdentity = async (identity: UserIdentity) => {
     // Keep localStorage in sync for now as a backup (Phase 4 requirement)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(identity));
   } catch (e) {
-    toast({
-      title: "Storage Error",
-      description: "Failed to save your identity locally.",
-      variant: "destructive",
-    });
+    console.warn("Vault save failed, using localStorage fallback", e);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(identity));
+    } catch {}
   }
 };
 
