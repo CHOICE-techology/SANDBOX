@@ -4,6 +4,8 @@ import { User, FileBadge, BookOpen, Briefcase, PlusCircle, LogOut, Menu, X, Targ
 import { cn } from '@/lib/utils';
 import { useWallet } from '@/contexts/WalletContext';
 import { getChoiceBalance } from '@/services/rewardService';
+import { useChoiceStore } from '@/store/useChoiceStore';
+import { WalletModal } from '@/components/wallet-modal/WalletModal';
 
 interface LayoutProps {
   children: React.ReactNode;
