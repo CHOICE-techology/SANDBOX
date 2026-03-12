@@ -201,8 +201,8 @@ const BountyBoardPage: React.FC = () => {
         </div>
         <div className="flex gap-3">
           <div className="bg-card border border-border rounded-2xl px-4 py-3 text-center min-w-[80px]">
-            <span className="block text-2xl font-extrabold text-primary">◈ {earnedRewards}</span>
-            <span className="text-[9px] uppercase tracking-widest font-bold text-muted-foreground">/ {totalRewards} earned</span>
+            <span className="block text-2xl font-extrabold text-primary">◈ {totalChoiceBalance.toLocaleString()}</span>
+            <span className="text-[9px] uppercase tracking-widest font-bold text-muted-foreground">Total CHOICE</span>
           </div>
           <div className="bg-card border border-border rounded-2xl px-4 py-3 text-center min-w-[80px]">
             <span className="block text-2xl font-extrabold text-foreground">{claimedIds.size}</span>

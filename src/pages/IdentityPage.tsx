@@ -428,7 +428,86 @@ DID: ${identity.did}`;
       {/* ═══════════════════════════════════════════════════════════════ */}
       {/* CHOICE BALANCE CARD                                            */}
       {/* ═══════════════════════════════════════════════════════════════ */}
+      <div className="bg-card border border-border rounded-3xl p-6 md:p-8 shadow-xl">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="bg-primary/10 p-2.5 rounded-xl">
+              <Gift size={20} className="text-primary" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-foreground">CHOICE BALANCE</h3>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Identity Fuel · Live</p>
+            </div>
+          </div>
+        </div>
 
+        <div className="flex items-baseline gap-3 mb-1">
+          <span className="text-4xl md:text-5xl font-black text-foreground tracking-tighter">{choiceBalance.toLocaleString()}</span>
+          <span className="text-lg font-bold text-primary">CHOICE</span>
+        </div>
+        <p className="text-xs text-primary font-semibold mb-6">↗ +{choiceBalance} since last refresh</p>
+
+        {/* Category Breakdown */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          {(() => {
+            const idTotal = recentTxs.filter(tx => getRewardCategory(tx.type) === 'identity').reduce((s, tx) => s + tx.amount, 0);
+            const eduTotal = recentTxs.filter(tx => getRewardCategory(tx.type) === 'education').reduce((s, tx) => s + tx.amount, 0);
+            const comTotal = recentTxs.filter(tx => getRewardCategory(tx.type) === 'community').reduce((s, tx) => s + tx.amount, 0);
+            const finTotal = recentTxs.filter(tx => getRewardCategory(tx.type) === 'finance').reduce((s, tx) => s + tx.amount, 0);
+            const total = choiceBalance || 1;
+            return [
+              { label: 'Identity', amount: idTotal, pct: Math.round((idTotal / total) * 100), color: 'bg-primary' },
+              { label: 'Education', amount: eduTotal, pct: Math.round((eduTotal / total) * 100), color: 'bg-purple-500' },
+              { label: 'Community', amount: comTotal, pct: Math.round((comTotal / total) * 100), color: 'bg-amber-500' },
+              { label: 'Finance', amount: finTotal, pct: Math.round((finTotal / total) * 100), color: 'bg-emerald-500' },
+            ].map(cat => (
+              <div key={cat.label} className="bg-muted rounded-xl p-3 border border-border">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">⬡ {cat.label}</span>
+                  <span className="text-[10px] text-muted-foreground">{cat.pct}%</span>
+                </div>
+                <span className="text-lg font-black text-foreground">+{cat.amount}</span>
+                <div className="w-full bg-border rounded-full h-1 mt-2">
+                  <div className={`${cat.color} h-1 rounded-full`} style={{ width: `${Math.min(cat.pct, 100)}%` }} />
+                </div>
+              </div>
+            ));
+          })()}
+        </div>
+
+        {/* Recent Transactions */}
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Recent Activity</span>
+          <span className="text-[10px] text-primary font-bold">● Live</span>
+        </div>
+        <div className="space-y-2">
+          {recentTxs.slice(0, showAllTxs ? 10 : 3).map(tx => (
+            <div key={tx.id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Gift size={14} className="text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">{getRewardLabel(tx.type)}</p>
+                  <p className="text-[10px] text-muted-foreground">{tx.reason.replace(/_/g, ' ')}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <span className="text-sm font-bold text-primary">+{tx.amount}</span>
+                <p className="text-[10px] text-muted-foreground">{new Date(tx.created_at).toLocaleDateString()}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        {recentTxs.length > 3 && (
+          <button
+            onClick={() => setShowAllTxs(!showAllTxs)}
+            className="w-full mt-3 py-2.5 text-xs font-bold text-muted-foreground hover:text-foreground border border-border rounded-xl hover:bg-muted transition-colors uppercase tracking-wider"
+          >
+            {showAllTxs ? 'Show Less' : `View up to ${Math.min(recentTxs.length, 10)} transactions ▾`}
+          </button>
+        )}
+      </div>
 
       {/* ── PROFILE + ON-CHAIN VERIFICATION ROW ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
