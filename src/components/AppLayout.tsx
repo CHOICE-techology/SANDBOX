@@ -214,6 +214,9 @@ export const AppLayout: React.FC<LayoutProps> = ({ children }) => {
           </div>
         </footer>
       </main>
+
+      {/* Wallet Connect Modal */}
+      <WalletModal />
     </div>
   );
 };
