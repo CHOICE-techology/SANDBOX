@@ -499,7 +499,7 @@ DID: ${identity.did}`;
             </div>
           ))}
         </div>
-        {recentTxs.length > 3 && (
+        {txHistory.length > 3 && (
           <button
             onClick={() => setShowAllTxs(!showAllTxs)}
             className="w-full mt-3 py-2.5 text-xs font-bold text-muted-foreground hover:text-foreground border border-border rounded-xl hover:bg-muted transition-colors uppercase tracking-wider"
