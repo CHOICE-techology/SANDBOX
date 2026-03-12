@@ -1,3 +1,5 @@
+import { supabase } from '@/integrations/supabase/client';
+
 export interface BlockchainStats {
   txCount: number;
   accountAge: string;
@@ -8,25 +10,46 @@ export interface BlockchainStats {
   chain?: string;
   activeChains?: string[];
   balance?: string;
+  chainDetails?: Record<string, { txCount: number; balance: number }>;
 }
 
-// Wallet analysis mocked for Phase 2/3 (transitioning to local-first)
 export const analyzeWalletHistory = async (address: string): Promise<BlockchainStats> => {
-  return {
-    txCount: 42,
-    accountAge: '2 years',
-    totalVolume: '15.5 ETH',
-    assetsHeld: '12 tokens',
-    netValue: '$45,000',
-    activityData: [
-      { name: 'Mon', tx: 2 },
-      { name: 'Tue', tx: 5 },
-      { name: 'Wed', tx: 3 },
-      { name: 'Thu', tx: 8 },
-      { name: 'Fri', tx: 4 },
-    ],
-    chain: 'Ethereum',
-    activeChains: ['Ethereum', 'Polygon', 'Arbitrum'],
-    balance: '1.2 ETH',
-  };
+  try {
+    const { data, error } = await supabase.functions.invoke('analyze-wallet', {
+      body: { address },
+    });
+
+    if (error) throw error;
+    if (!data || typeof data !== 'object') throw new Error('Invalid response');
+
+    return {
+      txCount: data.txCount ?? 0,
+      accountAge: data.accountAge ?? 'Unknown',
+      totalVolume: data.totalVolume ?? '0 ETH',
+      assetsHeld: data.assetsHeld ?? '0 chains',
+      netValue: data.netValue ?? '$0',
+      activityData: data.activityData ?? [],
+      chain: data.chain ?? 'Multi-chain',
+      activeChains: data.activeChains ?? [],
+      balance: data.balance ?? '0 ETH',
+      chainDetails: data.chainDetails,
+    };
+  } catch (e) {
+    console.warn('Edge function wallet analysis failed, using fallback:', e);
+    // Fallback: return empty stats rather than mock data
+    return {
+      txCount: 0,
+      accountAge: 'Unable to fetch',
+      totalVolume: '—',
+      assetsHeld: '—',
+      netValue: '—',
+      activityData: [
+        { name: 'Jan', tx: 0 }, { name: 'Feb', tx: 0 }, { name: 'Mar', tx: 0 },
+        { name: 'Apr', tx: 0 }, { name: 'May', tx: 0 }, { name: 'Jun', tx: 0 },
+      ],
+      chain: 'Unknown',
+      activeChains: [],
+      balance: '—',
+    };
+  }
 };
