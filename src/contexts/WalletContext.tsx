@@ -70,6 +70,7 @@ const PrivyWalletProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { wallets } = useWallets();
   const [pendingConnect, setPendingConnect] = useState(false);
   const [forceDisconnected, setForceDisconnected] = useState(false);
+  const connectTimeoutRef = useRef<number | null>(null);
 
   const {
     userIdentity,
