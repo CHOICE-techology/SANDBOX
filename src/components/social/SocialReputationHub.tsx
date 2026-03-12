@@ -12,11 +12,10 @@ import { SocialPlatformCard } from './SocialPlatformCard';
 import { ChoiceButton } from '@/components/ChoiceButton';
 
 import { addCredential } from '@/services/storageService';
-import { mockUploadToIPFS, mockConnectSocial } from '@/services/cryptoService';
+import { mockUploadToIPFS } from '@/services/cryptoService';
 import { grantSocialConnectReward } from '@/services/rewardService';
 
 import { getPlatformMeta } from './platformLogos';
-import { calculateReputationBreakdown } from '@/services/scoreEngine';
 
 const HANDLE_PLATFORMS = new Set(['Telegram', 'Discord', 'Farcaster']);
 
@@ -156,8 +155,6 @@ export const SocialReputationHub: React.FC<SocialReputationHubProps> = ({ identi
   const overallScore = computeOverallSocialScore(socialCreds);
   const metrics = getAggregateMetrics(socialCreds);
   const insights = getInsights(socialCreds, metrics);
-  const trustSocialPoints = calculateReputationBreakdown(identity.credentials).categories.social;
-  const perPlatformHint = Math.round(40 / 7);
 
   useEffect(() => {
     if (overallScore !== prevScore) {
@@ -204,10 +201,14 @@ export const SocialReputationHub: React.FC<SocialReputationHubProps> = ({ identi
         ? `https://${platformToUse.toLowerCase()}.com/${handleInput.replace(/^@/, '')}`
         : handleInput;
 
-      const socialData = await mockConnectSocial(
-        platformToUse,
-        handleInput.replace(/^@/, '')
-      );
+      // Mock analysis for now, will be replaced by scoreEngine/ollama later
+      const data = {
+        followers: 1000,
+        engagementRate: 5.5,
+        botProbability: 10,
+        platform: platformToUse,
+        platformScore: 85
+      };
 
 
       const vc: VerifiableCredential = {
@@ -215,7 +216,7 @@ export const SocialReputationHub: React.FC<SocialReputationHubProps> = ({ identi
         type: ['VerifiableCredential', 'SocialCredential'],
         issuer: `did:web:${platformToUse.toLowerCase().replace(/\s+/g, '')}.com`,
         issuanceDate: new Date().toISOString(),
-        credentialSubject: { id: identity.did, ...socialData, platform: platformToUse, profileUrl },
+        credentialSubject: { id: identity.did, ...data },
       };
       await mockUploadToIPFS(vc);
       const newIdentity = await addCredential(identity, vc);
@@ -261,7 +262,7 @@ export const SocialReputationHub: React.FC<SocialReputationHubProps> = ({ identi
           </div>
         </div>
         <span className="bg-secondary/10 text-secondary text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-secondary/20 hidden sm:inline-flex">
-          {socialCreds.length > 0 ? `${trustSocialPoints}/40 pts` : '+40 pts max'}
+          {socialCreds.length > 0 ? `${Math.min(socialCreds.length * 5, 40)}/40 pts` : '+40 pts max'}
         </span>
       </div>
 
@@ -342,7 +343,7 @@ export const SocialReputationHub: React.FC<SocialReputationHubProps> = ({ identi
                   <Check size={9} className="text-emerald-400" />
                 ) : (
                   <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider group-hover:text-primary transition-colors">
-                    +up to {perPlatformHint} pts
+                    +5 pts
                   </span>
                 )}
               </button>
