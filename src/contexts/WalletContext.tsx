@@ -218,7 +218,9 @@ const PrivyWalletProvider: React.FC<{ children: React.ReactNode }> = ({ children
       userIdentity: null,
     });
     localStorage.removeItem('choice_wallet_address');
-  }, [logout, setUserIdentity, setConnectionState]);
+    localStorage.removeItem('choice_last_verification');
+    localStorage.removeItem('choice_job_applications_v1');
+    localStorage.removeItem('choice_claimed_bounties');
 
   const createProfile = useCallback(async (): Promise<boolean> => {
     if (!address || !authenticated) {

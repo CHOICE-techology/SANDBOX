@@ -42,10 +42,7 @@ export const WalletModal: React.FC = () => {
     // Small delay to let our dialog unmount before Privy opens its UI
     await new Promise((r) => setTimeout(r, 150));
     try {
-      const ok = await connect(id);
-      if (ok) {
-        setSuccessSet((prev) => new Set(prev).add(id));
-      }
+      await connect(id);
     } catch {
       // handled in context
     } finally {
