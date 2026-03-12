@@ -3,7 +3,7 @@ import { useWallet } from '@/contexts/WalletContext';
 import { VerifiableCredential } from '@/types';
 import { addCredential } from '@/services/storageService';
 import { mockUploadToIPFS } from '@/services/cryptoService';
-import { analyzeWalletHistory, BlockchainStats } from '@/services/blockchainService';
+import { analyzeWalletHistory, BlockchainStats, DetectedProtocol } from '@/services/blockchainService';
 import { grantWalletAnalysisReward } from '@/services/rewardService';
 import { ChoiceButton } from '@/components/ChoiceButton';
 import { SocialReputationHub } from '@/components/social/SocialReputationHub';
