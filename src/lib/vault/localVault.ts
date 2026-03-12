@@ -5,7 +5,7 @@ export class LocalVault {
 
   static async getInstance(): Promise<PGlite> {
     if (!this.instance) {
-      this.instance = new PGlite();
+      this.instance = new PGlite('idb://choiceid-vault');
       await this.initializeSchema(this.instance);
     }
     return this.instance;
