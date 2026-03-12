@@ -38,7 +38,7 @@ const ProfileSettingsPage: React.FC = () => {
       displayName: displayName || identity.displayName,
       bio: bio || identity.bio,
     });
-    navigate('/');
+    navigate('/identity');
   };
 
   const fields = [
