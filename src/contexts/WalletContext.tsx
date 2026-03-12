@@ -1,5 +1,20 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { usePrivy, useWallets } from '@privy-io/react-auth';
+import { UserIdentity } from '../types';
+import { loadIdentity, saveIdentity, syncIdentity, loadIdentityWithSync, clearIdentity } from '../services/storageService';
+import { generateDID, calculateReputationScore } from '../services/cryptoService';
+import { grantWalletConnectReward } from '@/services/rewardService';
+import { useChoiceStore } from '../store/useChoiceStore';
+
+// Safely import Privy hooks - they may not be available if no app ID is set
+let usePrivyHook: any = () => ({ login: () => {}, logout: async () => {}, user: null, authenticated: false, ready: true });
+let useWalletsHook: any = () => ({ wallets: [] });
+try {
+  const privy = require('@privy-io/react-auth');
+  usePrivyHook = privy.usePrivy;
+  useWalletsHook = privy.useWallets;
+} catch (e) {
+  // Privy not available
+}
 import { UserIdentity } from '../types';
 import { loadIdentity, saveIdentity, syncIdentity, loadIdentityWithSync, clearIdentity } from '../services/storageService';
 import { generateDID, calculateReputationScore } from '../services/cryptoService';
