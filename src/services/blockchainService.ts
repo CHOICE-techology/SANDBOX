@@ -1,5 +1,10 @@
 import { supabase } from '@/integrations/supabase/client';
 
+export interface DetectedProtocol {
+  name: string;
+  logo: string;
+}
+
 export interface BlockchainStats {
   txCount: number;
   accountAge: string;
@@ -11,6 +16,7 @@ export interface BlockchainStats {
   activeChains?: string[];
   balance?: string;
   chainDetails?: Record<string, { txCount: number; balance: number }>;
+  protocols?: DetectedProtocol[];
 }
 
 export const analyzeWalletHistory = async (address: string): Promise<BlockchainStats> => {
@@ -33,6 +39,7 @@ export const analyzeWalletHistory = async (address: string): Promise<BlockchainS
       activeChains: data.activeChains ?? [],
       balance: data.balance ?? '0 ETH',
       chainDetails: data.chainDetails,
+      protocols: data.protocols ?? [],
     };
   } catch (e) {
     console.warn('Edge function wallet analysis failed, using fallback:', e);

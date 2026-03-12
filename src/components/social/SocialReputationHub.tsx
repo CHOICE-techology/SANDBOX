@@ -262,7 +262,7 @@ export const SocialReputationHub: React.FC<SocialReputationHubProps> = ({ identi
           </div>
         </div>
         <span className="bg-secondary/10 text-secondary text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-secondary/20 hidden sm:inline-flex">
-          {socialCreds.length > 0 ? `40/40 pts` : '+40 pts max'}
+          {socialCreds.length > 0 ? `${Math.min(Math.round((connectedPlatforms.size / 7) * 40), 40)}/40 pts` : '+40 pts max'}
         </span>
       </div>
 
@@ -345,7 +345,9 @@ export const SocialReputationHub: React.FC<SocialReputationHubProps> = ({ identi
                   <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider group-hover:text-primary transition-colors">
                     +{(() => {
                       const futureCount = connectedPlatforms.size + 1;
-                      return Math.floor(40 / futureCount);
+                      const currentPts = Math.round((connectedPlatforms.size / 7) * 40);
+                      const futurePts = Math.min(Math.round((futureCount / 7) * 40), 40);
+                      return futurePts - currentPts;
                     })()} pts
                   </span>
                 )}
