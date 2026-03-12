@@ -495,7 +495,7 @@ DID: ${identity.did}`;
                         <Clock size={14} className="text-muted-foreground" />
                         <span className="text-xs font-semibold text-muted-foreground">Date</span>
                       </div>
-                      <span className="text-sm font-semibold text-foreground">{verificationData.date}</span>
+                      <span className="text-sm font-semibold text-foreground">{verificationData.date || 'Not available'}</span>
                     </div>
                     <div className="flex items-center justify-between px-5 py-3.5">
                       <div className="flex items-center gap-2">
