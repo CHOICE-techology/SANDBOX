@@ -328,12 +328,12 @@ DID: ${identity.did}`;
       {/* ═══════════════════════════════════════════════════════════════ */}
       {/* HERO: TRUST SCORE — SCOREBOARD (UNCHANGED)                    */}
       {/* ═══════════════════════════════════════════════════════════════ */}
-      <div className="glass border-primary/20 rounded-[2.5rem] shadow-2xl overflow-hidden relative group transition-all duration-500 hover:shadow-glow-primary/20">
-        <div className="bg-gradient-to-br from-primary/15 via-background to-secondary/10 p-6 md:p-12 relative">
-          <div className="absolute top-0 right-0 p-12 opacity-10 pointer-events-none">
+      <div className="rounded-[2.5rem] shadow-2xl overflow-hidden relative group transition-all duration-500 border border-slate-700/50">
+        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6 md:p-12 relative">
+          <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
             <CheckCircle size={400} className="text-primary" />
           </div>
-          <div className="absolute top-0 right-0 w-96 h-96 bg-primary rounded-full blur-[120px] opacity-10 pointer-events-none"></div>
+          <div className="absolute top-0 right-0 w-96 h-96 bg-primary rounded-full blur-[120px] opacity-[0.07] pointer-events-none"></div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center relative z-10">
             <div className="text-center md:text-left space-y-6">
