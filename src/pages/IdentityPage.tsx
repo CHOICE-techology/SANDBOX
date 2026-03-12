@@ -494,13 +494,13 @@ DID: ${identity.did}`;
                     <Shield size={20} className="text-primary" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-foreground">Verify Proofs On-Chain</h3>
-                    <p className="text-muted-foreground text-xs">Anchor your reputation hash to Arbitrum.</p>
+                    <h3 className="text-lg font-bold text-foreground">Submit Proofs for Manual Verification</h3>
+                    <p className="text-muted-foreground text-xs">Request review before final on-chain anchoring.</p>
                   </div>
                 </div>
                 <Link to="/verify" className="shrink-0">
                   <ChoiceButton size="sm" className="shadow-lg hover:shadow-xl transition-all">
-                    VERIFY NOW <CheckCircle className="ml-1.5" size={14} />
+                    OPEN REQUEST <CheckCircle className="ml-1.5" size={14} />
                   </ChoiceButton>
                 </Link>
               </div>
