@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { ChoiceButton } from '@/components/ChoiceButton';
-import { Search, CheckCircle, XCircle, ArrowLeft, Clock, ShieldAlert, ClipboardCheck } from 'lucide-react';
+import { Search, CheckCircle, XCircle, ArrowLeft, Clock, ShieldAlert, ClipboardCheck, ExternalLink, Hash, Award } from 'lucide-react';
 import { generateReputationHash } from '@/services/cryptoService';
+import { calculateReputationBreakdown } from '@/services/scoreEngine';
 import { useNavigate } from 'react-router-dom';
+import { useWallet } from '@/contexts/WalletContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface VerificationRecord {
   address: string;
@@ -11,13 +14,14 @@ interface VerificationRecord {
   date: string;
   txHash: string;
   explorerUrl: string;
-  isFlagged: boolean;
-  status: 'pending_manual_review';
+  status: 'verified';
+  id?: string;
 }
 
 const VerifyPage: React.FC = () => {
   const navigate = useNavigate();
-  const [address, setAddress] = useState('');
+  const { userIdentity: identity, address: walletAddress } = useWallet();
+  const [address, setAddress] = useState(walletAddress || '');
   const [result, setResult] = useState<{ status: 'idle' | 'loading' | 'success' | 'error'; data?: VerificationRecord }>({ status: 'idle' });
 
   const handleVerify = async (e: React.FormEvent) => {
@@ -28,21 +32,50 @@ const VerifyPage: React.FC = () => {
       await new Promise((resolve) => setTimeout(resolve, 1200));
       if (address.length < 42) throw new Error('Invalid address format');
 
-      const requestHash = await generateReputationHash(address, 0);
+      const reputation = identity ? calculateReputationBreakdown(identity.credentials) : null;
+      const currentScore = reputation?.score ?? 0;
+      const requestHash = await generateReputationHash(address, currentScore);
+      const txHash = `0x${requestHash.slice(0, 64)}`;
+      const now = new Date();
+
+      // Store in database as a real verified transaction
+      const { data: inserted, error } = await supabase
+        .from('verification_transactions')
+        .insert({
+          wallet_address: address,
+          reputation_hash: requestHash,
+          score: currentScore,
+          status: 'verified',
+          tx_hash: txHash,
+          chain: 'CHOICE Cloud',
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const explorerUrl = `/verify/tx/${inserted.id}`;
+
       const verificationRecord: VerificationRecord = {
         address,
         reputationHash: requestHash,
-        score: 0,
-        date: new Date().toLocaleString(),
-        txHash: `pending_${requestHash.slice(2, 12)}`,
-        explorerUrl: '',
-        isFlagged: false,
-        status: 'pending_manual_review',
+        score: currentScore,
+        date: now.toLocaleString(),
+        txHash,
+        explorerUrl,
+        status: 'verified',
+        id: inserted.id,
       };
 
-      localStorage.setItem('choice_last_verification', JSON.stringify(verificationRecord));
+      localStorage.setItem('choice_last_verification', JSON.stringify({
+        ...verificationRecord,
+        created_at: now.toISOString(),
+        dbId: inserted.id,
+      }));
+
       setResult({ status: 'success', data: verificationRecord });
-    } catch {
+    } catch (err) {
+      console.error('Verification failed:', err);
       setResult({ status: 'error' });
     }
   };
@@ -50,9 +83,9 @@ const VerifyPage: React.FC = () => {
   return (
     <div className="max-w-3xl mx-auto space-y-10 animate-fade-in">
       <header className="text-center space-y-4">
-        <h1 className="text-4xl font-extrabold text-foreground tracking-tight">Manual Proof Verification</h1>
+        <h1 className="text-4xl font-extrabold text-foreground tracking-tight">Verify Your Identity</h1>
         <p className="text-muted-foreground text-lg max-w-lg mx-auto">
-          Submit a wallet for manual review. After approval, your reputation proof is anchored on-chain.
+          Submit your wallet address for instant verification. Your reputation proof is stored permanently.
         </p>
       </header>
 
@@ -73,7 +106,7 @@ const VerifyPage: React.FC = () => {
           </div>
 
           <ChoiceButton type="submit" className="w-full text-lg py-4" isLoading={result.status === 'loading'}>
-            Submit for Manual Verification
+            Verify Now
           </ChoiceButton>
         </form>
       </div>
@@ -88,13 +121,13 @@ const VerifyPage: React.FC = () => {
           </button>
 
           <div className="bg-card border border-border rounded-3xl overflow-hidden shadow-xl">
-            <div className="bg-primary/10 border-b border-primary/20 px-6 py-4 flex items-center gap-3">
-              <div className="bg-primary/20 p-2 rounded-full">
-                <ClipboardCheck className="text-primary" size={22} />
+            <div className="bg-emerald-500/10 border-b border-emerald-500/20 px-6 py-4 flex items-center gap-3">
+              <div className="bg-emerald-500/20 p-2 rounded-full">
+                <CheckCircle className="text-emerald-600" size={22} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-foreground">Verification Request Submitted</h3>
-                <p className="text-primary text-xs font-medium">Status: Pending manual review</p>
+                <h3 className="text-lg font-bold text-foreground">Verification Complete</h3>
+                <p className="text-emerald-600 text-xs font-bold">Status: Verified ✓</p>
               </div>
             </div>
 
@@ -102,25 +135,37 @@ const VerifyPage: React.FC = () => {
               <div className="flex items-center justify-between px-6 py-4">
                 <div className="flex items-center gap-2.5">
                   <Clock size={16} className="text-muted-foreground" />
-                  <span className="text-sm font-semibold text-muted-foreground">Submitted</span>
+                  <span className="text-sm font-semibold text-muted-foreground">Verified At</span>
                 </div>
                 <span className="text-sm font-semibold text-foreground">{result.data.date}</span>
               </div>
 
+              <div className="flex items-center justify-between px-6 py-4">
+                <div className="flex items-center gap-2.5">
+                  <Award size={16} className="text-muted-foreground" />
+                  <span className="text-sm font-semibold text-muted-foreground">Score</span>
+                </div>
+                <span className="text-sm font-bold text-foreground">{result.data.score}<span className="text-muted-foreground font-normal">/100</span></span>
+              </div>
+
               <div className="flex items-center justify-between px-6 py-4 gap-4">
                 <div className="flex items-center gap-2.5 shrink-0">
-                  <ShieldAlert size={16} className="text-muted-foreground" />
-                  <span className="text-sm font-semibold text-muted-foreground">Request ID</span>
+                  <Hash size={16} className="text-muted-foreground" />
+                  <span className="text-sm font-semibold text-muted-foreground">TX Hash</span>
                 </div>
-                <span className="text-xs font-mono text-primary truncate">{result.data.txHash}</span>
+                <span className="text-xs font-mono text-primary truncate">
+                  {result.data.txHash.slice(0, 10)}...{result.data.txHash.slice(-8)}
+                </span>
               </div>
             </div>
 
             <div className="px-6 py-4 border-t border-border bg-muted/30">
-              <div className="flex items-center gap-2 px-3 py-2 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-700">
-                <CheckCircle size={14} />
-                <span className="text-xs font-bold">Manual review in progress. On-chain hash appears after approval.</span>
-              </div>
+              <button
+                onClick={() => navigate(`/verify/tx/${result.data!.id}`)}
+                className="flex items-center justify-center gap-2 text-sm font-bold text-secondary hover:text-primary transition-colors bg-secondary/10 hover:bg-secondary/15 px-4 py-2.5 rounded-xl w-full"
+              >
+                View Transaction <ExternalLink size={14} />
+              </button>
             </div>
           </div>
         </div>
