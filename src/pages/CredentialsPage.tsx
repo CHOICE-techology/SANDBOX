@@ -86,10 +86,16 @@ const CredentialsPage: React.FC = () => {
   const [isAnalyzingAdded, setIsAnalyzingAdded] = useState(false);
   const [addedWallets, setAddedWallets] = useState<AddedWallet[]>([]);
 
-  // Auto-analyze connected wallet on mount
+  // Custom address input for wallet history analysis
+  const [customAddress, setCustomAddress] = useState('');
+
+  // Auto-populate connected wallet address and analyze on mount
   useEffect(() => {
-    if (identity?.address && !walletStats && !walletCredential && !isAnalyzingWallet) {
-      analyzeWallet();
+    if (identity?.address) {
+      setCustomAddress(identity.address);
+      if (!walletStats && !walletCredential && !isAnalyzingWallet) {
+        analyzeWallet(identity.address);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [identity?.address]);
