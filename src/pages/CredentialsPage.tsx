@@ -681,9 +681,9 @@ const CredentialsPage: React.FC = () => {
               {physicalCredentials.map((vc: VerifiableCredential) => {
                 const dtype = vc.credentialSubject.documentType as string;
                 const fname = vc.credentialSubject.fileName as string;
-                const status = (vc.credentialSubject.verificationStatus as string) || 'Pending Manual Review';
                 const IconComp = docTypeIconComponents[dtype] || FileText;
-                const pending = status.toLowerCase().includes('pending');
+                const txHash = vc.ipfsCid || vc.id.replace('urn:uuid:', '');
+                const explorerUrl = `https://etherscan.io/tx/0x${txHash.replace(/-/g, '').slice(0, 64)}`;
                 return (
                   <div key={vc.id} className="bg-muted border border-border rounded-xl p-3.5 flex items-center gap-3">
                     <div className="p-2 bg-primary/10 rounded-lg flex-shrink-0">
@@ -692,12 +692,20 @@ const CredentialsPage: React.FC = () => {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <span className="font-black text-foreground text-sm">{dtype}</span>
-                        <span className={cn('text-[8px] font-black px-2 py-0.5 rounded-full uppercase border inline-flex items-center gap-1', pending ? 'bg-amber-500/10 text-amber-600 border-amber-500/20' : 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20')}>
-                          {pending ? <Clock3 size={10} /> : <CheckCircle2 size={10} />} {status}
+                        <span className="text-[8px] font-black px-2 py-0.5 rounded-full uppercase border inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+                          <CheckCircle2 size={10} /> Verified
                         </span>
                       </div>
                       <p className="text-xs text-muted-foreground font-medium truncate mt-0.5">{fname}</p>
                     </div>
+                    <a
+                      href={explorerUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 text-[10px] font-bold text-primary hover:underline whitespace-nowrap flex-shrink-0"
+                    >
+                      <ExternalLink size={12} /> View Transaction
+                    </a>
                   </div>
                 );
               })}
