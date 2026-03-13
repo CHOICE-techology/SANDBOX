@@ -707,6 +707,15 @@ DID: ${identity.did}`;
                     <span className="ml-auto text-[10px] font-mono text-emerald-600">Arbitrum Sepolia</span>
                   </div>
                   <div className="divide-y divide-border">
+                    <div className="flex items-center justify-between px-5 py-3.5 gap-3">
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Wallet size={14} className="text-muted-foreground" />
+                        <span className="text-xs font-semibold text-muted-foreground">Address</span>
+                      </div>
+                      <span className="text-xs font-mono text-foreground truncate">
+                        {identity.address}
+                      </span>
+                    </div>
                     <div className="flex items-center justify-between px-5 py-3.5">
                       <div className="flex items-center gap-2">
                         <Clock size={14} className="text-muted-foreground" />
