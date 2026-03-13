@@ -323,13 +323,28 @@ const CredentialsPage: React.FC = () => {
             <div className="bg-primary/10 p-1.5 rounded-lg">
               <Wallet size={14} className="text-primary" />
             </div>
-            <span className="flex-1 text-xs font-mono text-slate-300 truncate">{identity.address}</span>
+            <input
+              type="text"
+              value={customAddress}
+              onChange={(e) => setCustomAddress(e.target.value)}
+              placeholder="Enter any wallet address to analyze..."
+              className="flex-1 text-xs font-mono text-slate-300 truncate bg-transparent border-none outline-none placeholder:text-slate-500"
+            />
+            {customAddress !== identity.address && customAddress.trim() && (
+              <button
+                onClick={() => setCustomAddress(identity.address)}
+                className="text-slate-400 hover:text-slate-200 transition-colors p-1"
+                title="Reset to connected wallet"
+              >
+                <X size={12} />
+              </button>
+            )}
             <button
-              onClick={analyzeWallet}
-              disabled={isAnalyzingWallet}
+              onClick={() => analyzeWallet()}
+              disabled={isAnalyzingWallet || !customAddress.trim()}
               className={cn(
                 'px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all',
-                isAnalyzingWallet
+                isAnalyzingWallet || !customAddress.trim()
                   ? 'bg-primary/30 text-primary/60 cursor-wait'
                   : 'bg-primary text-primary-foreground hover:brightness-110 shadow-lg shadow-primary/30',
               )}
