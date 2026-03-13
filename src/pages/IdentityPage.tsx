@@ -550,7 +550,7 @@ DID: ${identity.did}`;
               <div className="border-b px-5 py-3 flex items-center gap-2 bg-emerald-500/10 border-emerald-500/20">
                 <CheckCircle size={14} className="text-emerald-600" />
                 <span className="text-xs font-bold text-emerald-700">Verified</span>
-                <span className="ml-auto text-[10px] font-mono text-emerald-600">Arbitrum Sepolia</span>
+                <span className="ml-auto text-[10px] font-mono text-emerald-600">{verificationData.chain}</span>
               </div>
               <div className="divide-y divide-border">
                 <div className="flex items-center justify-between px-5 py-3.5">
