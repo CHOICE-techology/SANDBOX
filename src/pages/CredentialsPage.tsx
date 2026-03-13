@@ -210,7 +210,13 @@ const CredentialsPage: React.FC = () => {
                     selectedChain === chain.id && 'ring-2 ring-primary/50',
                   )}
                 >
-                  <img src={chain.logo} alt={chain.name} className="w-6 h-6 object-contain" />
+                  {chain.logo ? (
+                    <img src={chain.logo} alt={chain.name} className="w-6 h-6 object-contain" />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-black" style={{ backgroundColor: chain.color }}>
+                      {chain.letter}
+                    </div>
+                  )}
                   <span className="text-[8px] font-black text-slate-300 uppercase tracking-wider">{chain.name}</span>
                   {active && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />}
                 </button>
