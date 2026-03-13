@@ -82,6 +82,24 @@ const LessonPage: React.FC = () => {
       await onUpdateIdentity(newIdentity);
       setCompleted(true);
 
+      // Grant CHOICE reward instantly
+      const reward = course.choiceReward ?? 40;
+      try {
+        await supabase.rpc('increment_choice_balance', {
+          p_wallet_address: identity.address,
+          p_amount: reward,
+        });
+        await supabase.from('choice_transactions').insert({
+          user_id: identity.address,
+          amount: reward,
+          type: 'education_reward',
+          reason: `Completed course: ${course.title}`,
+        });
+        window.dispatchEvent(new CustomEvent('choice-rewards-updated'));
+      } catch (rewardErr) {
+        console.warn('Reward grant failed', rewardErr);
+      }
+
     } catch (e) {
       console.error(e);
     } finally {
