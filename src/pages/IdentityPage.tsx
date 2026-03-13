@@ -148,7 +148,7 @@ const IdentityPage: React.FC = () => {
         date: getSafeDisplayDate(identity.lastAnchorTimestamp),
         score,
         txHash: mockTxHash,
-        explorerUrl: `https://sepolia.arbiscan.io/tx/${mockTxHash}`,
+        explorerUrl: `https://etherscan.io/tx/${mockTxHash}`,
       };
     }
     if (navState?.verificationData) {
