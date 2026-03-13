@@ -156,7 +156,7 @@ const IdentityPage: React.FC = () => {
         date: getSafeDisplayDate(navState.verificationData.date),
         score,
         txHash: navState.verificationData.txHash,
-        explorerUrl: navState.verificationData.explorerUrl || `https://sepolia.arbiscan.io/tx/${navState.verificationData.txHash}`,
+        explorerUrl: `https://etherscan.io/tx/${navState.verificationData.txHash}`,
       };
     }
     // Fallback: last persisted verification from localStorage
