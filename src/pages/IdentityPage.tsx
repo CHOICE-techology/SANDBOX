@@ -669,7 +669,7 @@ DID: ${identity.did}`;
                         rel="noopener noreferrer"
                         className="flex items-center justify-center gap-2 text-sm font-bold text-secondary hover:text-primary transition-colors bg-secondary/10 hover:bg-secondary/15 px-4 py-2.5 rounded-xl w-full"
                       >
-                        View on Arbiscan <ExternalLink size={14} />
+                        View Transaction <ExternalLink size={14} />
                       </a>
                     </div>
                   )}
