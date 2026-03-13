@@ -559,36 +559,8 @@ const CredentialsPage: React.FC = () => {
       )}
 
       {/* ══════════════════════════════════════════════════════════ */}
-      {/* CHOICE CV — Auto-generated summary                        */}
+      {/* PROOFS OF VERIFICATION (moved above CHOICE CV)            */}
       {/* ══════════════════════════════════════════════════════════ */}
-      <section className="bg-card border border-border rounded-2xl p-5 md:p-6 shadow-sm">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="bg-primary/10 p-2 rounded-xl border border-primary/20">
-            <FileCode size={18} className="text-primary" />
-          </div>
-          <div>
-            <h2 className="text-base font-black text-foreground tracking-tight">CHOICE CV</h2>
-            <p className="text-muted-foreground text-[10px] font-medium">Auto-generated from your credentials</p>
-          </div>
-        </div>
-
-        <p className="text-sm text-foreground leading-relaxed mb-4">{cvSummary}</p>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {[
-            { label: 'Courses', value: badges.length, icon: BookOpen, color: 'text-emerald-400' },
-            { label: 'Socials', value: socialPlatforms.length, icon: Users, color: 'text-blue-400' },
-            { label: 'Chains', value: [...new Set(walletChains)].length, icon: Wallet, color: 'text-purple-400' },
-            { label: 'Documents', value: physicalDocs.length, icon: FileText, color: 'text-amber-400' },
-          ].map(({ label, value, icon: Icon, color }) => (
-            <div key={label} className="bg-muted/50 border border-border rounded-lg p-2.5 text-center">
-              <Icon size={14} className={cn('mx-auto mb-1', color)} />
-              <p className="text-lg font-black text-foreground">{value}</p>
-              <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">{label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
 
       {/* ══════════════════════════════════════════════════════════ */}
       {/* PROOFS OF VERIFICATION                                    */}
