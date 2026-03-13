@@ -39,8 +39,10 @@ const LessonPage: React.FC = () => {
   const isLastLesson = currentLessonIdx === course.lessons.length - 1;
   const progress = ((currentLessonIdx + (answered ? 1 : 0)) / course.lessons.length) * 100;
 
+  const isCorrectAnswer = selectedAnswer !== null && lesson.quiz && selectedAnswer === lesson.quiz.correctIndex;
+
   const handleAnswer = (idx: number) => {
-    if (answered) return;
+    if (isCorrectAnswer) return; // lock after correct answer
     setSelectedAnswer(idx);
     setAnswered(true);
     if (lesson.quiz && idx === lesson.quiz.correctIndex) {
