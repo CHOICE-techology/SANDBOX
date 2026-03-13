@@ -148,7 +148,7 @@ const IdentityPage: React.FC = () => {
         date: getSafeDisplayDate(identity.lastAnchorTimestamp),
         score,
         txHash: mockTxHash,
-        explorerUrl: `https://sepolia.arbiscan.io/tx/${mockTxHash}`,
+        explorerUrl: `https://etherscan.io/tx/${mockTxHash}`,
       };
     }
     if (navState?.verificationData) {
@@ -156,7 +156,7 @@ const IdentityPage: React.FC = () => {
         date: getSafeDisplayDate(navState.verificationData.date),
         score,
         txHash: navState.verificationData.txHash,
-        explorerUrl: navState.verificationData.explorerUrl || `https://sepolia.arbiscan.io/tx/${navState.verificationData.txHash}`,
+        explorerUrl: `https://etherscan.io/tx/${navState.verificationData.txHash}`,
       };
     }
     // Fallback: last persisted verification from localStorage
@@ -168,7 +168,7 @@ const IdentityPage: React.FC = () => {
           date: getSafeDisplayDate(parsed.date),
           score,
           txHash: parsed.txHash,
-          explorerUrl: parsed.explorerUrl || `https://sepolia.arbiscan.io/tx/${parsed.txHash}`,
+          explorerUrl: `https://etherscan.io/tx/${parsed.txHash}`,
         };
       }
     } catch {}
@@ -654,7 +654,11 @@ DID: ${identity.did}`;
                         <Hash size={14} className="text-muted-foreground" />
                         <span className="text-xs font-semibold text-muted-foreground">{isVerificationPending ? 'Request ID' : 'TX Hash'}</span>
                       </div>
-                      <span className="text-xs font-mono text-primary truncate">{verificationData.txHash}</span>
+                      <span className="text-xs font-mono text-primary truncate">
+                        {verificationData.txHash.length > 10
+                          ? `${verificationData.txHash.slice(0, 6)}...${verificationData.txHash.slice(-4)}`
+                          : verificationData.txHash}
+                      </span>
                     </div>
                   </div>
                   {!isVerificationPending && verificationData.explorerUrl && (
@@ -665,7 +669,7 @@ DID: ${identity.did}`;
                         rel="noopener noreferrer"
                         className="flex items-center justify-center gap-2 text-sm font-bold text-secondary hover:text-primary transition-colors bg-secondary/10 hover:bg-secondary/15 px-4 py-2.5 rounded-xl w-full"
                       >
-                        View on Arbiscan <ExternalLink size={14} />
+                        View Transaction <ExternalLink size={14} />
                       </a>
                     </div>
                   )}
