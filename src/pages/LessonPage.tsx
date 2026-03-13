@@ -215,27 +215,28 @@ const LessonPage: React.FC = () => {
             {lesson.quiz.options.map((option, idx) => {
               const isSelected = selectedAnswer === idx;
               const isCorrect = idx === lesson.quiz?.correctIndex;
-              const showResult = answered;
+              const wasWrong = answered && isSelected && !isCorrect;
+              const wasRight = answered && isSelected && isCorrect;
               
               let variantClass = "border-border hover:border-primary/50 hover:bg-muted/50";
-              if (showResult) {
-                if (isCorrect) variantClass = "border-emerald-500 bg-emerald-500/10 text-emerald-500";
-                else if (isSelected) variantClass = "border-destructive bg-destructive/10 text-destructive";
-                else variantClass = "opacity-50 border-border";
-              } else if (isSelected) {
-                variantClass = "border-primary bg-primary/10 text-primary";
+              if (wasRight) {
+                variantClass = "border-emerald-500 bg-emerald-500/10 text-emerald-500";
+              } else if (wasWrong) {
+                variantClass = "border-destructive bg-destructive/10 text-destructive";
+              } else if (isCorrectAnswer && isCorrect) {
+                variantClass = "border-emerald-500 bg-emerald-500/10 text-emerald-500";
               }
 
               return (
                 <button
                   key={idx}
                   onClick={() => handleAnswer(idx)}
-                  disabled={answered}
+                  disabled={!!isCorrectAnswer}
                   className={`w-full text-left p-4 rounded-xl border-2 font-medium transition-all flex items-center justify-between ${variantClass}`}
                 >
                   <span>{option}</span>
-                  {showResult && isCorrect && <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px]">✓</div>}
-                  {showResult && isSelected && !isCorrect && <div className="w-5 h-5 rounded-full bg-destructive text-white flex items-center justify-center text-[10px]">✕</div>}
+                  {wasRight && <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px]">✓</div>}
+                  {wasWrong && <div className="w-5 h-5 rounded-full bg-destructive text-white flex items-center justify-center text-[10px]">✕</div>}
                 </button>
               );
             })}
