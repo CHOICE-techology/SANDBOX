@@ -39,8 +39,10 @@ const LessonPage: React.FC = () => {
   const isLastLesson = currentLessonIdx === course.lessons.length - 1;
   const progress = ((currentLessonIdx + (answered ? 1 : 0)) / course.lessons.length) * 100;
 
+  const isCorrectAnswer = selectedAnswer !== null && lesson.quiz && selectedAnswer === lesson.quiz.correctIndex;
+
   const handleAnswer = (idx: number) => {
-    if (answered) return;
+    if (isCorrectAnswer) return; // lock after correct answer
     setSelectedAnswer(idx);
     setAnswered(true);
     if (lesson.quiz && idx === lesson.quiz.correctIndex) {
@@ -213,27 +215,28 @@ const LessonPage: React.FC = () => {
             {lesson.quiz.options.map((option, idx) => {
               const isSelected = selectedAnswer === idx;
               const isCorrect = idx === lesson.quiz?.correctIndex;
-              const showResult = answered;
+              const wasWrong = answered && isSelected && !isCorrect;
+              const wasRight = answered && isSelected && isCorrect;
               
               let variantClass = "border-border hover:border-primary/50 hover:bg-muted/50";
-              if (showResult) {
-                if (isCorrect) variantClass = "border-emerald-500 bg-emerald-500/10 text-emerald-500";
-                else if (isSelected) variantClass = "border-destructive bg-destructive/10 text-destructive";
-                else variantClass = "opacity-50 border-border";
-              } else if (isSelected) {
-                variantClass = "border-primary bg-primary/10 text-primary";
+              if (wasRight) {
+                variantClass = "border-emerald-500 bg-emerald-500/10 text-emerald-500";
+              } else if (wasWrong) {
+                variantClass = "border-destructive bg-destructive/10 text-destructive";
+              } else if (isCorrectAnswer && isCorrect) {
+                variantClass = "border-emerald-500 bg-emerald-500/10 text-emerald-500";
               }
 
               return (
                 <button
                   key={idx}
                   onClick={() => handleAnswer(idx)}
-                  disabled={answered}
+                  disabled={!!isCorrectAnswer}
                   className={`w-full text-left p-4 rounded-xl border-2 font-medium transition-all flex items-center justify-between ${variantClass}`}
                 >
                   <span>{option}</span>
-                  {showResult && isCorrect && <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px]">✓</div>}
-                  {showResult && isSelected && !isCorrect && <div className="w-5 h-5 rounded-full bg-destructive text-white flex items-center justify-center text-[10px]">✕</div>}
+                  {wasRight && <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px]">✓</div>}
+                  {wasWrong && <div className="w-5 h-5 rounded-full bg-destructive text-white flex items-center justify-center text-[10px]">✕</div>}
                 </button>
               );
             })}
@@ -242,7 +245,7 @@ const LessonPage: React.FC = () => {
           {answered && (
             <div className={`mt-6 p-4 rounded-xl border ${selectedAnswer === lesson.quiz.correctIndex ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-600' : 'bg-destructive/5 border-destructive/20 text-destructive'} animate-in fade-in slide-in-from-top-2`}>
               <p className="text-sm font-bold">
-                {selectedAnswer === lesson.quiz.correctIndex ? '✨ Correct! Well done.' : 'Oops! That\'s not quite right.'}
+                {selectedAnswer === lesson.quiz.correctIndex ? '✨ Correct! Well done.' : 'Try Again'}
               </p>
             </div>
           )}
@@ -297,7 +300,7 @@ const LessonPage: React.FC = () => {
         </ChoiceButton>
         <ChoiceButton
           onClick={handleNext}
-          disabled={!answered && !!lesson.quiz}
+          disabled={lesson.quiz ? !isCorrectAnswer : false}
           isLoading={completing}
           className="rounded-xl px-8"
         >
