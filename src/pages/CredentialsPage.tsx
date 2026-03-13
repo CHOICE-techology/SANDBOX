@@ -119,7 +119,7 @@ const CredentialsPage: React.FC = () => {
         ],
       };
       await onUpdateIdentity(dedupedIdentity);
-      await grantWalletAnalysisReward(identity.address, identity.address);
+      
     } catch (e) {
       console.error('Wallet analysis failed', e);
     } finally {
