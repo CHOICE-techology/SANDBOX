@@ -60,7 +60,9 @@ const IdentityPage: React.FC = () => {
   const [appSent, setAppSent] = useState(false);
   const [isCreatingProfile, setIsCreatingProfile] = useState(false);
   const [affiliateLink, setAffiliateLink] = useState('');
-  const [invitedCount] = useState(() => Math.floor(Math.random() * 5));
+  const [referralCode, setReferralCode] = useState('');
+  const [referrals, setReferrals] = useState<Referral[]>([]);
+  const [isLoadingReferrals, setIsLoadingReferrals] = useState(false);
   const [choiceBalance, setChoiceBalance] = useState(0);
   const [recentTxs, setRecentTxs] = useState<ChoiceTransaction[]>([]);
   const [showAllTxs, setShowAllTxs] = useState(false);
