@@ -659,19 +659,17 @@ DID: ${identity.did}`;
                       </div>
                       <span className="text-sm font-semibold text-foreground">{verificationData.date || 'Not available'}</span>
                     </div>
-                    {!isVerificationPending && (
-                      <div className="flex items-center justify-between px-5 py-3.5">
-                        <div className="flex items-center gap-2">
-                          <Award size={14} className="text-muted-foreground" />
-                          <span className="text-xs font-semibold text-muted-foreground">Anchored Score</span>
-                        </div>
-                        <span className="text-sm font-bold text-foreground">{verificationData.score}<span className="text-muted-foreground font-normal">/100</span></span>
+                    <div className="flex items-center justify-between px-5 py-3.5">
+                      <div className="flex items-center gap-2">
+                        <Award size={14} className="text-muted-foreground" />
+                        <span className="text-xs font-semibold text-muted-foreground">Anchored Score</span>
                       </div>
-                    )}
+                      <span className="text-sm font-bold text-foreground">{verificationData.score}<span className="text-muted-foreground font-normal">/100</span></span>
+                    </div>
                     <div className="flex items-center justify-between px-5 py-3.5 gap-3">
                       <div className="flex items-center gap-2 shrink-0">
                         <Hash size={14} className="text-muted-foreground" />
-                        <span className="text-xs font-semibold text-muted-foreground">{isVerificationPending ? 'Request ID' : 'TX Hash'}</span>
+                        <span className="text-xs font-semibold text-muted-foreground">TX Hash</span>
                       </div>
                       <span className="text-xs font-mono text-primary truncate">
                         {verificationData.txHash.length > 10
@@ -680,7 +678,7 @@ DID: ${identity.did}`;
                       </span>
                     </div>
                   </div>
-                  {!isVerificationPending && verificationData.explorerUrl && (
+                  {verificationData.explorerUrl && (
                     <div className="px-5 py-3.5 border-t border-border bg-muted/50">
                       <a
                         href={verificationData.explorerUrl}
