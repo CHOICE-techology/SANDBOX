@@ -163,7 +163,7 @@ const BountyBoardPage: React.FC = () => {
 
   const getTaskStatus = (task: BountyTask): 'claimable' | 'locked' | 'completed' => {
     if (claimedIds.has(task.id)) return 'completed';
-    if (score < task.minScore) return 'locked';
+    if (completedCoursesCount < task.minCourses) return 'locked';
     return 'claimable';
   };
 
