@@ -17,6 +17,7 @@ import JobsPage from "./pages/JobsPage";
 import BountyBoardPage from "./pages/BountyBoardPage";
 import AboutPage from "./pages/AboutPage";
 import VerifyPage from "./pages/VerifyPage";
+import TransactionViewPage from "./pages/TransactionViewPage";
 import WalletManagerPage from "./pages/WalletManagerPage";
 import ProfileSettingsPage from "./pages/ProfileSettingsPage";
 import NotFound from "./pages/NotFound";
@@ -56,6 +57,7 @@ const AppContent = () => {
                 <Route path="/bounties" element={<BountyBoardPage />} />
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/verify" element={<VerifyPage />} />
+                <Route path="/verify/tx/:txId" element={<TransactionViewPage />} />
                 <Route path="/wallet/create" element={<WalletManagerPage />} />
                 <Route path="/profile/settings" element={<ProfileSettingsPage />} />
                 <Route path="*" element={<NotFound />} />
