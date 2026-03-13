@@ -567,13 +567,14 @@ const CredentialsPage: React.FC = () => {
           </span>
         </div>
 
-        {/* Score breakdown from reputation */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        {/* 5-column signal summary */}
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
           {[
-            { label: 'Physical Score', value: `${breakdown.categories.physical}/20`, icon: Shield, color: 'text-emerald-400' },
-            { label: 'Docs Verified', value: `${physicalCredentials.length}/4`, icon: FileCheck, color: 'text-primary' },
-            { label: 'Social Score', value: `${breakdown.categories.social}/40`, icon: Users, color: 'text-secondary' },
-            { label: 'Total Score', value: `${breakdown.score}/100`, icon: TrendingUp, color: 'text-amber-400' },
+            { label: 'Social Accounts', value: `${breakdown.categories.social}/40`, icon: Users, color: 'text-secondary' },
+            { label: 'Documents', value: `${physicalCredentials.length}/4`, icon: FileCheck, color: 'text-primary' },
+            { label: 'Wallets', value: `${(activeChains.length || 0) + addedWallets.length}`, icon: Wallet, color: 'text-accent' },
+            { label: 'Courses', value: `${identity.credentials.filter((vc: VerifiableCredential) => vc.type.includes('EducationCredential')).length}`, icon: GraduationCap, color: 'text-amber-400' },
+            { label: 'Trust Score', value: `${breakdown.score}/100`, icon: TrendingUp, color: 'text-emerald-400' },
           ].map(({ label, value, icon: Icon, color }) => (
             <div key={label} className="bg-muted/60 border border-border rounded-xl p-3 text-center">
               <Icon size={16} className={cn('mx-auto mb-1.5', color)} />

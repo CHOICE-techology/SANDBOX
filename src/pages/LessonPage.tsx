@@ -257,14 +257,32 @@ const LessonPage: React.FC = () => {
               🏆
             </div>
             <h2 className="text-2xl font-bold mb-2">Course Completed!</h2>
-            <p className="text-muted-foreground mb-8">
+            <p className="text-muted-foreground mb-4">
               Congratulations! You've earned the <strong>{course.title}</strong> badge and <strong>{course.points} Reputation Points</strong>.
             </p>
-            <ChoiceButton className="w-full" onClick={() => navigate('/education')}>
-              Back to Academy
-            </ChoiceButton>
+            <div className="bg-primary/10 border border-primary/20 rounded-xl p-3 mb-6">
+              <p className="text-primary font-black text-sm">◈ +{course.choiceReward ?? 40} CHOICE earned!</p>
+            </div>
+            <div className="flex gap-3">
+              <ChoiceButton variant="outline" className="flex-1" onClick={() => setShareOpen(true)}>
+                <Share2 size={14} className="mr-1.5" /> Share Badge
+              </ChoiceButton>
+              <ChoiceButton className="flex-1" onClick={() => navigate('/education')}>
+                Back to Academy
+              </ChoiceButton>
+            </div>
           </div>
         </div>
+      )}
+
+      {course && (
+        <ShareBadgeDialog
+          open={shareOpen}
+          onOpenChange={setShareOpen}
+          courseName={course.title}
+          courseLevel={course.level}
+          points={course.points}
+        />
       )}
 
       {/* Navigation */}
