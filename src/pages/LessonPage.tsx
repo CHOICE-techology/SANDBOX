@@ -299,7 +299,7 @@ const LessonPage: React.FC = () => {
         </ChoiceButton>
         <ChoiceButton
           onClick={handleNext}
-          disabled={!answered && !!lesson.quiz}
+          disabled={lesson.quiz ? !isCorrectAnswer : false}
           isLoading={completing}
           className="rounded-xl px-8"
         >
