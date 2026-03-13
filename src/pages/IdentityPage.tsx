@@ -89,11 +89,15 @@ const IdentityPage: React.FC = () => {
   }, [identity?.address]);
 
   // Fetch CHOICE balance & transactions
+  const [allTxs, setAllTxs] = useState<ChoiceTransaction[]>([]);
   useEffect(() => {
     if (!identity?.address) return;
     const refresh = () => {
       getChoiceBalance(identity.address).then(setChoiceBalance);
-      getTransactionHistory(identity.address).then(txs => setRecentTxs(txs.slice(0, 10)));
+      getTransactionHistory(identity.address).then(txs => {
+        setAllTxs(txs);
+        setRecentTxs(txs.slice(0, 10));
+      });
     };
     refresh();
     window.addEventListener('choice-rewards-updated', refresh);
@@ -501,10 +505,10 @@ DID: ${identity.did}`;
         {/* Category Breakdown */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
           {(() => {
-            const idTotal = recentTxs.filter(tx => getRewardCategory(tx.type) === 'identity').reduce((s, tx) => s + tx.amount, 0);
-            const eduTotal = recentTxs.filter(tx => getRewardCategory(tx.type) === 'education').reduce((s, tx) => s + tx.amount, 0);
-            const comTotal = recentTxs.filter(tx => getRewardCategory(tx.type) === 'community').reduce((s, tx) => s + tx.amount, 0);
-            const finTotal = recentTxs.filter(tx => getRewardCategory(tx.type) === 'finance').reduce((s, tx) => s + tx.amount, 0);
+            const idTotal = allTxs.filter(tx => getRewardCategory(tx.type, tx.reason) === 'identity').reduce((s, tx) => s + tx.amount, 0);
+            const eduTotal = allTxs.filter(tx => getRewardCategory(tx.type, tx.reason) === 'education').reduce((s, tx) => s + tx.amount, 0);
+            const comTotal = allTxs.filter(tx => getRewardCategory(tx.type, tx.reason) === 'community').reduce((s, tx) => s + tx.amount, 0);
+            const finTotal = allTxs.filter(tx => getRewardCategory(tx.type, tx.reason) === 'finance').reduce((s, tx) => s + tx.amount, 0);
             const total = choiceBalance || 1;
             return [
               { label: 'Identity', amount: idTotal, pct: Math.round((idTotal / total) * 100), color: 'bg-primary' },
@@ -539,8 +543,8 @@ DID: ${identity.did}`;
                   <Gift size={14} className="text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-foreground">{getRewardLabel(tx.type)}</p>
-                  <p className="text-[10px] text-muted-foreground">{tx.reason.replace(/_/g, ' ')}</p>
+                  <p className="text-sm font-semibold text-foreground">{getRewardLabel(tx.type, tx.reason)}</p>
+                  <p className="text-[10px] text-muted-foreground">{tx.type === 'education_reward' ? tx.reason : tx.type === 'bounty_reward' ? 'Bounty Board' : tx.reason.replace(/_/g, ' ')}</p>
                 </div>
               </div>
               <div className="text-right">
