@@ -408,10 +408,18 @@ const CredentialsPage: React.FC = () => {
                         </span>
                       ))}
                     </div>
-                    <a href={`https://etherscan.io/address/${identity.address}`} target="_blank" rel="noreferrer"
-                      className="text-[10px] text-primary font-bold flex items-center gap-1 hover:underline">
-                      <ExternalLink size={10} /> View on-chain details
-                    </a>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Transaction:</span>
+                      <span className="text-[10px] font-mono text-primary">
+                        {identity.lastAnchorHash
+                          ? `${(`0x${identity.lastAnchorHash.slice(2, 66)}`).slice(0, 6)}...${(`0x${identity.lastAnchorHash.slice(2, 66)}`).slice(-4)}`
+                          : `${identity.address.slice(0, 6)}...${identity.address.slice(-4)}`}
+                      </span>
+                      <a href={`https://etherscan.io/tx/${identity.lastAnchorHash ? `0x${identity.lastAnchorHash.slice(2, 66)}` : identity.address}`} target="_blank" rel="noopener noreferrer"
+                        className="text-[10px] text-primary font-bold flex items-center gap-1 hover:underline">
+                        <ExternalLink size={10} /> View Transaction
+                      </a>
+                    </div>
                   </div>
                 )}
               </div>
