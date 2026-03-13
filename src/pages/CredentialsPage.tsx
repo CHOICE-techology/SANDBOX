@@ -558,8 +558,8 @@ const CredentialsPage: React.FC = () => {
               <FileCheck size={20} className="text-primary" />
             </div>
             <div>
-              <h2 className="text-lg md:text-xl font-black text-foreground tracking-tight leading-tight">Proofs of Verification</h2>
-              <p className="text-muted-foreground text-xs font-medium mt-0.5">Identity signals and verified documents that strengthen your trust score</p>
+              <h2 className="text-lg md:text-xl font-black text-foreground tracking-tight leading-tight">Real-World Proofs</h2>
+              <p className="text-muted-foreground text-xs font-medium mt-0.5">Upload and verify physical documents to strengthen your identity</p>
             </div>
           </div>
           <span className="bg-emerald-500/10 text-emerald-500 text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-emerald-500/20 hidden sm:inline-flex">
@@ -567,38 +567,13 @@ const CredentialsPage: React.FC = () => {
           </span>
         </div>
 
-        {/* Scoreboard summary */}
-        <div className="bg-muted/40 border border-border rounded-xl p-4 mb-5 space-y-2">
+        {/* Score breakdown from reputation */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           {[
-            { label: 'Trust Score', value: `${breakdown.score} / 100` },
-            { label: 'Social Score', value: `${breakdown.categories.social} / 40` },
-            { label: 'Wallet Activity', value: `${breakdown.categories.finance} / 10` },
-            { label: 'Courses Completed', value: `${identity.credentials.filter((vc: VerifiableCredential) => vc.type.includes('EducationCredential')).length}` },
-            { label: 'Credentials Verified', value: `${physicalCredentials.length} / 4` },
-          ].map(({ label, value }) => (
-            <div key={label} className="flex items-center justify-between">
-              <span className="text-xs font-bold text-muted-foreground">{label}</span>
-              <span className="text-xs font-black text-foreground">{value}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Short bio */}
-        <div className="bg-muted/30 border border-border rounded-xl p-4 mb-5">
-          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">Short Bio</p>
-          <p className="text-sm text-foreground font-medium italic">
-            {identity.bio || 'Web3 builder focused on identity, reputation and decentralized credentials.'}
-          </p>
-        </div>
-
-        {/* 5-column signal summary */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
-          {[
-            { label: 'Social Accounts', value: `${breakdown.categories.social}/40`, icon: Users, color: 'text-secondary' },
-            { label: 'Documents', value: `${physicalCredentials.length}/4`, icon: FileCheck, color: 'text-primary' },
-            { label: 'Wallets', value: `${(activeChains.length || 0) + addedWallets.length}`, icon: Wallet, color: 'text-accent' },
-            { label: 'Courses', value: `${identity.credentials.filter((vc: VerifiableCredential) => vc.type.includes('EducationCredential')).length}`, icon: GraduationCap, color: 'text-amber-400' },
-            { label: 'Trust Score', value: `${breakdown.score}/100`, icon: TrendingUp, color: 'text-emerald-400' },
+            { label: 'Physical Score', value: `${breakdown.categories.physical}/20`, icon: Shield, color: 'text-emerald-400' },
+            { label: 'Docs Verified', value: `${physicalCredentials.length}/4`, icon: FileCheck, color: 'text-primary' },
+            { label: 'Social Score', value: `${breakdown.categories.social}/40`, icon: Users, color: 'text-secondary' },
+            { label: 'Total Score', value: `${breakdown.score}/100`, icon: TrendingUp, color: 'text-amber-400' },
           ].map(({ label, value, icon: Icon, color }) => (
             <div key={label} className="bg-muted/60 border border-border rounded-xl p-3 text-center">
               <Icon size={16} className={cn('mx-auto mb-1.5', color)} />
@@ -681,9 +656,9 @@ const CredentialsPage: React.FC = () => {
               {physicalCredentials.map((vc: VerifiableCredential) => {
                 const dtype = vc.credentialSubject.documentType as string;
                 const fname = vc.credentialSubject.fileName as string;
+                const status = (vc.credentialSubject.verificationStatus as string) || 'Pending Manual Review';
                 const IconComp = docTypeIconComponents[dtype] || FileText;
-                const txHash = vc.ipfsCid || vc.id.replace('urn:uuid:', '');
-                const explorerUrl = `https://etherscan.io/tx/0x${txHash.replace(/-/g, '').slice(0, 64)}`;
+                const pending = status.toLowerCase().includes('pending');
                 return (
                   <div key={vc.id} className="bg-muted border border-border rounded-xl p-3.5 flex items-center gap-3">
                     <div className="p-2 bg-primary/10 rounded-lg flex-shrink-0">
@@ -692,20 +667,12 @@ const CredentialsPage: React.FC = () => {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <span className="font-black text-foreground text-sm">{dtype}</span>
-                        <span className="text-[8px] font-black px-2 py-0.5 rounded-full uppercase border inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-                          <CheckCircle2 size={10} /> Verified
+                        <span className={cn('text-[8px] font-black px-2 py-0.5 rounded-full uppercase border inline-flex items-center gap-1', pending ? 'bg-amber-500/10 text-amber-600 border-amber-500/20' : 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20')}>
+                          {pending ? <Clock3 size={10} /> : <CheckCircle2 size={10} />} {status}
                         </span>
                       </div>
                       <p className="text-xs text-muted-foreground font-medium truncate mt-0.5">{fname}</p>
                     </div>
-                    <a
-                      href={explorerUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-[10px] font-bold text-primary hover:underline whitespace-nowrap flex-shrink-0"
-                    >
-                      <ExternalLink size={12} /> View Transaction
-                    </a>
                   </div>
                 );
               })}
