@@ -440,6 +440,137 @@ DID: ${identity.did}`;
       {/* ═══════════════════════════════════════════════════════════════ */}
 
       {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* PROOFS OF VERIFICATION — directly after CHOICE ID              */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      <div className="glass border-white/10 rounded-3xl shadow-xl overflow-hidden transition-all hover:bg-white/5">
+        <div className="bg-gradient-to-r from-primary/10 to-secondary/10 p-5 md:p-6 border-b border-white/10">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="bg-primary/10 p-2.5 rounded-xl">
+                <Shield size={20} className="text-primary" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-foreground">Proofs of Verification</h3>
+                <p className="text-muted-foreground text-xs">Your verified identity signals and reputation summary.</p>
+              </div>
+            </div>
+            <Link to="/verify" className="shrink-0">
+              <ChoiceButton size="sm" className="shadow-lg hover:shadow-xl transition-all">
+                VERIFY <CheckCircle className="ml-1.5" size={14} />
+              </ChoiceButton>
+            </Link>
+          </div>
+        </div>
+
+        {/* Scoreboard Summary — 2-row layout */}
+        <div className="p-5 md:p-6 space-y-4 border-b border-border">
+          <div className="space-y-3">
+            {/* Row 1: Trust Score | Social Score | Wallet Activity */}
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { label: 'Trust Score', value: `${score}/100` },
+                { label: 'Social Score', value: `${social}/40` },
+                { label: 'Wallet Activity', value: `${finance}/10` },
+              ].map(item => (
+                <div key={item.label} className="bg-muted rounded-xl p-3 border border-border text-center">
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">{item.label}</span>
+                  <span className="text-lg font-black text-foreground">{item.value}</span>
+                </div>
+              ))}
+            </div>
+            {/* Row 2: Courses Done | Credentials */}
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: 'Courses Done', value: `${identity.credentials.filter(c => Array.isArray(c.type) ? c.type.includes('EducationCredential') : c.type === 'EducationCredential').length}` },
+                { label: 'Credentials', value: `${identity.credentials.length}` },
+              ].map(item => (
+                <div key={item.label} className="bg-muted rounded-xl p-3 border border-border text-center">
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">{item.label}</span>
+                  <span className="text-lg font-black text-foreground">{item.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Short Bio */}
+          <div className="bg-muted rounded-xl p-4 border border-border">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Short Bio</span>
+            <p className="text-sm text-foreground leading-relaxed">
+              {identity.bio || 'No bio added yet.'}
+            </p>
+          </div>
+        </div>
+
+        {/* Verification data */}
+        {verificationData ? (
+          <div className="p-5 md:p-6 space-y-4">
+            {navState?.verificationSuccess && (
+              <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-xl px-5 py-3.5">
+                <div className="bg-emerald-100 p-1.5 rounded-full">
+                  <CheckCircle size={18} className="text-emerald-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-emerald-800">Verification Successful</p>
+                  <p className="text-xs text-emerald-600">Your reputation proof has been verified on-chain.</p>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-muted rounded-2xl border border-border overflow-hidden">
+              <div className="border-b px-5 py-3 flex items-center gap-2 bg-emerald-500/10 border-emerald-500/20">
+                <CheckCircle size={14} className="text-emerald-600" />
+                <span className="text-xs font-bold text-emerald-700">Verified</span>
+                <span className="ml-auto text-[10px] font-mono text-emerald-600">Arbitrum Sepolia</span>
+              </div>
+              <div className="divide-y divide-border">
+                <div className="flex items-center justify-between px-5 py-3.5">
+                  <div className="flex items-center gap-2">
+                    <Clock size={14} className="text-muted-foreground" />
+                    <span className="text-xs font-semibold text-muted-foreground">Date</span>
+                  </div>
+                  <span className="text-sm font-semibold text-foreground">{verificationData.date || 'Not available'}</span>
+                </div>
+                <div className="flex items-center justify-between px-5 py-3.5">
+                  <div className="flex items-center gap-2">
+                    <Award size={14} className="text-muted-foreground" />
+                    <span className="text-xs font-semibold text-muted-foreground">Anchored Score</span>
+                  </div>
+                  <span className="text-sm font-bold text-foreground">{verificationData.score}<span className="text-muted-foreground font-normal">/100</span></span>
+                </div>
+                <div className="flex items-center justify-between px-5 py-3.5 gap-3">
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Hash size={14} className="text-muted-foreground" />
+                    <span className="text-xs font-semibold text-muted-foreground">TX Hash</span>
+                  </div>
+                  <span className="text-xs font-mono text-primary truncate">{verificationData.txHash}</span>
+                </div>
+              </div>
+              {verificationData.explorerUrl && (
+                <div className="px-5 py-3.5 border-t border-border bg-muted/50">
+                  <a
+                    href={verificationData.explorerUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 text-sm font-bold text-secondary hover:text-primary transition-colors bg-secondary/10 hover:bg-secondary/15 px-4 py-2.5 rounded-xl w-full"
+                  >
+                    View Transaction <ExternalLink size={14} />
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="p-6 md:p-8 text-center flex items-center justify-center">
+            <div className="bg-primary/5 rounded-2xl p-8 border border-primary/20 w-full">
+              <Shield size={32} className="text-primary mx-auto mb-3" />
+              <p className="text-foreground text-sm font-semibold">
+                No verification yet. Submit your proofs to anchor your identity on-chain.
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════ */}
       {/* CHOICE BALANCE CARD                                            */}
       {/* ═══════════════════════════════════════════════════════════════ */}
       <div className="bg-card border border-border rounded-3xl p-6 md:p-8 shadow-xl">
