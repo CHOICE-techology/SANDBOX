@@ -151,7 +151,6 @@ const PrivyWalletProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const savedAddr = localStorage.getItem('choice_wallet_address');
         if (savedAddr !== rawAddress) {
           localStorage.setItem('choice_wallet_address', rawAddress);
-          }
         }
       } catch (err) {
         console.warn('Session sync failed', err);
