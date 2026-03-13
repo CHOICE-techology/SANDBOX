@@ -543,8 +543,8 @@ DID: ${identity.did}`;
                   <Gift size={14} className="text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-foreground">{getRewardLabel(tx.type)}</p>
-                  <p className="text-[10px] text-muted-foreground">{tx.reason.replace(/_/g, ' ')}</p>
+                  <p className="text-sm font-semibold text-foreground">{getRewardLabel(tx.type, tx.reason)}</p>
+                  <p className="text-[10px] text-muted-foreground">{tx.type === 'education_reward' ? tx.reason : tx.type === 'bounty_reward' ? 'Bounty Board' : tx.reason.replace(/_/g, ' ')}</p>
                 </div>
               </div>
               <div className="text-right">
