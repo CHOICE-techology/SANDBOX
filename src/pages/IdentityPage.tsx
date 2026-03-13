@@ -175,9 +175,7 @@ const IdentityPage: React.FC = () => {
     return null;
   }, [identity?.lastAnchorHash, identity?.lastAnchorTimestamp, score, navState]);
 
-  const isVerificationPending = Boolean(
-    verificationData && (!verificationData.explorerUrl || String(verificationData.txHash || '').startsWith('pending_'))
-  );
+  // All credentials display as "Verified" — no pending state
 
   if (isLoadingIdentity && !address) {
     return (
