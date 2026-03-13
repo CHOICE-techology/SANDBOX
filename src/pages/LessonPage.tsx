@@ -8,7 +8,7 @@ import { addCredential } from '@/services/storageService';
 import { mockUploadToIPFS } from '@/services/cryptoService';
 import { useWallet } from '@/contexts/WalletContext';
 import { ShareBadgeDialog } from '@/components/ShareBadgeDialog';
-import { supabase } from '@/integrations/supabase/client';
+
 
 const LessonPage: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
