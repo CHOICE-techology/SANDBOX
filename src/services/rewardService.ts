@@ -167,9 +167,14 @@ export const getRewardLabel = (type: string, reason?: string): string => {
 /**
  * Get icon category for a reward type
  */
-export const getRewardCategory = (type: string): 'identity' | 'education' | 'community' | 'finance' => {
+export const getRewardCategory = (type: string, reason?: string): 'identity' | 'education' | 'community' | 'finance' => {
+  // For bounty rewards, categorize by the specific task's actual category
+  if (type === 'bounty_reward' && reason && BOUNTY_CATEGORIES[reason]) {
+    return BOUNTY_CATEGORIES[reason];
+  }
   if (type.includes('identity') || type.includes('social')) return 'identity';
   if (type.includes('education')) return 'education';
   if (type.includes('referral') || type.includes('bounty')) return 'community';
+  if (type.includes('wallet_analysis')) return 'finance';
   return 'finance';
 };
