@@ -17,6 +17,8 @@ const EducationPage: React.FC = () => {
   const { userIdentity: identity, isConnected } = useWallet();
   const { setWalletModalOpen } = useChoiceStore();
   const navigate = useNavigate();
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareCourse, setShareCourse] = useState<{ title: string; level: string; points: number } | null>(null);
 
   const hasBadge = (courseTitle: string) =>
     identity?.credentials.some(vc => vc.type.includes('EducationCredential') && vc.credentialSubject.courseName === courseTitle);
