@@ -37,6 +37,16 @@ const CHAINS = [
   { id: 'cardano', name: 'CARDANO', logo: cardanoLogo },
   { id: 'polkadot', name: 'POLKADOT', logo: polkadotLogo },
   { id: 'tezos', name: 'TEZOS', logo: tezosLogo },
+  { id: 'polygon', name: 'POLYGON', logo: null, color: '#8247E5', letter: 'P' },
+  { id: 'optimism', name: 'OPTIMISM', logo: null, color: '#FF0420', letter: 'O' },
+  { id: 'bnb chain', name: 'BNB', logo: null, color: '#F3BA2F', letter: 'B' },
+  { id: 'cosmos', name: 'COSMOS', logo: null, color: '#2E3148', letter: 'C' },
+  { id: 'near', name: 'NEAR', logo: null, color: '#000000', letter: 'N' },
+  { id: 'tron', name: 'TRON', logo: null, color: '#FF0013', letter: 'T' },
+  { id: 'starknet', name: 'STARKNET', logo: null, color: '#0C0C4F', letter: 'S' },
+  { id: 'zksync', name: 'ZKSYNC', logo: null, color: '#1E69FF', letter: 'Z' },
+  { id: 'sui', name: 'SUI', logo: null, color: '#4DA2FF', letter: 'S' },
+  { id: 'aptos', name: 'APTOS', logo: null, color: '#2DD8A3', letter: 'A' },
 ];
 
 const CredentialsPage: React.FC = () => {
