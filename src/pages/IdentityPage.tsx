@@ -154,40 +154,71 @@ const IdentityPage: React.FC = () => {
     return alerts;
   }, [score, social, education, finance, physical]);
 
+  const getExplorerUrl = (chain: string, txHash: string): string => {
+    const explorers: Record<string, string> = {
+      ethereum: `https://etherscan.io/tx/${txHash}`,
+      arbitrum: `https://arbiscan.io/tx/${txHash}`,
+      'arbitrum sepolia': `https://sepolia.arbiscan.io/tx/${txHash}`,
+      base: `https://basescan.org/tx/${txHash}`,
+      avalanche: `https://snowtrace.io/tx/${txHash}`,
+      polygon: `https://polygonscan.com/tx/${txHash}`,
+      bnb: `https://bscscan.com/tx/${txHash}`,
+      solana: `https://solscan.io/tx/${txHash}`,
+      polkadot: `https://polkadot.subscan.io/extrinsic/${txHash}`,
+      optimism: `https://optimistic.etherscan.io/tx/${txHash}`,
+    };
+    return explorers[chain.toLowerCase()] || `https://sepolia.arbiscan.io/tx/${txHash}`;
+  };
+
+  const detectedChain = useMemo(() => {
+    if (navState?.verificationData?.chain) return navState.verificationData.chain;
+    try {
+      const stored = localStorage.getItem('choice_last_verification');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.chain) return parsed.chain;
+      }
+    } catch {}
+    return 'Arbitrum Sepolia';
+  }, [navState]);
+
   const verificationData = useMemo(() => {
-    // Priority: identity anchor data > navState > localStorage
     if (identity?.lastAnchorHash) {
       const mockTxHash = `0x${identity.lastAnchorHash.slice(2, 66) || 'a1b2c3d4e5f6'.repeat(5)}`;
       return {
         date: getSafeDisplayDate(identity.lastAnchorTimestamp),
         score,
         txHash: mockTxHash,
-        explorerUrl: `https://sepolia.arbiscan.io/tx/${mockTxHash}`,
+        chain: detectedChain,
+        explorerUrl: getExplorerUrl(detectedChain, mockTxHash),
       };
     }
     if (navState?.verificationData) {
+      const chain = navState.verificationData.chain || detectedChain;
       return {
         date: getSafeDisplayDate(navState.verificationData.date),
         score,
         txHash: navState.verificationData.txHash,
-        explorerUrl: navState.verificationData.explorerUrl || `https://sepolia.arbiscan.io/tx/${navState.verificationData.txHash}`,
+        chain,
+        explorerUrl: navState.verificationData.explorerUrl || getExplorerUrl(chain, navState.verificationData.txHash),
       };
     }
-    // Fallback: last persisted verification from localStorage
     try {
       const stored = localStorage.getItem('choice_last_verification');
       if (stored) {
         const parsed = JSON.parse(stored);
+        const chain = parsed.chain || detectedChain;
         return {
           date: getSafeDisplayDate(parsed.date),
           score,
           txHash: parsed.txHash,
-          explorerUrl: parsed.explorerUrl || `https://sepolia.arbiscan.io/tx/${parsed.txHash}`,
+          chain,
+          explorerUrl: parsed.explorerUrl || getExplorerUrl(chain, parsed.txHash),
         };
       }
     } catch {}
     return null;
-  }, [identity?.lastAnchorHash, identity?.lastAnchorTimestamp, score, navState]);
+  }, [identity?.lastAnchorHash, identity?.lastAnchorTimestamp, score, navState, detectedChain]);
 
   const isVerificationPending = Boolean(
     verificationData && (!verificationData.explorerUrl || String(verificationData.txHash || '').startsWith('pending_'))
