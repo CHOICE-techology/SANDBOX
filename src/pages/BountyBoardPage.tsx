@@ -4,6 +4,7 @@ import { ChoiceButton } from '@/components/ChoiceButton';
 import { useWallet } from '@/contexts/WalletContext';
 import { calculateIdentityScore } from '@/services/scoreEngine';
 import { grantReward, getChoiceBalance } from '@/services/rewardService';
+import { COURSES } from '@/data/coursesData';
 
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -15,7 +16,8 @@ interface BountyTask {
   reward: number;
   icon: React.ElementType;
   category: 'identity' | 'education' | 'community' | 'security';
-  minScore: number;
+  /** Minimum number of completed courses to unlock */
+  minCourses: number;
   minBalance: number;
   type: string;
   reason: string;
