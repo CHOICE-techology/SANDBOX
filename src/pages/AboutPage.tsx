@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Heart, Globe, CheckCircle, Users, Shield, TrendingUp, Clock, Gift, Copy, Share2, UserPlus } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ChoiceButton } from '@/components/ChoiceButton';
 import { useToast } from '@/hooks/use-toast';
