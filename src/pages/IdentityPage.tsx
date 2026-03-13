@@ -175,9 +175,7 @@ const IdentityPage: React.FC = () => {
     return null;
   }, [identity?.lastAnchorHash, identity?.lastAnchorTimestamp, score, navState]);
 
-  const isVerificationPending = Boolean(
-    verificationData && (!verificationData.explorerUrl || String(verificationData.txHash || '').startsWith('pending_'))
-  );
+  // All credentials display as "Verified" — no pending state
 
   if (isLoadingIdentity && !address) {
     return (
@@ -590,9 +588,9 @@ DID: ${identity.did}`;
                   <div className="bg-primary/10 p-2.5 rounded-xl">
                     <Shield size={20} className="text-primary" />
                   </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-foreground">Submit Proofs for Manual Verification</h3>
-                    <p className="text-muted-foreground text-xs">Request review before final on-chain anchoring.</p>
+                   <div>
+                    <h3 className="text-lg font-bold text-foreground">Proofs of Verification</h3>
+                    <p className="text-muted-foreground text-xs">Your verified credentials and reputation summary.</p>
                   </div>
                 </div>
                 <Link to="/verify" className="shrink-0">
@@ -600,6 +598,32 @@ DID: ${identity.did}`;
                     OPEN REQUEST <CheckCircle className="ml-1.5" size={14} />
                   </ChoiceButton>
                 </Link>
+              </div>
+            </div>
+
+            {/* Scoreboard Summary */}
+            <div className="px-5 pt-5 md:px-6 md:pt-6">
+              <div className="bg-muted rounded-2xl border border-border p-4 space-y-2">
+                <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Reputation Summary</h4>
+                {[
+                  { label: 'Trust Score', value: `${score}/100` },
+                  { label: 'Social Score', value: `${social}/40` },
+                  { label: 'Wallet Activity', value: `${finance}/10` },
+                  { label: 'Courses Completed', value: `${education}/30` },
+                  { label: 'Credentials Verified', value: `${identity.credentials.length}` },
+                ].map(row => (
+                  <div key={row.label} className="flex items-center justify-between py-1.5">
+                    <span className="text-xs font-semibold text-muted-foreground">{row.label}</span>
+                    <span className="text-xs font-bold text-foreground">{row.value}</span>
+                  </div>
+                ))}
+              </div>
+              {/* Short Bio */}
+              <div className="mt-3 bg-muted rounded-2xl border border-border p-4">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Short Bio</span>
+                <p className="text-sm text-foreground mt-1 leading-relaxed">
+                  {identity.bio || 'No bio added yet.'}
+                </p>
               </div>
             </div>
 
@@ -620,17 +644,10 @@ DID: ${identity.did}`;
 
                 {/* Transaction-style record */}
                 <div className="bg-muted rounded-2xl border border-border overflow-hidden">
-                  <div className={cn(
-                    "border-b px-5 py-3 flex items-center gap-2",
-                    isVerificationPending ? "bg-amber-500/10 border-amber-500/20" : "bg-emerald-500/10 border-emerald-500/20"
-                  )}>
-                    <CheckCircle size={14} className={isVerificationPending ? "text-amber-600" : "text-emerald-600"} />
-                    <span className={cn("text-xs font-bold", isVerificationPending ? "text-amber-700" : "text-emerald-700")}>
-                      {isVerificationPending ? 'Pending Manual Review' : 'Transaction Confirmed'}
-                    </span>
-                    <span className={cn("ml-auto text-[10px] font-mono", isVerificationPending ? "text-amber-700" : "text-emerald-600")}>
-                      {isVerificationPending ? 'Awaiting anchor' : 'Arbitrum Sepolia'}
-                    </span>
+                  <div className="border-b px-5 py-3 flex items-center gap-2 bg-emerald-500/10 border-emerald-500/20">
+                    <CheckCircle size={14} className="text-emerald-600" />
+                    <span className="text-xs font-bold text-emerald-700">Verified</span>
+                    <span className="ml-auto text-[10px] font-mono text-emerald-600">Arbitrum Sepolia</span>
                   </div>
                   <div className="divide-y divide-border">
                     <div className="flex items-center justify-between px-5 py-3.5">
@@ -640,19 +657,17 @@ DID: ${identity.did}`;
                       </div>
                       <span className="text-sm font-semibold text-foreground">{verificationData.date || 'Not available'}</span>
                     </div>
-                    {!isVerificationPending && (
-                      <div className="flex items-center justify-between px-5 py-3.5">
-                        <div className="flex items-center gap-2">
-                          <Award size={14} className="text-muted-foreground" />
-                          <span className="text-xs font-semibold text-muted-foreground">Anchored Score</span>
-                        </div>
-                        <span className="text-sm font-bold text-foreground">{verificationData.score}<span className="text-muted-foreground font-normal">/100</span></span>
+                    <div className="flex items-center justify-between px-5 py-3.5">
+                      <div className="flex items-center gap-2">
+                        <Award size={14} className="text-muted-foreground" />
+                        <span className="text-xs font-semibold text-muted-foreground">Anchored Score</span>
                       </div>
-                    )}
+                      <span className="text-sm font-bold text-foreground">{verificationData.score}<span className="text-muted-foreground font-normal">/100</span></span>
+                    </div>
                     <div className="flex items-center justify-between px-5 py-3.5 gap-3">
                       <div className="flex items-center gap-2 shrink-0">
                         <Hash size={14} className="text-muted-foreground" />
-                        <span className="text-xs font-semibold text-muted-foreground">{isVerificationPending ? 'Request ID' : 'TX Hash'}</span>
+                        <span className="text-xs font-semibold text-muted-foreground">TX Hash</span>
                       </div>
                       <span className="text-xs font-mono text-primary truncate">
                         {verificationData.txHash.length > 10
@@ -661,7 +676,7 @@ DID: ${identity.did}`;
                       </span>
                     </div>
                   </div>
-                  {!isVerificationPending && verificationData.explorerUrl && (
+                  {verificationData.explorerUrl && (
                     <div className="px-5 py-3.5 border-t border-border bg-muted/50">
                       <a
                         href={verificationData.explorerUrl}
