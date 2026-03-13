@@ -203,6 +203,14 @@ const CredentialsPage: React.FC = () => {
       const newIdentity = await addCredential(identity, walletVC);
       await onUpdateIdentity(newIdentity);
 
+      // Grant CHOICE reward for added wallet analysis
+      try {
+        const { grantWalletAnalysisReward } = await import('@/services/rewardService');
+        await grantWalletAnalysisReward(identity.address, addWalletAddress.trim());
+      } catch (err) {
+        console.warn('Wallet analysis reward failed:', err);
+      }
+
       setShowAddWallet(false);
       setAddWalletAddress('');
       setAddWalletChain(null);
