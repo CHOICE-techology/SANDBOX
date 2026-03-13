@@ -140,10 +140,12 @@ const CredentialsPage: React.FC = () => {
     }
   };
 
-  const analyzeWallet = async () => {
+  const analyzeWallet = async (addressToAnalyze?: string) => {
+    const addr = addressToAnalyze || customAddress || identity.address;
+    if (!addr.trim()) return;
     setIsAnalyzingWallet(true);
     try {
-      const stats = await analyzeWalletHistory(identity.address);
+      const stats = await analyzeWalletHistory(addr.trim());
       setWalletStats(stats);
 
       const walletVC: VerifiableCredential = {
