@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { COURSES } from '@/data/coursesData';
 import { ChoiceButton } from '@/components/ChoiceButton';
-import { ArrowLeft, ArrowRight, BookOpen, Zap, Layers } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookOpen, Zap, Layers, Share2 } from 'lucide-react';
 import { VerifiableCredential } from '@/types';
 import { addCredential } from '@/services/storageService';
 import { mockUploadToIPFS } from '@/services/cryptoService';
 import { useWallet } from '@/contexts/WalletContext';
-
-
+import { ShareBadgeDialog } from '@/components/ShareBadgeDialog';
+import { supabase } from '@/integrations/supabase/client';
 
 const LessonPage: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
@@ -19,9 +19,11 @@ const LessonPage: React.FC = () => {
   const [currentLessonIdx, setCurrentLessonIdx] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [answered, setAnswered] = useState(false);
+  const [isCorrectAnswer, setIsCorrectAnswer] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
   const [completing, setCompleting] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   if (!course) {
     return (
@@ -34,15 +36,23 @@ const LessonPage: React.FC = () => {
 
   const lesson = course.lessons[currentLessonIdx];
   const isLastLesson = currentLessonIdx === course.lessons.length - 1;
-  const progress = ((currentLessonIdx + (answered ? 1 : 0)) / course.lessons.length) * 100;
+  const progress = ((currentLessonIdx + (answered && isCorrectAnswer ? 1 : 0)) / course.lessons.length) * 100;
 
   const handleAnswer = (idx: number) => {
-    if (answered) return;
+    if (answered && isCorrectAnswer) return;
     setSelectedAnswer(idx);
     setAnswered(true);
-    if (lesson.quiz && idx === lesson.quiz.correctIndex) {
+    const correct = lesson.quiz && idx === lesson.quiz.correctIndex;
+    setIsCorrectAnswer(!!correct);
+    if (correct) {
       setCorrectCount(prev => prev + 1);
     }
+  };
+
+  const handleTryAgain = () => {
+    setSelectedAnswer(null);
+    setAnswered(false);
+    setIsCorrectAnswer(false);
   };
 
   const handleNext = () => {
@@ -52,6 +62,7 @@ const LessonPage: React.FC = () => {
       setCurrentLessonIdx(prev => prev + 1);
       setSelectedAnswer(null);
       setAnswered(false);
+      setIsCorrectAnswer(false);
     }
   };
 
@@ -77,8 +88,26 @@ const LessonPage: React.FC = () => {
       await mockUploadToIPFS(badgeVC);
       const newIdentity = await addCredential(identity, badgeVC);
       await onUpdateIdentity(newIdentity);
-      setCompleted(true);
 
+      // Grant CHOICE reward
+      const reward = course.choiceReward ?? 40;
+      try {
+        await supabase.rpc('increment_choice_balance', {
+          p_wallet_address: identity.address,
+          p_amount: reward,
+        });
+        await supabase.from('choice_transactions').insert({
+          user_id: identity.address,
+          type: 'education_reward',
+          amount: reward,
+          reason: `Completed course: ${course.title}`,
+        });
+        window.dispatchEvent(new Event('choice-rewards-updated'));
+      } catch (err) {
+        console.warn('Reward grant failed:', err);
+      }
+
+      setCompleted(true);
     } catch (e) {
       console.error(e);
     } finally {
@@ -196,8 +225,9 @@ const LessonPage: React.FC = () => {
               
               let variantClass = "border-border hover:border-primary/50 hover:bg-muted/50";
               if (showResult) {
-                if (isCorrect) variantClass = "border-emerald-500 bg-emerald-500/10 text-emerald-500";
-                else if (isSelected) variantClass = "border-destructive bg-destructive/10 text-destructive";
+                if (isCorrect && isCorrectAnswer) variantClass = "border-emerald-500 bg-emerald-500/10 text-emerald-500";
+                else if (isSelected && !isCorrectAnswer) variantClass = "border-destructive bg-destructive/10 text-destructive";
+                else if (!isCorrectAnswer) variantClass = "opacity-50 border-border";
                 else variantClass = "opacity-50 border-border";
               } else if (isSelected) {
                 variantClass = "border-primary bg-primary/10 text-primary";
@@ -207,28 +237,36 @@ const LessonPage: React.FC = () => {
                 <button
                   key={idx}
                   onClick={() => handleAnswer(idx)}
-                  disabled={answered}
+                  disabled={answered && isCorrectAnswer}
                   className={`w-full text-left p-4 rounded-xl border-2 font-medium transition-all flex items-center justify-between ${variantClass}`}
                 >
                   <span>{option}</span>
-                  {showResult && isCorrect && <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px]">✓</div>}
-                  {showResult && isSelected && !isCorrect && <div className="w-5 h-5 rounded-full bg-destructive text-white flex items-center justify-center text-[10px]">✕</div>}
+                  {showResult && isCorrect && isCorrectAnswer && <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px]">✓</div>}
+                  {showResult && isSelected && !isCorrectAnswer && <div className="w-5 h-5 rounded-full bg-destructive text-white flex items-center justify-center text-[10px]">✕</div>}
                 </button>
               );
             })}
           </div>
           
           {answered && (
-            <div className={`mt-6 p-4 rounded-xl border ${selectedAnswer === lesson.quiz.correctIndex ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-600' : 'bg-destructive/5 border-destructive/20 text-destructive'} animate-in fade-in slide-in-from-top-2`}>
+            <div className={`mt-6 p-4 rounded-xl border ${isCorrectAnswer ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-600' : 'bg-destructive/5 border-destructive/20 text-destructive'} animate-in fade-in slide-in-from-top-2`}>
               <p className="text-sm font-bold">
-                {selectedAnswer === lesson.quiz.correctIndex ? '✨ Correct! Well done.' : 'Oops! That\'s not quite right.'}
+                {isCorrectAnswer ? '✨ Correct! Well done.' : 'Oops! That\'s not quite right.'}
               </p>
+              {!isCorrectAnswer && (
+                <button
+                  onClick={handleTryAgain}
+                  className="mt-3 text-sm font-bold text-primary hover:underline"
+                >
+                  🔄 Try Again
+                </button>
+              )}
             </div>
           )}
         </div>
       )}
 
-      {/* Success Modal / Screen */}
+      {/* Success Modal */}
       {completed && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-[#020617]/40 backdrop-blur-2xl animate-in fade-in duration-500">
           <div className="glass-dark border-white/10 rounded-[3rem] p-10 max-w-sm w-full shadow-[0_0_100px_rgba(var(--primary),0.2)] text-center animate-in zoom-in duration-300">
@@ -236,21 +274,39 @@ const LessonPage: React.FC = () => {
               🏆
             </div>
             <h2 className="text-2xl font-bold mb-2">Course Completed!</h2>
-            <p className="text-muted-foreground mb-8">
+            <p className="text-muted-foreground mb-3">
               Congratulations! You've earned the <strong>{course.title}</strong> badge and <strong>{course.points} Reputation Points</strong>.
             </p>
-            <ChoiceButton className="w-full" onClick={() => navigate('/education')}>
-              Back to Academy
-            </ChoiceButton>
+            <p className="text-primary font-bold text-lg mb-6">◈ +{course.choiceReward ?? 40} CHOICE earned!</p>
+            <div className="space-y-3">
+              <button
+                onClick={() => setShareOpen(true)}
+                className="w-full flex items-center justify-center gap-2 bg-secondary/10 hover:bg-secondary/20 text-secondary font-bold py-3 px-6 rounded-xl transition-all border border-secondary/20"
+              >
+                <Share2 size={16} /> Share Badge on Social Media
+              </button>
+              <ChoiceButton className="w-full" onClick={() => navigate('/education')}>
+                Back to Academy
+              </ChoiceButton>
+            </div>
           </div>
         </div>
       )}
+
+      {/* Share Dialog */}
+      <ShareBadgeDialog
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        courseName={course.title}
+        level={course.level}
+        points={course.points}
+      />
 
       {/* Navigation */}
       <div className="flex justify-between items-center mt-8">
         <ChoiceButton
           variant="outline"
-          onClick={() => { setCurrentLessonIdx(prev => prev - 1); setSelectedAnswer(null); setAnswered(false); }}
+          onClick={() => { setCurrentLessonIdx(prev => prev - 1); setSelectedAnswer(null); setAnswered(false); setIsCorrectAnswer(false); }}
           disabled={currentLessonIdx === 0}
           className="rounded-xl px-6"
         >
@@ -258,7 +314,7 @@ const LessonPage: React.FC = () => {
         </ChoiceButton>
         <ChoiceButton
           onClick={handleNext}
-          disabled={!answered && !!lesson.quiz}
+          disabled={!answered || !isCorrectAnswer}
           isLoading={completing}
           className="rounded-xl px-8"
         >
