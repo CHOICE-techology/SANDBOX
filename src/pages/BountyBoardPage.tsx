@@ -267,7 +267,7 @@ const BountyBoardPage: React.FC = () => {
                 <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
                   <div className="text-center">
                     <Lock size={24} className="text-muted-foreground mx-auto mb-2" />
-                    <p className="text-xs font-bold text-muted-foreground">Unlock at score {task.minScore}+</p>
+                    <p className="text-xs font-bold text-muted-foreground">Complete {task.minCourses} course{task.minCourses > 1 ? 's' : ''} to unlock</p>
                     {task.minBalance > 0 && (
                       <p className="text-[10px] text-muted-foreground">and ◈ {task.minBalance} CHOICE</p>
                     )}
