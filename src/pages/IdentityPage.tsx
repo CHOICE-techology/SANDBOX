@@ -168,7 +168,7 @@ const IdentityPage: React.FC = () => {
           date: getSafeDisplayDate(parsed.date),
           score,
           txHash: parsed.txHash,
-          explorerUrl: parsed.explorerUrl || `https://sepolia.arbiscan.io/tx/${parsed.txHash}`,
+          explorerUrl: `https://etherscan.io/tx/${parsed.txHash}`,
         };
       }
     } catch {}
