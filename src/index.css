@@ -6,46 +6,26 @@
   :root {
     --background: 220 20% 97%;
     --foreground: 222 47% 11%;
-
     --card: 220 20% 98%;
     --card-foreground: 222 47% 11%;
-
     --popover: 220 20% 98%;
     --popover-foreground: 222 47% 11%;
-
-    /* Primary: Neon Cyan */
     --primary: 187 100% 42%;
     --primary-foreground: 0 0% 100%;
-
-    /* Secondary: Deep Blue */
     --secondary: 221 83% 53%;
     --secondary-foreground: 0 0% 100%;
-
     --muted: 220 14% 93%;
     --muted-foreground: 220 10% 46%;
-
-    /* Accent: Pink/Magenta */
     --accent: 330 80% 60%;
     --accent-foreground: 0 0% 100%;
-
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-
     --border: 220 13% 87%;
     --input: 220 13% 87%;
     --ring: 187 100% 42%;
-
     --radius: 0.75rem;
-
-    /* Custom tokens */
     --dark: 222 47% 11%;
     --dark-surface: 222 30% 18%;
-    --glow-primary: 187 100% 42% / 0.15;
-
-    --glass-bg: 0 0% 100% / 0.03;
-    --glass-border: 0 0% 100% / 0.1;
-    --glass-blur: 12px;
-
     --sidebar-background: 220 20% 97%;
     --sidebar-foreground: 220 10% 46%;
     --sidebar-primary: 187 100% 42%;
@@ -58,99 +38,22 @@
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-
-  body {
-    @apply bg-background text-foreground font-sans antialiased selection:bg-primary/30;
-  }
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground font-sans antialiased selection:bg-primary/30; }
 }
 
 @layer utilities {
-  .glass {
-    @apply bg-white/5 backdrop-blur-md border border-white/10 shadow-xl;
-  }
-
-  .glass-dark {
-    @apply bg-black/20 backdrop-blur-xl border border-white/5 shadow-2xl;
-  }
-
-  .shadow-glow-primary {
-    box-shadow: 0 0 20px hsl(187 100% 42% / 0.35), 0 0 60px hsl(187 100% 42% / 0.08);
-  }
-
-  .shadow-glow-accent {
-    box-shadow: 0 0 20px hsl(330 80% 60% / 0.3), 0 0 60px hsl(330 80% 60% / 0.06);
-  }
-
-  .text-gradient-primary {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-400 to-secondary;
-  }
-
-  .text-dark {
-    color: hsl(var(--dark));
-  }
-
-  .bg-dark {
-    background-color: hsl(var(--dark));
-  }
-
-  .animate-fade-in {
-    animation: fadeIn 0.4s ease-out;
-  }
-
-  .animate-scale-in {
-    animation: scaleIn 0.3s ease-out;
-  }
-
-  .animate-slide-in-right {
-    animation: slideInRight 0.4s ease-out;
-  }
-
-  .mesh-gradient {
-    background-color: hsla(220, 20%, 97%, 1);
-    background-image: 
-      radial-gradient(at 0% 0%, hsla(187, 100%, 42%, 0.1) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, hsla(221, 83%, 53%, 0.1) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, hsla(330, 80%, 60%, 0.1) 0px, transparent 50%),
-      radial-gradient(at 0% 100%, hsla(187, 100%, 42%, 0.1) 0px, transparent 50%);
-  }
+  .glass { @apply bg-white/5 backdrop-blur-md border border-white/10 shadow-xl; }
+  .glass-dark { @apply bg-black/20 backdrop-blur-xl border border-white/5 shadow-2xl; }
+  .shadow-glow-primary { box-shadow: 0 0 20px hsl(187 100% 42% / 0.35), 0 0 60px hsl(187 100% 42% / 0.08); }
+  .text-gradient-primary { @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-400 to-secondary; }
+  .animate-fade-in { animation: fadeIn 0.4s ease-out; }
+  .animate-scale-in { animation: scaleIn 0.3s ease-out; }
+  .animate-blob { animation: bubble-float 10s infinite ease-in-out; }
+  .animate-reward-popup { animation: rewardPopup 2.5s ease-out forwards; }
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-@keyframes slideInRight {
-  from { opacity: 0; transform: translateX(20px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes bubble-float {
-  0% { transform: translateY(0) scale(1); opacity: 0.3; }
-  50% { transform: translateY(-20px) scale(1.1); opacity: 0.5; }
-  100% { transform: translateY(0) scale(1); opacity: 0.3; }
-}
-
-.animate-blob {
-  animation: bubble-float 10s infinite ease-in-out;
-}
-
-@keyframes rewardPopup {
-  0% { opacity: 0; transform: translateY(20px) scale(0.8); }
-  20% { opacity: 1; transform: translateY(-8px) scale(1.05); }
-  40% { transform: translateY(0) scale(1); }
-  80% { opacity: 1; transform: translateY(0) scale(1); }
-  100% { opacity: 0; transform: translateY(-30px) scale(0.9); }
-}
-
-.animate-reward-popup {
-  animation: rewardPopup 2.5s ease-out forwards;
-}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+@keyframes bubble-float { 0% { transform: translateY(0) scale(1); opacity: 0.3; } 50% { transform: translateY(-20px) scale(1.1); opacity: 0.5; } 100% { transform: translateY(0) scale(1); opacity: 0.3; } }
+@keyframes rewardPopup { 0% { opacity: 0; transform: translateY(20px) scale(0.8); } 20% { opacity: 1; transform: translateY(-8px) scale(1.05); } 40% { transform: translateY(0) scale(1); } 80% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-30px) scale(0.9); } }
